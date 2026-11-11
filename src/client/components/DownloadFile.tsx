@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Button } from "@heroui/react";
 
 export function DownloadFile({
   blob,
@@ -9,17 +9,23 @@ export function DownloadFile({
   name: string;
   label: string;
 }) {
-  const [link, setLink] = useState<{ blob: Blob; url: string } | null>(null);
-  useEffect(() => {
+  function download() {
     const url = URL.createObjectURL(blob);
-    setLink({ blob, url });
-    return () => URL.revokeObjectURL(url);
-  }, [blob]);
-  return link?.blob === blob ? (
-    <a href={link.url} download={name}>
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = name;
+    try {
+      document.body.append(link);
+      link.click();
+    } finally {
+      link.remove();
+      // Let the browser start consuming the URL before releasing this click's URL.
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+    }
+  }
+  return (
+    <Button type="button" variant="secondary" onPress={download}>
       {label}
-    </a>
-  ) : (
-    <span role="status">正在准备下载链接…</span>
+    </Button>
   );
 }

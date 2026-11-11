@@ -15,12 +15,6 @@ export function useApiQuery<T>(path: string, revision = 0, sessionId?: string) {
   });
   useEffect(() => {
     const controller = new AbortController();
-    setState({
-      key,
-      data: null,
-      error: null,
-      loading: true,
-    });
     void api<T>(path, {
       signal: controller.signal,
       ...(sessionId

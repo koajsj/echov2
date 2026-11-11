@@ -1,5 +1,7 @@
 # PostgreSQL 迁移边界
 
+2026-11-11 Cloud 验证：001 在 PostgreSQL 17.11 因 account_identity_keys.authorization 为未加引号保留字失败（psql ON_ERROR_STOP 退出 3），事务完整回滚，echo schema 不存在；002–005 未执行。其他持久化环境是否曾成功应用仍待用户核查，因此历史迁移保持原字节。确认从未成功应用后，拟作首次成功部署前修正：字段及长度约束改为 authorization_proof；若已有成功应用环境，须先制定兼容方案。不得替换合法 CREATE SCHEMA ... AUTHORIZATION 语法。详情见 [Cloud 验证](../docs/cloud-bootstrap-verification.md)。
+
 本轮只编写，未执行SQL，也未连接数据库。`001-initial.sql`后接`002-runtime-permissions.sql`，必须先由运维创建独立数据库`echo_native`及`echo_native_owner`/`echo_native_api`；owner负责DDL，API不授超级用户、建库、建角色、BYPASSRLS或schema所有权。PUBLIC对数据库的CONNECT/TEMP及public schema CREATE也应由运维审查撤销，只允许本机访问。
 
 迁移采用事务且不在应用启动自动运行。本轮没有迁移执行器、已执行迁移版本表或SQL解析/数据库验收；现有文件不可直接在旧Matrix数据库运行。初始Schema为空库设计，不清空/覆盖任何既有库；目标若有echo schema先停止，不能改写历史迁移使其看似已成功。

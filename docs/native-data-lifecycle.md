@@ -1,5 +1,7 @@
 # 数据模型与生命周期
 
+2026-11-11 Cloud 验证补充：account_identity_keys 的 authorization 列名在 PostgreSQL 17.11 导致 001 语法错误并整体回滚。计划的非保留字字段为 authorization_proof，表示公开授权证明，长度约束保持 1–16384 字节；因持久化环境应用记录尚未确认，本次未实施改名，当前 Schema 尚未创建。23 表/后续约束及权限未获运行验证，见 [Cloud 报告](cloud-bootstrap-verification.md)。
+
 2026-11-11。初始DDL位于[001](../migrations/001-initial.sql)，运行权限位于[002](../migrations/002-runtime-permissions.sql)，增量变更为[003](../migrations/003-route-version-and-delivery.sql)与[004](../migrations/004-invitation-idempotency.sql)，**全部未执行，001/002保持历史原样**。表名以SQL为准：研究中的group_messages落为`messages`；没有MLS私有Group State表。设计依据包括[PostgreSQL约束](https://www.postgresql.org/docs/18/ddl-constraints.html)与[行锁](https://www.postgresql.org/docs/18/explicit-locking.html)，数据库能力不证明应用授权正确。
 
 ## 表职责、键与保留
