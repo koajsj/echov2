@@ -1,8 +1,8 @@
 # 数据模型与生命周期
 
-迁移调查更新：持久化环境应用史 **UNKNOWN**。目标 authorization_proof 尚未实施；新库初始化基线与旧库向前升级必须经核准后分别验证并收敛相同列、约束、触发器、owner 和 ACL。完整 [兼容计划](cloud-bootstrap-verification.md#情况-c-的兼容计划提案未实施) 不改写当前历史 SQL。
+Cloud 兼容实现更新：历史 001–005 保持原字节。新库独立 echo-native-v1 基线和旧库 006 最终都使用 authorization_proof bytea NOT NULL、1–16384 字节及统一 CHECK 名称；Cloud 两条路径的 echo Schema dump/目录完全一致、合成字节保留。echo_meta 仅存迁移收据，API 无访问权，不存 MLS 私钥。操作规范唯一来源为 [迁移说明](../migrations/README.md)，本次证据见 [Cloud 验证](cloud-bootstrap-verification.md)。以下历史记录不代表该实现仍停留于提案。
 
-2026-11-11 Cloud 验证补充：account_identity_keys 的 authorization 列名在 PostgreSQL 17.11 导致 001 语法错误并整体回滚。计划的非保留字字段为 authorization_proof，表示公开授权证明，长度约束保持 1–16384 字节；因持久化环境应用记录尚未确认，本次未实施改名，当前 Schema 尚未创建。23 表/后续约束及权限未获运行验证，见 [Cloud 报告](cloud-bootstrap-verification.md)。
+## 原数据规格记录（历史快照）
 
 2026-11-11。初始DDL位于[001](../migrations/001-initial.sql)，运行权限位于[002](../migrations/002-runtime-permissions.sql)，增量变更为[003](../migrations/003-route-version-and-delivery.sql)与[004](../migrations/004-invitation-idempotency.sql)，**全部未执行，001/002保持历史原样**。表名以SQL为准：研究中的group_messages落为`messages`；没有MLS私有Group State表。设计依据包括[PostgreSQL约束](https://www.postgresql.org/docs/18/ddl-constraints.html)与[行锁](https://www.postgresql.org/docs/18/explicit-locking.html)，数据库能力不证明应用授权正确。
 

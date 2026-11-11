@@ -1,5 +1,7 @@
 # 自主通信架构
 
+Cloud 启动兼容更新：新增离线 scripts/migrate.mjs（inspect/plan/status/apply），由普通 owner 在启动之外执行固定摘要迁移并持 advisory lock；应用仍仅连接 echo_native_api，绝不启动时迁移。新基线/006 与 owner-only echo_meta 不增加服务或认证系统；未知历史库禁止自动接管。见权威 [迁移说明](../migrations/README.md) 和 [运行证据](cloud-bootstrap-verification.md)。MLS 与生产准入边界不变。
+
 2026-11-11。本文是整体目标设计；当前已有第一/二阶段基础和第三阶段静态收敛增量，实际范围见[实施计划](native-implementation-plan.md)。标准事实与候选证据集中在[密码学研究](native-cryptography.md)及[来源](research-sources.md)。条件决策见[决策表](decisions.md)，不把设计中的未接通流程记作实现。
 
 ## 系统边界

@@ -1,0 +1,50 @@
+{
+  "baseline_id": "echo-native-v1",
+  "postgres_major_min": 17,
+  "postgres_major_max": 17,
+  "source": {
+    "path": "migrations/001-initial.sql",
+    "sha256": "bc404f56cf0658c138c2177a1d277a74ca4292d234a4269aba6c51fde5fb96e6"
+  },
+  "differences": [
+    "Rename authorization to authorization_proof and explicitly name its length CHECK; no other schema changes."
+  ],
+  "migrations": [
+    {
+      "version": "001",
+      "migration_name": "echo-native-v1",
+      "path": "migrations/baselines/echo-native-v1/001-initial.sql",
+      "sha256": "22afb6fd24d654824f0021b77ba6ce5ec3efbffcac35647ba8e0bf46f011a2e8"
+    },
+    {
+      "version": "002",
+      "migration_name": "002-runtime-permissions",
+      "path": "migrations/002-runtime-permissions.sql",
+      "sha256": "8d94e1f7e4eca7814d7bd145978c73d098cfa8d971feeeabf0fa14f1ae076962"
+    },
+    {
+      "version": "003",
+      "migration_name": "003-route-version-and-delivery",
+      "path": "migrations/003-route-version-and-delivery.sql",
+      "sha256": "8c4bf81e53fa51af3c891a5530388b75334d0e5a1dc6394b024e9c0a2fef1ccf"
+    },
+    {
+      "version": "004",
+      "migration_name": "004-invitation-idempotency",
+      "path": "migrations/004-invitation-idempotency.sql",
+      "sha256": "5f79462433d0d182c331767b599f3187e709cf993120945089f1632a422008bb"
+    },
+    {
+      "version": "005",
+      "migration_name": "005-admin-lifecycle",
+      "path": "migrations/005-admin-lifecycle.sql",
+      "sha256": "ccb640eb1f7e5c6b1fb740b6f6c2fe1d9291899fc1f306ac90ed3cbb54c0d65e"
+    },
+    {
+      "version": "006",
+      "migration_name": "006-authorization-proof",
+      "path": "migrations/006-authorization-proof.sql",
+      "sha256": "ba2faca6bf545b5ba1002d82d178ac4ab5092e2207d9305589f9b825793ab999"
+    }
+  ]
+}

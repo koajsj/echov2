@@ -1,98 +1,107 @@
-# Cloud 启动阻塞修复验证
+# Cloud 启动与迁移兼容验证
 
-2026-11-11，基线 `26626711139c97cd57bb041200c3657a4c4373e6`，分支 `codex/fix-cloud-bootstrap-lint`。本报告补充此前静态报告；仅在 Codex Cloud 工作，未连接生产 VPS/数据库，未修改旧 echo-v2。整体 **PARTIAL**，等待历史迁移应用情况核查；MLS 等安全门禁不变，不增加第四阶段。
+2026-11-11，Cloud 分支 `codex/fix-cloud-bootstrap-lint`，main 基线 `26626711139c97cd57bb041200c3657a4c4373e6`，本轮起点 `023d93a29cabd9ef6cb941f9f514f43d3438aa35`。本报告是当前运行证据；技术操作唯一来源为 [迁移说明](../migrations/README.md)。先前调查及失败记录保留在 Git 历史中。
 
-## 修复范围
+**FIXED/PASS**：新库基线、旧库 006、轻量执行器、版本/摘要记录、两路径收敛、合成数据保留、最小权限和真实 HTTP 认证。**UNKNOWN/NEEDS_RUNTIME_VERIFICATION**：其他持久化环境是否执行过原始/手工变体迁移，仍无完整证据；本次不自动 adopt。Cloud 临时成功不能证明未知历史安全。MLS、信任设备准入、加密聊天和生产部署继续 **BLOCKED**，没有新增第四阶段。
 
-- **FIXED**：`useApiQuery` 删除 Effect 内同步 loading 更新，request key 不匹配时派生空数据/loading；保留 AbortController、取消、sessionId/revision 依赖、异步错误和 aborted 检查。旧请求不得覆盖新结果。
-- **FIXED**：`DownloadFile` 改为可键盘操作的 HeroUI secondary Button，用户点击时创建临时链接与 Blob URL，设置文件名、触发下载，在 finally 移除链接并通过下一任务 revoke。每次点击独立释放，不在渲染、Effect 或 useMemo 创建 URL。CsvExport/MetadataArchivePanel 的 props 无变化。
-- **BLOCKED**：001 中 `account_identity_keys.authorization` 是 PostgreSQL 保留字，未加引号导致语法错误（SQLSTATE 42601）。全仓库检索仅发现该列定义及长度约束；合法 `CREATE SCHEMA echo AUTHORIZATION echo_native_owner` 和 HTTP authorization 日志脱敏无需变更。
-- 用户对其他持久化环境是否成功应用旧迁移答复“不确定，需要先核查”。因此本次**未修改历史迁移**，不能宣称已确认首次成功部署前。待确认从未应用后，才可将字段及约束改为 `authorization_proof`；若已有成功应用环境，先制定兼容迁移方案。
+## 001–005 字节保护
 
-## PostgreSQL 实际结果
+执行前保存 SHA-256，执行后逐份核对；与 main 的 Git 差异也为零。原始 001 保留未加引号的 authorization，包括此前 PostgreSQL 17.11 语法错误、退出 3 和事务回滚事实；没有把它称为新库成功基线。
 
-Cloud 隔离 PostgreSQL 17.11，数据库 echo_native。DDL 使用 `SET ROLE echo_native_owner`，每次 psql 带 `-X -v ON_ERROR_STOP=1`。应用账号 echo_native_api 为普通 LOGIN，owner 为 NOLOGIN；两者均无 superuser/CREATEDB/CREATEROLE/BYPASSRLS。密码仅在 Cloud 受保护配置中，不纳入 Git。
+| 历史文件                           | 执行前与执行后 SHA-256                                             | 比对       |
+| ---------------------------------- | ------------------------------------------------------------------ | ---------- |
+| 001-initial.sql                    | `bc404f56cf0658c138c2177a1d277a74ca4292d234a4269aba6c51fde5fb96e6` | PASS，相同 |
+| 002-runtime-permissions.sql        | `8d94e1f7e4eca7814d7bd145978c73d098cfa8d971feeeabf0fa14f1ae076962` | PASS，相同 |
+| 003-route-version-and-delivery.sql | `8c4bf81e53fa51af3c891a5530388b75334d0e5a1dc6394b024e9c0a2fef1ccf` | PASS，相同 |
+| 004-invitation-idempotency.sql     | `5f79462433d0d182c331767b599f3187e709cf993120945089f1632a422008bb` | PASS，相同 |
+| 005-admin-lifecycle.sql            | `ccb640eb1f7e5c6b1fb740b6f6c2fe1d9291899fc1f306ac90ed3cbb54c0d65e` | PASS，相同 |
 
-| 迁移                               | 实际退出码 | 状态                                                          |
-| ---------------------------------- | ---------- | ------------------------------------------------------------- |
-| 001-initial.sql                    | 3          | BLOCKED：第 62 行 authorization，报错定位第 65 行表定义结束处 |
-| 002-runtime-permissions.sql        | 未执行     | NOT_RUN，遵守首错停止                                         |
-| 003-route-version-and-delivery.sql | 未执行     | NOT_RUN                                                       |
-| 004-invitation-idempotency.sql     | 未执行     | NOT_RUN                                                       |
-| 005-admin-lifecycle.sql            | 未执行     | NOT_RUN                                                       |
+## 新工件与执行器
 
-**PASS（回滚）**：失败连接退出后另开连接查询 pg_namespace，echo schema 数量为 0；本次事务创建的表/函数等均随 schema 回滚。未跳过迁移或搭建替代 Schema。
+新基线：`migrations/baselines/echo-native-v1/001-initial.sql`，baseline_id 为 echo-native-v1；manifest 固定文件路径、摘要、PostgreSQL major 17 验证范围、来源摘要和差异。逐字比较确认只修改目标列和其 CHECK 显式名称；合法 CREATE SCHEMA AUTHORIZATION 未变。
 
-**PARTIAL（权限）**：角色属性、数据库 owner、撤销 PUBLIC 数据库权限已检查。由于 Schema 不存在，23 张基础表、增量结构、外键、唯一约束、索引、触发器、运行时 DML 授权均 **NOT_RUN**，不能宣称 API 最小权限完整通过。
+- 新基线 SHA-256：`22afb6fd24d654824f0021b77ba6ce5ec3efbffcac35647ba8e0bf46f011a2e8`。
+- 006 SHA-256：`ba2faca6bf545b5ba1002d82d178ac4ab5092e2207d9305589f9b825793ab999`。
+- 合成旧夹具 SHA-256：`0eaf99e9235e4330984eb3261392c18638f13dc1de407039a0b4834b25d6e943`。夹具只给旧列定义及 CHECK 引用加引号，使用 synthetic-legacy-fixture 收据，未修改原文件。
 
-## 工程命令
+006 完整 SQL 见 [006-authorization-proof.sql](../migrations/006-authorization-proof.sql)：owner 校验、事务/表锁、明确基线收据、双列/缺列/未知新列拒绝，检查 bytea、NOT NULL、无意外默认/列 ACL、唯一精确长度 CHECK、约束依赖、列相关索引/视图依赖和函数文本引用。只执行 RENAME COLUMN 与 RENAME CONSTRAINT，不复制/删除数据；已明确 canonical 基线或 006 完成收据的新列只校验。两路径统一 account_identity_keys_authorization_proof_check。
 
-在 `/workspace/echov2` 使用 Node 24.22.1、npm 11.9.0 和仓库精确依赖运行，无依赖声明或锁文件变更。
+`scripts/migrate.mjs` 提供 inspect/plan/status/apply 和显式 --manifest；空库检查、普通 owner 连接、服务端版本范围、全部文件摘要、既有记录顺序/名称/摘要、元数据所有权/ACL、目标库名确认及数据库 advisory lock。应用启动完全不调用执行器。没有新依赖或迁移框架。
 
-| 命令                 | 退出码 | 结果                                                                   |
-| -------------------- | ------ | ---------------------------------------------------------------------- |
-| npm run typecheck    | 0      | PASS，client/server/tools                                              |
-| npm run lint         | 0      | PASS，无禁用规则/忽略文件                                              |
-| npm run format:check | 0      | PASS                                                                   |
-| npm run check:ast    | 0      | PASS，66 TS/TSX 文件、234 本地绑定                                     |
-| npm run check:source | 2      | PARTIAL，111 文件、39 解析、30 JSX 跳过、零失败，退出 2 为脚本覆盖限制 |
-| npm run build:client | 0      | PASS                                                                   |
-| npm run build:server | 0      | PASS                                                                   |
+独立 echo_meta.schema_migrations：唯一 version、migration_name、sha256、status、started_at、applied_at、postgres_version、error_code。SQL 前持久化 started；确认 SQL 错误后回滚并记 failed；SQL 成功提交后才写 applied。提交确认丢失或记账失败保留 started；所有 failed/started 拒绝自动续跑。未知历史无记录库直接拒绝，人工核验/授权接管不由本工具自动完成。元数据只授权 owner，API/PUBLIC 无访问权。
 
-## 浏览器与真实工作流
+## 数据库与 SQL 结果
 
-使用 Cloud Chromium/Playwright，未伪造注册或数据库响应。
+使用新建隔离 PostgreSQL **17.11** 集群、工作区 Unix socket/55432。Cloud 管理连接只创建普通角色/临时库；所有业务 Schema DDL 和迁移元数据 DDL 由无超级权限的 echo_native_owner 执行。API 实际运行账号为 echo_native_api，连接 loopback echo_native；没有访问生产 VPS、生产数据库或真实用户数据。最终独立路径验收库为 echo_release_new、echo_release_legacy（此前 echo_accept_new/echo_accept_legacy 也通过）。
 
-- **PASS**：真实登录页面渲染、页面切换；页面 JavaScript 错误为零。真实注册模式 API 返回 500，页面显示模式不可用。
-- **PASS（组件级）**：挂载真实 CsvExport/DownloadFile，使用合成数据，连续三次下载 `synthetic.csv`，核对文件内容和公式转义；键盘 Enter 下载 `echo-service-metadata.echo`，核对 ECHOMD01 文件头，并用实际 WebCrypto seal/open 验证合成元数据往返。四次创建、四次 revoke，无遗留 URL。测试未伪造已登录页面。
-- **PASS（Hook 回归）**：使用可控 Promise 检查 sessionId 切换立即隐藏旧数据、revision 重新请求、AbortSignal 取消、迟到响应不覆盖新结果、真实错误状态。该组件级测试不是服务端工作流证据。
-- **BLOCKED**：注册成功、operationId 重试/摘要冲突、用户名唯一、登录、会话读取、退出、关闭注册拒绝行为，以及登录后的 MetadataArchivePanel 和管理员 CSV 完整流程；须先解除迁移核查阻碍。没有将健康接口返回 alive 视为注册通过。
-- **NEEDS_RUNTIME_VERIFICATION**：五份迁移成功后的上述数据库和浏览器完整流程，及既有文档列出的真实 MLS/跨设备/恢复/容量准入。
+| 步骤   | 新库路径                           | synthetic legacy fixture 路径        |
+| ------ | ---------------------------------- | ------------------------------------ |
+| 001    | 独立修正版，exit 0                 | 明确标记的带引号夹具，exit 0         |
+| 原 002 | exit 0                             | exit 0                               |
+| 原 003 | exit 0                             | exit 0                               |
+| 原 004 | exit 0                             | exit 0                               |
+| 原 005 | exit 0                             | exit 0                               |
+| 006    | canonical 结构验证/no-op，exit 0   | 列/约束重命名，exit 0                |
+| 记录   | 001–006 全 applied，原文件摘要匹配 | 001–006 全 applied，001 夹具摘要明确 |
 
-Cloud 复核脚本和详细日志保存在 `/workspace/.cloud-setup/browser/fix-downloads.mjs`、`fix-query.mjs` 及 `/workspace/.cloud-setup/fix-evidence/`；均不包含实际用户数据，不提交 Cloud 临时产物。
+这里 exit 0 是执行器对每份完整 SQL query 成功返回后的记录，Node 回归命令实际退出 0；不是未运行的 psql 命令。每份 SQL 自带事务，服务端错误立即停止，未吞掉任何失败退出码。新/旧初始测试及最终验收库独立，临时集群之外的环境未作成功推断。
 
-## 交付限制
+**PASS**：两库 `pg_dump --schema-only --schema=echo` 逐字一致（仅去除每次随机生成的 dump restrict/unrestrict 令牌行）；并比较系统目录的表/字段/类型/默认/NOT NULL、owner、关系和列 ACL。dump 覆盖 PK/FK/唯一/CHECK/索引/触发器/函数/序列与授权；元数据不在 echo Schema，按要求排除。
 
-已检查 Git 跟踪差异、迁移原字节、依赖原字节及敏感文件边界。保留全部提交，不覆盖 main，不 force push。GitHub API `api.github.com` 当前被 Cloud 代理 CONNECT 403 拒绝；已保存该域名到环境网络配置草稿，须在环境设置保存应用后才能重试创建 PR。草稿保存不代表网络已生效或环境已发布。分支推送与 PR 的实际结果以交付回复为准。
+最终 echo：23 张表、23 主键、33 外键、16 唯一约束、60 CHECK、55 索引、3 非内部触发器。所有对象通过实际 PostgreSQL 解析/DDL；历史原始 001 仍是明确记录的预期语法失败，不能声称所有历史 SQL 可直接运行。
 
-代码修复提交 `2220d92756103db7d41f7033b5064f00c2de41d2` 已成功推送并核对远端分支。PR 尚未创建，原因是上述 GitHub API 网络阻碍；不是已有 PR 链接遗漏。工作区未提交凭据、Cloud 数据库、缓存或临时测试文件。
+**PASS（数据保留）**：006 前插入合成账户和 identity key，证明值 `000102ff`、4 字节在重命名后不变；公钥、账号引用和其余 Schema 未替换。规范化 Schema 完全收敛。
 
-## 迁移历史调查补充（2026-11-11）
+## 安全回归与权限
 
-本轮起点为修复分支 `011d4cd465af40dde181338022afec9c8f992697`。用户再次确认无法提供环境清单或迁移应用情况，答复“我也不知道”。调查结论为 **UNKNOWN**，不是“未部署”。按本轮情况 C，先提出兼容方案，**不执行迁移修复、不改写历史 SQL**。
+可复核工具：`scripts/check-migrations.mjs`，Cloud 受确认的临时目标与 socket/端口才运行。每次使用新空的 legacy 目标；不覆盖已有库。负例数据库是脚本自己创建的随机临时库，finally 仅删除这些库。
 
-### 已检查证据及其边界
+**PASS**：并发 advisory lock 拒绝、磁盘文件摘要和既有收据摘要不符拒绝、无记录已有 Schema、伪系统前缀 Schema、public 函数/类型拒绝、已完成空计划不重复执行；真实 SQL 失败回滚/failed 收据阻止重试；模拟 SQL 已 COMMIT 而记账 UPDATE 失败时保留 started 并拒绝重跑。003 在非零历史计数时失败，保留原计数，不执行后续文件。
 
-| 来源              | 实际发现                                                                                  | 能证明的范围                                                |
-| ----------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Git 完整本地历史  | 非浅克隆；001 仅在 `6b5900e3cac7700e8e1c6ddcdbaf9dbe1da213b3` 首次加入，此后无修改        | 当前可见提交内的文件历史；不能证明无人从其他副本手工执行    |
-| 远端 refs         | main 仍为 `26626711139c97cd57bb041200c3657a4c4373e6`；仅 main、修复分支，无远端 tag       | 当前可见 refs；不是所有历史部署的证明                       |
-| 全部迁移及 README | 001–005 是事务 SQL；无执行版本表或迁移 runner；文档记载当时未执行                         | 文档陈述及源文件，不是持久化环境的执行收据                  |
-| 部署与应用入口    | systemd 仅启动 Node；preflight 仅检查程序；provision-admin 不执行迁移；应用不自动迁移     | 没有发现仓库内自动迁移路径；不排除人工执行                  |
-| Cloud 配置        | 无声明的数据库秘密或运行变量；仅保留本会话创建的受保护本地配置，未读取或输出其值          | 当前 Cloud 配置，无外部数据库资产清单                       |
-| Cloud 实例数据库  | 仅 postgres、echo_native 两个非模板库，两者均无用户表；echo schema 不存在，无迁移版本记录 | 仅此临时实例；旧失败日志及原先退出码 3 保留，不外推其他环境 |
-| 其他持久化环境    | 用户无法提供清单或执行凭据；依任务边界未连接任何 VPS/外部数据库                           | **UNKNOWN**，缺少完整环境清单、应用版本和可审查执行记录     |
+**PASS**：006 七类负例均失败并留下 failed 收据：双列、缺列、错误类型、缺长度 CHECK、意外列 ACL、依赖视图、无相符 canonical/006 完成收据的新列。失败未创建替代表或丢弃数据。
 
-001 的 SHA-256 为 `bc404f56cf0658c138c2177a1d277a74ca4292d234a4269aba6c51fde5fb96e6`，本轮仍保持原字节。语法错误只能说明本文件在已测试 PostgreSQL 17.11 上失败；不能排除其他环境执行了手工加引号或其他本地变体。后续发现“成功执行”记录时，必须核对实际文件摘要和 schema，不能把它直接等同于原始文件。
+**PASS**：owner/API 均无 SUPERUSER/CREATEDB/CREATEROLE/BYPASSRLS，API 不是 owner 成员，无数据库 TEMP 授权。实际以 API 连接验证拒绝：创建 Schema/角色，读取或更新迁移表，写 identity key、改聊天密文、直接将删除记录完成；对有合成记录的设备激活/群组激活，分别由实际触发器拒绝。业务注册 INSERT 仍允许。Schema dump 比较同时覆盖所有表/序列/函数/Schema/列 ACL。测试没有扩大 API 权限。
 
-### 情况 C 的兼容计划（提案，未实施）
+**NOT_AVAILABLE（MLS 私钥存储）**：Schema 本就没有 MLS 私钥列或私有 Group State 表；读取 private_key 被 PostgreSQL 拒绝为列不存在，不能把这个结果冒充已实现 MLS 的密钥访问控制认证。
 
-共同目标是 `echo.account_identity_keys.authorization_proof bytea NOT NULL`，长度约束 1–16384 字节，保留既有 23 张基础表、增量结构、所有权、索引、外键、触发器和最小权限。合法的 `CREATE SCHEMA ... AUTHORIZATION` 保留。任何异常、未知列类型或版本差异均停止，不删除数据或自动猜测。
+## 真实 HTTP 认证
 
-1. **先建立可审查的环境分类与版本证据**：由获授权运维提供每个持久化环境的标识、PostgreSQL 版本、001 实际文件摘要/变体、已执行版本、相关列/约束及权限的只读目录查询结果。不要提供密码或业务数据。无版本表时依实际结构和执行收据核验，不能单凭某一列推断 002–005 全部完成。对未知或部分完成的环境先冻结自动迁移。兼容方案需经用户明确选择/核准后才实现。
-2. **新环境初始化路径（需要核准的新工件）**：原 001 保持原字节归档。新增单独命名、版本及校验和明确的修正版初始基线，仅修正字段及长度约束为 authorization_proof，明确不是原 001 的成功执行；随后严格执行原 002→003→004→005。记录初始基线变体和后续每份文件摘要及退出码。禁止原 001 失败后静默跳过或偷偷过滤替换输入。空库预检失败则停止，不能将已有 schema 当空库重建。若用户最终确认全部持久化环境均未应用且选择情况 A，则可改为审查原 001 的首次成功部署前修正，无需并行基线。
-3. **旧环境升级路径（需要核准的向前迁移）**：保留 001–005。在已确认的旧基线库中，先核对实际版本，只补未执行的 002–005；尤其 003 遇已有消息/inbox/非零计数时会主动中止，必须另审查历史投递转换，不能绕过。之后新增向前迁移（候选编号 006，尚未创建），在 owner 事务中锁定 account_identity_keys，校验列类型、NOT NULL、长度约束及依赖，使用带引号的旧列名进行 RENAME COLUMN "authorization" TO authorization_proof。列重命名保留数据和依赖绑定，仍需对约束、视图/函数文本、列级 ACL 和客户端引用逐一验证。仅新列存在时验证完整目标结构并记录 no-op；双列并存、两列皆无或其他结构偏差则拒绝。禁止新建空表覆盖旧表。
-4. **Schema 收敛证明**：在两个独立临时库分别走经核准的新库路径、旧库夹具升级路径，比较规范化 pg_dump --schema-only 及列/约束/索引/触发器/owner/ACL 目录结果；忽略仅属于版本登记的预期差异。旧库夹具的历史文件变体必须显式命名并单独记录，不能称原始 001 通过。以 owner 执行 DDL，普通 echo_native_api 执行业务及拒绝权限测试，使用合成数据验证行和引用保持不变。
-5. **运行验收**：迁移逐份 ON_ERROR_STOP、记录退出码并首错停止；成功后再验证注册/operationId 重试/摘要冲突、邀请消费和幂等、用户名唯一、登录/Session/重新认证/退出及注册关闭。当前这些步骤均 **NOT_RUN/BLOCKED**，没有冒充运行成功的固定响应。失败时事务回滚，保留执行收据；不对历史表执行破坏性“回滚修复”。
+`scripts/check-auth-workflow.mjs` 使用实际 Fastify TCP HTTP 和真实 PostgreSQL，不用 inject/Mock；真实部署拓扑的 TLS 由 Caddy 提供，内部 API 请求通过 loopback，Origin 固定为配置的 HTTPS origin。合成密码随机生成且不打印，限流规则保持原样；独立 RFC 5737 源 IP 仅用于隔离测试场景。实际命令退出 0。
 
-该计划没有自行选定覆盖方案，也不声称仅添加 006 就能让无法解析的原 001 在新库成功。只有向前迁移而没有新库基线是不完整方案；只有修改 001 而无旧库升级方案也无法保证混合环境收敛。
+| 行为                    | HTTP                   | 数据库核对                                                |
+| ----------------------- | ---------------------- | --------------------------------------------------------- |
+| 注册模式读取/开放后注册 | 200/201                | 随机 operationId 对应一行                                 |
+| 相同 operationId 重试   | 201                    | 同一 account id，不新增行                                 |
+| 不同摘要冲突            | 409 OPERATION_CONFLICT | 原记录保留                                                |
+| 用户名唯一              | 409                    | 唯一约束拒绝                                              |
+| 邀请消费/同操作重复     | 201/201                | uses 仅增至 1                                             |
+| 邀请耗尽再使用          | 403                    | 不额外消费                                                |
+| 登录/Session            | 200/200                | 真正 session 行与 account id 相符；Secure Cookie 真实生成 |
+| 重新认证                | 200                    | reauth-success 和 login-success 事件各一条                |
+| 修改用户名              | 200                    | 更新同一 UUID 记录                                        |
+| 登出/旧 Session         | 204/401                | session 行删除                                            |
+| 注册关闭及拒绝新注册    | 200/403                | 对应 operationId 无用户行                                 |
 
-### Cloud 网络与 PR 再核查
+早期认证测试曾误把 `{account: ...}` 响应读作顶层 username，修正测试断言后完整重跑通过，没有修改 API 返回契约。过程中重复启动服务曾因本次已运行的进程占用 3001 失败；端口归属、当前配置和真实功能请求已确认，复用同一本任务服务，不当作数据库缺陷。
 
-配置草稿 revision 4 包含自定义 `api.github.com`。当前实例仍使用原 source config version，spec/observed revision 均为 1，observations_current=true、策略 enforced，但实际 allowed/effective hosts 均未含该域名；新的 HTTPS CONNECT 请求被代理拒绝 403（curl 退出 56）。因此仅能确认**草稿已保存、当前实例未应用**；现有工具证据不足以独立确认用户是否已在其他版本发布，不能声称发布成功。
+## 工程检查与边界
 
-需要用户在环境设置审核并 Save draft 应用 `api.github.com`，再按产品流程 Publish。保存/发布后需刷新状态并用新连接重试；草稿写入本身不改变当前网络。未要求新 GitHub token：Git HTTPS 读写仍正常，但不等于 GitHub API 已获网络或凭据访问。
+| 命令                 | 实际退出码 | 结果                                            |
+| -------------------- | ---------- | ----------------------------------------------- |
+| npm run typecheck    | 0          | PASS                                            |
+| npm run lint         | 0          | PASS                                            |
+| npm run format:check | 0          | PASS                                            |
+| npm run check:ast    | 0          | PASS                                            |
+| npm run check:source | 2          | PARTIAL，117 文件、42 解析、30 JSX 跳过、零失败 |
+| npm run build:client | 0          | PASS                                            |
+| npm run build:server | 0          | PASS                                            |
 
-PR 当前 **BLOCKED/未创建**。完整交付要求包含迁移修复，而迁移策略尚未核准，因此当前分支先保留 React 修复和调查报告；即使网络恢复，也不能将它描述为完整数据库修复 PR。后续按选定路径完成验证后再创建目标 main 的 PR，不自动合并。
+未禁用检查、未更改依赖声明/锁文件/MLS 门禁。历史五份 SHA-256 再次一致；原字段在历史 SQL/合成夹具中的引用有意保留，其他源码无业务列名使用需要替换。React 修复保持已有提交，先前下载/Hook 浏览器回归证据仍只覆盖其组件范围；本轮新增认证验收是实际 HTTP/DB，未额外宣称生产浏览器、跨设备、容量或恢复已通过。
 
-本轮报告检查：Prettier 全仓检查通过（退出 0）；check:source 退出 2、PARTIAL，111 文件、67 本地文档引用、零失败；git diff --check 通过。未改应用代码或依赖，无需重复此前已完成的构建/类型/Hook 浏览器检查；数据库工作流保持未执行。
+## GitHub 与待审查范围
+
+新运行环境 source config version 已更新，observations_current=true，api.github.com 在当前 enforced effective hosts 中；`gh pr list` 实际成功，草稿与运行策略不再混淆。本轮不重新应用旧草稿，也不发布环境。main 实际仍为上述基线；保持原修复分支和全部提交，不 force push，不合并/部署。
+
+提交和 PR 将在完整 Diff/敏感信息审查后登记；此处尚不表示 PR 已创建。
+
+未知持久化环境依然需要独立资产清单、实际 SQL 变体/版本/结构/执行收据和接管授权；本工具拒绝自动 adopt。旧投递历史触发 003 时需要独立转换审查。PostgreSQL 其他 major、真实 MLS、生产硬件容量、备份恢复及跨设备安全仍 NEEDS_RUNTIME_VERIFICATION/BLOCKED，不能因为 Cloud 注册成功提前解除门禁。
