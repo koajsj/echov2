@@ -102,6 +102,6 @@
 
 新运行环境 source config version 已更新，observations_current=true，api.github.com 在当前 enforced effective hosts 中；`gh pr list` 实际成功，草稿与运行策略不再混淆。本轮不重新应用旧草稿，也不发布环境。main 实际仍为上述基线；保持原修复分支和全部提交，不 force push，不合并/部署。
 
-提交和 PR 将在完整 Diff/敏感信息审查后登记；此处尚不表示 PR 已创建。
+实现提交 `4b7d78a9bedc852fbde7e654970554f52c6434a6` 已通过正常 Git HTTPS 推送。已创建 [PR #1](https://github.com/koajsj/echov2/pull/1)，目标 main，状态 OPEN，包含先前 React 修复、本轮兼容迁移和验证报告；未合并或部署。此后仅追加交付记录提交。
 
 未知持久化环境依然需要独立资产清单、实际 SQL 变体/版本/结构/执行收据和接管授权；本工具拒绝自动 adopt。旧投递历史触发 003 时需要独立转换审查。PostgreSQL 其他 major、真实 MLS、生产硬件容量、备份恢复及跨设备安全仍 NEEDS_RUNTIME_VERIFICATION/BLOCKED，不能因为 Cloud 注册成功提前解除门禁。
