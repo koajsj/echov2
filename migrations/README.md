@@ -1,5 +1,7 @@
 # PostgreSQL 迁移边界
 
+历史调查结论：**UNKNOWN**。用户无法确认持久化环境清单；Git/部署脚本及 Cloud 空库不能证明其他环境未应用。001–005 保持原字节，暂不执行后续迁移。情况 C 的新库版本化修正版基线、旧库向前重命名升级及 Schema 收敛验证仅为待核准提案，见 [迁移历史调查与兼容计划](../docs/cloud-bootstrap-verification.md#迁移历史调查补充2026-11-11)。不要单独增加 006 后宣称原始 001 能初始化新库。
+
 2026-11-11 Cloud 验证：001 在 PostgreSQL 17.11 因 account_identity_keys.authorization 为未加引号保留字失败（psql ON_ERROR_STOP 退出 3），事务完整回滚，echo schema 不存在；002–005 未执行。其他持久化环境是否曾成功应用仍待用户核查，因此历史迁移保持原字节。确认从未成功应用后，拟作首次成功部署前修正：字段及长度约束改为 authorization_proof；若已有成功应用环境，须先制定兼容方案。不得替换合法 CREATE SCHEMA ... AUTHORIZATION 语法。详情见 [Cloud 验证](../docs/cloud-bootstrap-verification.md)。
 
 本轮只编写，未执行SQL，也未连接数据库。`001-initial.sql`后接`002-runtime-permissions.sql`，必须先由运维创建独立数据库`echo_native`及`echo_native_owner`/`echo_native_api`；owner负责DDL，API不授超级用户、建库、建角色、BYPASSRLS或schema所有权。PUBLIC对数据库的CONNECT/TEMP及public schema CREATE也应由运维审查撤销，只允许本机访问。
