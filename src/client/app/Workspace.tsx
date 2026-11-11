@@ -1,4 +1,5 @@
 import type { SessionView } from "../../shared/contracts";
+import { SessionPanel } from "../features/devices/SessionPanel";
 import { AccountPage } from "../features/account/AccountPage";
 import { PrivacyPage } from "../features/account/PrivacyPage";
 import { DevicesPage } from "../features/devices/DevicesPage";
@@ -42,6 +43,8 @@ export function Workspace({
           <AdminRecordsPage kind="security" sessionId={sessionId} />
         ) : page === "admin/audit" ? (
           <AdminRecordsPage kind="audit" sessionId={sessionId} />
+        ) : page === "admin/deletions" ? (
+          <AdminRecordsPage kind="deletions" sessionId={sessionId} />
         ) : page === "admin/backups" ? (
           <AdminRecordsPage kind="backups" sessionId={sessionId} />
         ) : page === "admin/analytics" ? (
@@ -57,7 +60,7 @@ export function Workspace({
             </header>
           </section>
         ) : page === "admin/settings" ? (
-          <AdminSettingsPage />
+          <AdminSettingsPage sessionId={sessionId} />
         ) : (
           <p>页面不存在。</p>
         )}
@@ -67,6 +70,8 @@ export function Workspace({
     return (
       <>
         <AccountPage session={session} onChanged={onChanged} />
+        <ReauthenticationForm audience="user" sessionId={sessionId} />
+        <SessionPanel sessionId={sessionId} />
         <section className="panel">
           <h2>注销账号与导出</h2>
           <p>
@@ -84,7 +89,7 @@ export function Workspace({
   if (page === "contacts") return <ContactsPage sessionId={sessionId} />;
   if (page === "saved") return <SavedPage />;
   if (page === "trash") return <TrashPage sessionId={sessionId} />;
-  if (page === "data") return <DataPage sessionId={sessionId} />;
+  if (page === "data") return <DataPage session={session} />;
   if (page === "conversations") return <ConversationsPage session={session} />;
   return (
     <section>

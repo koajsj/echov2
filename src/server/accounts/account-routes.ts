@@ -7,6 +7,8 @@ import type { SessionService } from "./sessions.js";
 import type { DeviceService } from "../devices/device-service.js";
 import type { IdentityService } from "../identity/identity-service.js";
 import type { ConnectionHub } from "../delivery/connection-hub.js";
+import { transaction } from "../storage/database.js";
+import { lockUserSession } from "./session-access.js";
 import { HttpError } from "../api/http-error.js";
 const username = {
   type: "string",
@@ -99,7 +101,7 @@ export function accountRoutes(
     async (request, reply) => {
       sessions.assertOrigin(request);
       const account = await accounts.authenticate(
-        request.body.username,
+        { username: request.body.username },
         request.body.password,
         request.ip,
       );
@@ -200,16 +202,19 @@ export function accountRoutes(
       sessions.assertCsrf(request, request.body.audience);
       const current = await sessions.require(request, request.body.audience);
       await accounts.authenticate(
-        current.account.username,
+        { userId: current.account.id },
         request.body.password,
         request.ip,
       );
-      const updated = await pool.query(
-        "UPDATE echo.sessions SET reauthenticated_at=now() WHERE id=$1 AND expires_at>now() RETURNING id",
-        [current.id],
-      );
-      if (!updated.rowCount)
-        throw new HttpError(401, "SESSION_EXPIRED", "会话已失效。");
+      await transaction(pool, async (db) => {
+        await lockUserSession(db, current.account.id, current.id, {
+          audience: current.audience,
+        });
+        await db.query(
+          "UPDATE echo.sessions SET reauthenticated_at=clock_timestamp() WHERE id=$1",
+          [current.id],
+        );
+      });
       return {
         reauthenticated: true,
       };
@@ -283,12 +288,22 @@ export function accountRoutes(
       };
     },
   );
-  app.get("/v1/devices", async (request) => {
-    const current = await sessions.require(request);
-    return {
-      items: await devices.list(current.account.id),
-    };
-  });
+  app.get<{ Querystring: { after?: string } }>(
+    "/v1/devices",
+    {
+      schema: {
+        querystring: {
+          type: "object",
+          additionalProperties: false,
+          properties: { after: uuidSchema },
+        },
+      },
+    },
+    async (request) => {
+      const current = await sessions.require(request);
+      return devices.list(current.account.id, request.query.after ?? null);
+    },
+  );
   app.post<{
     Body: {
       label: string;
@@ -349,11 +364,7 @@ export function accountRoutes(
     async (request) => {
       sessions.assertCsrf(request, "user");
       const current = await sessions.require(request, "user", true);
-      const ids = await devices.revoke(
-        current.account.id,
-        current.id,
-        request.params.id,
-      );
+      const ids = await devices.revoke(current, request.params.id);
       for (const id of ids) hub.closeSession(id);
       hub.notify(current.account.id);
       return {

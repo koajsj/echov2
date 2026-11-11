@@ -92,6 +92,7 @@ export const adminNavigation: NavigationItem[] = [
     label: "注册与邀请",
     symbol: "key",
   },
+  { id: "admin/deletions", label: "删除状态", symbol: "archive" },
   {
     id: "admin/backups",
     label: "备份管理",

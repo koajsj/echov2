@@ -102,7 +102,7 @@ export class AccountService {
     };
   }
   async authenticate(
-    username: string,
+    identity: { username: string } | { userId: string },
     password: string,
     ip: string,
   ): Promise<Account> {
@@ -113,8 +113,14 @@ export class AccountService {
       status: string;
       password_hash: string;
     }>(
-      "SELECT id,username,version::text,status,password_hash FROM echo.users WHERE username_normalized=$1",
-      [normalizeUsername(username)],
+      "userId" in identity
+        ? "SELECT id,username,version::text,status,password_hash FROM echo.users WHERE id=$1"
+        : "SELECT id,username,version::text,status,password_hash FROM echo.users WHERE username_normalized=$1",
+      [
+        "userId" in identity
+          ? identity.userId
+          : normalizeUsername(identity.username),
+      ],
     );
     const user = result.rows[0];
     const matches = await passwordMatches(
@@ -124,7 +130,17 @@ export class AccountService {
     const accepted = !!user && matches && user.status === "active";
     await this.pool.query(
       "INSERT INTO echo.security_events(user_id,kind,ip) VALUES($1,$2,$3)",
-      [user?.id ?? null, accepted ? "login-success" : "login-failure", ip],
+      [
+        user?.id ?? null,
+        "userId" in identity
+          ? accepted
+            ? "reauth-success"
+            : "reauth-failure"
+          : accepted
+            ? "login-success"
+            : "login-failure",
+        ip,
+      ],
     );
     if (!accepted || !user)
       throw new HttpError(

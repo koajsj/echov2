@@ -101,8 +101,8 @@ export function adminReadRoutes(
         // The table/columns/predicate are code constants, never request-controlled SQL.
         const sql =
           kind === "audit"
-            ? "SELECT id::text,actor_user_id,action,target_id,created_at FROM echo.admin_audit_logs WHERE ($1::bigint IS NULL OR id<$1) ORDER BY id DESC LIMIT 51"
-            : `SELECT id::text,user_id,kind,host(ip) AS ip,created_at FROM echo.security_events WHERE ($1::bigint IS NULL OR id<$1) ${kind === "logins" ? "AND kind IN ('login-success','login-failure')" : ""} ORDER BY id DESC LIMIT 51`;
+            ? "SELECT id::text,actor_user_id,action,target_id,event_id::text,created_at FROM echo.admin_audit_logs WHERE ($1::bigint IS NULL OR id<$1) ORDER BY id DESC LIMIT 51"
+            : `SELECT id::text,user_id,kind,host(ip) AS ip,reviewed_at,reviewed_by,created_at FROM echo.security_events WHERE ($1::bigint IS NULL OR id<$1) ${kind === "logins" ? "AND kind IN ('login-success','login-failure','reauth-success','reauth-failure')" : ""} ORDER BY id DESC LIMIT 51`;
         const result = await pool.query(sql, [before]);
         return {
           items: result.rows.slice(0, 50),
@@ -173,6 +173,29 @@ export function adminReadRoutes(
         items: result.rows.slice(0, 50),
         next: result.rows.length > 50 ? result.rows[49].id : null,
         executor: "BLOCKED",
+      };
+    },
+  );
+  app.get<{ Querystring: { before?: string } }>(
+    "/v1/admin/deletions",
+    {
+      schema: {
+        querystring: {
+          type: "object",
+          additionalProperties: false,
+          properties: { before: sequenceSchema },
+        },
+      },
+    },
+    async (request) => {
+      await sessions.require(request, "admin");
+      const result = await pool.query(
+        "SELECT id::text,message_id,reason,state,created_at,completed_at FROM echo.deletion_records WHERE ($1::bigint IS NULL OR id<$1) ORDER BY id DESC LIMIT 51",
+        [request.query.before ? sequence(request.query.before) : null],
+      );
+      return {
+        items: result.rows.slice(0, 50),
+        next: result.rows.length > 50 ? result.rows[49].id : null,
       };
     },
   );

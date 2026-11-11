@@ -8,6 +8,8 @@ export function createDatabase(connectionString: string): Pool {
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000,
     statement_timeout: 10000,
+    lock_timeout: 5000,
+    idle_in_transaction_session_timeout: 15000,
     application_name: "echo-native",
   });
 }

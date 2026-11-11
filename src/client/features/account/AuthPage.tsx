@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Button } from "@heroui/react";
 import type { Audience } from "../../../shared/contracts";
+import { useApiQuery } from "../../app/use-api-query";
+import { ServiceState } from "../../components/ServiceState";
 import { api } from "../../app/api";
 export function AuthPage({
   audience,
@@ -10,6 +12,12 @@ export function AuthPage({
   audience: Audience;
   onAuthenticated: () => void;
 }) {
+  const [revision, setRevision] = useState(0);
+  const registration = useApiQuery<{ mode: string }>(
+    "/v1/registration",
+    revision,
+  );
+  const mode = registration.data?.mode;
   const [register, setRegister] = useState(false);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
@@ -66,7 +74,7 @@ export function AuthPage({
   return (
     <section className="auth-layout">
       <div className="auth-intro">
-        <p className="eyebrow">ECHO NATIVE · 第二阶段</p>
+        <p className="eyebrow">ECHO NATIVE · 第三阶段</p>
         <h1>让交流，回到彼此。</h1>
         <p>独立通信架构。客户端密钥。清晰的信任边界。</p>
         <p className="muted">
@@ -111,17 +119,27 @@ export function AuthPage({
           {register && (
             <label>
               邀请码（按注册模式）
-              <input name="invitation" autoComplete="off" maxLength={128} />
+              <input
+                name="invitation"
+                autoComplete="off"
+                maxLength={128}
+                minLength={32}
+                required={mode === "invite"}
+              />
             </label>
           )}
-          <Button type="submit" isPending={pending}>
+          <Button
+            type="submit"
+            isPending={pending}
+            isDisabled={register && mode !== "open" && mode !== "invite"}
+          >
             {register ? "注册" : "登录"}
           </Button>
         </form>
         {audience === "user" && (
           <Button
             variant="ghost"
-            isDisabled={pending}
+            isDisabled={pending || (!register && mode === "closed")}
             onPress={() => {
               setRegister(!register);
               setMessage("");
@@ -129,6 +147,27 @@ export function AuthPage({
           >
             {register ? "已有账号，返回登录" : "创建新账号"}
           </Button>
+        )}
+        {audience === "user" && (
+          <>
+            <ServiceState {...registration} />
+            <p className="muted">
+              {mode === "open"
+                ? "当前开放注册"
+                : mode === "invite"
+                  ? "当前需要邀请码注册"
+                  : mode === "closed"
+                    ? "当前注册关闭"
+                    : "注册模式未知，不能提交新注册"}
+            </p>
+            <Button
+              variant="ghost"
+              isDisabled={registration.loading || pending}
+              onPress={() => setRevision((v) => v + 1)}
+            >
+              刷新注册模式
+            </Button>
+          </>
         )}
         <p role="status">{message}</p>
       </div>

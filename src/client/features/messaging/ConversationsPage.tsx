@@ -27,7 +27,7 @@ export function ConversationsPage({ session }: { session: SessionView }) {
     <section>
       <header className="page-heading">
         <h1>你的交流空间</h1>
-        <p>客户端持有密钥，服务器只负责必要路由与不透明投递。</p>
+        <p>原生 MLS 准入未完成；当前仅提供受限路由目录，不处理聊天正文。</p>
       </header>
       <ServiceState {...capabilities} />
       <div className="chat-layout">

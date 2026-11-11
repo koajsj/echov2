@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { Button } from "@heroui/react";
 import { api } from "../../app/api";
 import { useApiQuery } from "../../app/use-api-query";
+import { CsvExport } from "../../components/CsvExport";
 import { ServiceState } from "../../components/ServiceState";
 interface Overview {
   registration: {
@@ -109,6 +110,32 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
       setBusy(false);
     }
   }
+  async function revoke(id: string) {
+    if (
+      busy ||
+      !confirm(
+        "撤销此邀请码？已注册账号不受影响，正在注册的事务以数据库锁的提交顺序为准。",
+      )
+    )
+      return;
+    setBusy(true);
+    setMessage("");
+    try {
+      await api(`/v1/admin/invitations/${id}/revoke`, {
+        method: "POST",
+        audience: "admin",
+        sessionId,
+      });
+      setRevision((v) => v + 1);
+      setMessage("邀请码撤销已确认并审计。");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "结果未确认，请刷新核实。",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <section>
       <header className="page-heading">
@@ -205,6 +232,12 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
       <ServiceState {...invitations} />
       {invitations.data && (
         <>
+          <CsvExport
+            key={`${after}:${revision}`}
+            columns={["id", "uses", "max_uses", "expires_at", "revoked_at"]}
+            rows={invitations.data.items.map((row) => ({ ...row }))}
+            name="echo-invitations-current-page.csv"
+          />
           <div className="table-scroll">
             <table>
               <caption>只查询元数据，不读取邀请码或哈希</caption>
@@ -214,6 +247,7 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
                   <th>使用次数</th>
                   <th>到期时间</th>
                   <th>撤销时间</th>
+                  <th>操作</th>
                 </tr>
               </thead>
               <tbody>
@@ -225,6 +259,17 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
                     </td>
                     <td>{row.expires_at}</td>
                     <td>{row.revoked_at ?? "未撤销"}</td>
+                    <td>
+                      <Button
+                        variant="secondary"
+                        isDisabled={busy || row.revoked_at !== null}
+                        onPress={() => {
+                          void revoke(row.id);
+                        }}
+                      >
+                        撤销
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

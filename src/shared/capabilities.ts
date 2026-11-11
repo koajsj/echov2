@@ -2,7 +2,7 @@ import type { Capabilities } from "./contracts.js";
 
 // A safety policy, not an encryption adapter. No secret-bearing API is exposed.
 export const capabilities: Capabilities = {
-  phase: 2,
+  phase: 3,
   crypto: {
     status: "BLOCKED",
     reason:

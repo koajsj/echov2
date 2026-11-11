@@ -42,6 +42,13 @@ export class ConnectionHub {
       connection.socket.send(JSON.stringify({ type: "sync-required" }));
     }
   }
+  onlineSessions(): number {
+    return new Set(
+      [...this.connections]
+        .filter((c) => c.socket.readyState === 1 && c.expiresAt > Date.now())
+        .map((c) => c.sessionId),
+    ).size;
+  }
   closeSession(sessionId: string): void {
     for (const c of this.connections)
       if (c.sessionId === sessionId) c.socket.close(1008, "Session revoked");

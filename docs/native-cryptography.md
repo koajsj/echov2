@@ -1,6 +1,6 @@
 # MLS 与浏览器密码学研究
 
-2026-11-11，仅官方文档、标签清单、源码网页、许可证及公告的只读研究；没有下载/编译/运行实现。[来源索引](research-sources.md)记录版本与提交。本章“支持”表示上游声明或接口证据，不表示 Echo 已验证。
+2026-11-11。以下上游资料为第一阶段只读研究快照，第三阶段没有联网刷新或下载/编译/运行实现，不作为当前上游最新状态声明。[来源索引](research-sources.md)记录版本与提交。本章“支持”表示上游声明或接口证据，不表示 Echo 已验证。
 
 ## 标准与结论
 
@@ -59,8 +59,10 @@ OpenMLS官方提供[Add](https://book.openmls.tech/user_manual/add_members.html)
 
 因此首选是**研究顺序**而非生产定稿。若OpenMLS浏览器门槛不能满足，转评ts-mls时仍需完整审计与同样事务/撤权验证；不通过便暂停核心建设，不能以“TS更简单”降低标准。详细准入证据见[实施计划](native-implementation-plan.md)。
 
-## 第二阶段本地核对（2026-11-11）
+## 第二/三阶段本地核对（2026-11-11）
 
 本轮未重新联网查询上述版本/维护状态；以上为第一阶段来源快照。实际本地package与源码无OpenMLS/ts-mls/mls-rs依赖、Cargo/WASM构建、provider或稳定版本绑定，且禁止下载/安装/构建/运行。无法验证固定API、套件1、WASM导出、Welcome消费或原生storage事务，因此没有新增空适配器/Worker或自造MLS状态机。OpenMLS0.9.2仍只是可行性优先顺序，不能确定为已完成生产选型。
 
 独立附件基础仅使用浏览器标准AES-GCM，见数据生命周期的实际边界；不是MLS集成。浏览器API存在也不证明算法、IndexedDB、跨标签单写者或故障恢复已通过。解除G1–G4至少需要：明确授权准备固定原生库/provider、审查稳定版实际源码/导出、编译WASM或评估ts-mls、运行互操作/真实浏览器与持久化故障验证。当前限制下不能安全完成，聊天/初始化/恢复保持关闭。
+
+第三阶段本地仓库仍无MLS运行依赖、Cargo/WASM构建或provider；检查的本机Cargo registry及既有工具目录也未发现可用候选，不能把此有限盘点表述为扫描全机。G1–G4保持BLOCKED。新metadata-archive只调用WebCrypto既有PBKDF2/AES-GCM处理有限服务元数据，不做MLS、HPKE、HKDF、签名或根恢复；格式与参数唯一规格见[生命周期](native-data-lifecycle.md)。相关局部strict/AST与运行NOT_RUN见[静态报告](static-verification-report.md)。

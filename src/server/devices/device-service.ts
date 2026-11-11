@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { AuthorizedSession } from "../accounts/sessions.js";
 import type { Pool } from "pg";
 import type { DeviceView } from "../../shared/contracts.js";
 import { transaction } from "../storage/database.js";
@@ -6,12 +7,18 @@ import { lockUserSession } from "../accounts/session-access.js";
 import { HttpError } from "../api/http-error.js";
 export class DeviceService {
   constructor(private readonly pool: Pool) {}
-  async list(userId: string): Promise<DeviceView[]> {
+  async list(
+    userId: string,
+    after: string | null,
+  ): Promise<{ items: DeviceView[]; next: string | null }> {
     const result = await this.pool.query<DeviceView>(
-      `SELECT id,label,status,created_at AS "createdAt" FROM echo.devices WHERE user_id=$1 ORDER BY created_at,id LIMIT 100`,
-      [userId],
+      `SELECT id,label,status,created_at AS "createdAt" FROM echo.devices WHERE user_id=$1 AND ($2::uuid IS NULL OR id>$2) ORDER BY id LIMIT 51`,
+      [userId, after],
     );
-    return result.rows;
+    return {
+      items: result.rows.slice(0, 50),
+      next: result.rows.length > 50 ? result.rows[49]!.id : null,
+    };
   }
   async register(
     userId: string,
@@ -56,18 +63,27 @@ export class DeviceService {
       return id;
     });
   }
-  async revoke(
-    userId: string,
-    sessionId: string,
-    deviceId: string,
-  ): Promise<string[]> {
+  async revoke(actor: AuthorizedSession, deviceId: string): Promise<string[]> {
     return transaction(this.pool, async (db) => {
-      await lockUserSession(db, userId, sessionId, {
+      await lockUserSession(db, actor.account.id, actor.id, {
+        audience: actor.audience,
         recent: true,
       });
-      const device = await db.query<{
-        status: string;
-      }>(
+      const owner = await db.query<{ user_id: string }>(
+        "SELECT user_id FROM echo.devices WHERE id=$1",
+        [deviceId],
+      );
+      const userId = owner.rows[0]?.user_id;
+      if (
+        !userId ||
+        (actor.audience !== "admin" && userId !== actor.account.id)
+      )
+        throw new HttpError(404, "DEVICE_NOT_FOUND", "设备不存在。");
+      if (userId !== actor.account.id)
+        await db.query("SELECT id FROM echo.users WHERE id=$1 FOR UPDATE", [
+          userId,
+        ]);
+      const device = await db.query<{ status: string }>(
         "SELECT status FROM echo.devices WHERE id=$1 AND user_id=$2 FOR UPDATE",
         [deviceId, userId],
       );
@@ -78,11 +94,10 @@ export class DeviceService {
         "UPDATE echo.devices SET status='revoked',revoked_at=now(),version=version+1 WHERE id=$1",
         [deviceId],
       );
-      const sessions = await db.query<{
-        id: string;
-      }>("DELETE FROM echo.sessions WHERE device_id=$1 RETURNING id", [
-        deviceId,
-      ]);
+      const removed = await db.query<{ id: string }>(
+        "DELETE FROM echo.sessions WHERE device_id=$1 RETURNING id",
+        [deviceId],
+      );
       await db.query(
         "UPDATE echo.conversations SET status='frozen' WHERE status='active' AND id IN(SELECT conversation_id FROM echo.conversation_devices WHERE device_id=$1 AND left_seq IS NULL)",
         [deviceId],
@@ -91,7 +106,12 @@ export class DeviceService {
         "INSERT INTO echo.security_events(user_id,kind) VALUES($1,'device-revoked')",
         [userId],
       );
-      return sessions.rows.map((row) => row.id);
+      if (actor.audience === "admin")
+        await db.query(
+          "INSERT INTO echo.admin_audit_logs(actor_user_id,action,target_id) VALUES($1,'device-revoke',$2)",
+          [actor.account.id, deviceId],
+        );
+      return removed.rows.map((row) => row.id);
     });
   }
 }

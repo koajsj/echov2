@@ -17,6 +17,7 @@ export function adminRoutes(
   app.get<{
     Querystring: {
       after?: string;
+      username?: string;
     };
   }>(
     "/v1/admin/users",
@@ -27,6 +28,7 @@ export function adminRoutes(
           additionalProperties: false,
           properties: {
             after: uuidSchema,
+            username: { type: "string", pattern: "^[a-zA-Z0-9_]{3,32}$" },
           },
         },
       },
@@ -34,8 +36,8 @@ export function adminRoutes(
     async (request) => {
       await sessions.require(request, "admin");
       const result = await pool.query(
-        "SELECT id,username,status,created_at FROM echo.users WHERE ($1::uuid IS NULL OR id>$1) ORDER BY id LIMIT 51",
-        [request.query.after ?? null],
+        'SELECT id,username,status,created_at FROM echo.users WHERE ($1::uuid IS NULL OR id>$1) AND ($2::text IS NULL OR username_normalized=lower($2 COLLATE "C")) ORDER BY id LIMIT 51',
+        [request.query.after ?? null, request.query.username ?? null],
       );
       return {
         items: result.rows.slice(0, 50),
@@ -55,6 +57,9 @@ export function adminRoutes(
     const result =
       await pool.query(`SELECT (SELECT count(*)::text FROM echo.users) AS users,
       (SELECT count(*)::text FROM echo.devices WHERE status='active') AS devices,
+      (SELECT count(*)::text FROM echo.users WHERE created_at >= (date_trunc('day',now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC')) AS new_users_today,
+      (SELECT count(DISTINCT s.user_id)::text FROM echo.sessions s JOIN echo.users u ON u.id=s.user_id WHERE s.expires_at>clock_timestamp() AND u.status='active' AND (s.device_id IS NULL OR EXISTS(SELECT 1 FROM echo.devices d WHERE d.id=s.device_id AND d.status<>'revoked'))) AS accounts_with_sessions,
+      (SELECT coalesce(sum(ciphertext_bytes),0)::text FROM echo.attachments WHERE status<>'deleted') AS registered_attachment_bytes,
       (SELECT count(*)::text FROM echo.messages) AS accepted_envelopes,
       (SELECT count(*)::text FROM echo.deletion_records WHERE state<>'complete') AS pending_deletions`);
     const settings = await pool.query(
@@ -67,6 +72,8 @@ export function adminRoutes(
       regions: null,
       source: "postgresql-business-metadata",
       cryptoVerifiedMessages: null,
+      onlineDevices: null,
+      onlineNotificationSessions: hub.onlineSessions(),
     };
   });
   app.patch<{

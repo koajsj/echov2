@@ -25,7 +25,7 @@ export function ChartFrame({
       <header className="section-heading">
         <div>
           <h2>{title}</h2>
-          <p className="secondary">{kind}</p>
+          <p className="muted">{kind}</p>
         </div>
       </header>
       <p className="chart-note">{description}</p>

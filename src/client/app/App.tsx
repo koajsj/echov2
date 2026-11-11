@@ -144,7 +144,7 @@ export function App() {
         <Button variant="ghost" onPress={() => setDark((value) => !value)}>
           {dark ? "浅色外观" : "深色外观"}
         </Button>
-        <small>第二阶段 · MLS 准入未通过</small>
+        <small>第三阶段 · MLS 准入未通过</small>
       </aside>
       <main id="main" tabIndex={-1}>
         <Realm key={audience} audience={audience} page={page} />

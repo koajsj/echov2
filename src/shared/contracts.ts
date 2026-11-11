@@ -22,7 +22,7 @@ export interface Capability {
   reason: string;
 }
 export interface Capabilities {
-  phase: 2;
+  phase: 3;
   crypto: Capability;
   messaging: Capability;
   recovery: Capability;
@@ -94,4 +94,20 @@ export interface OperationView {
   deletionRequested: boolean;
   expired: boolean;
   status: "persisted-unverified";
+}
+
+export interface MetadataExport {
+  version: 1;
+  scope: "service-metadata-only";
+  origin: string;
+  issuedAt: string;
+  account: Account;
+  devices: DeviceView[];
+  deletions: {
+    id: string;
+    messageId: string;
+    reason: "sender" | "expiry" | "account-close";
+    state: "pending-anchor" | "anchored" | "purging" | "complete";
+    createdAt: string;
+  }[];
 }

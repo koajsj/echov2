@@ -16,9 +16,13 @@ import { IdentityService } from "./identity/identity-service.js";
 import { DeliveryService } from "./delivery/delivery-service.js";
 import { DeletionService } from "./lifecycle/deletion-service.js";
 import { ConnectionHub } from "./delivery/connection-hub.js";
+import { dataRoutes } from "./accounts/data-routes.js";
+import { sessionManagementRoutes } from "./accounts/session-management.js";
 import { accountRoutes } from "./accounts/account-routes.js";
 import { deliveryRoutes } from "./delivery/delivery-routes.js";
 import { adminReadRoutes } from "./admin/admin-read-routes.js";
+import { storageRoutes } from "./admin/storage-routes.js";
+import { adminActionRoutes } from "./admin/admin-action-routes.js";
 import { adminRoutes } from "./admin/admin-routes.js";
 import { lifecycleRoutes } from "./lifecycle/lifecycle-routes.js";
 export async function createApp(config: ServerConfig) {
@@ -119,6 +123,7 @@ export async function createApp(config: ServerConfig) {
   const hub = new ConnectionHub();
   const sessions = new SessionService(pool, config.origin);
   const deletions = new DeletionService(pool);
+  const devices = new DeviceService(pool);
   const accounts = new AccountService(
     pool,
     await passwordHash(randomBytes(32).toString("base64url")),
@@ -128,13 +133,17 @@ export async function createApp(config: ServerConfig) {
     pool,
     accounts,
     sessions,
-    new DeviceService(pool),
+    devices,
     new IdentityService(pool),
     hub,
   );
+  dataRoutes(app, pool, sessions, config.origin);
+  sessionManagementRoutes(app, pool, sessions, hub);
   deliveryRoutes(app, sessions, new DeliveryService(pool), hub);
   adminRoutes(app, pool, sessions, hub);
   adminReadRoutes(app, pool, sessions);
+  storageRoutes(app, sessions, config.mediaPath);
+  adminActionRoutes(app, pool, sessions, devices, hub);
   lifecycleRoutes(app, sessions, deletions);
   app.get("/v1/health", async () => ({
     status: "alive",
@@ -154,11 +163,19 @@ export async function createApp(config: ServerConfig) {
     hub.expire();
     if (working) return;
     working = true;
-    void deletions
-      .scheduleExpired()
-      .catch(() =>
-        app.log.error("Expiry scheduling failed; no purge performed"),
-      )
+    void Promise.allSettled([
+      deletions.scheduleExpired(),
+      sessions.pruneExpired(),
+    ])
+      .then((results) => {
+        for (const [index, result] of results.entries())
+          if (result.status === "rejected")
+            app.log.error(
+              index === 0
+                ? "Expiry scheduling failed; no purge performed"
+                : "Expired session cleanup failed",
+            );
+      })
       .finally(() => {
         working = false;
       });

@@ -1,6 +1,6 @@
 # 自主通信架构
 
-2026-11-11。本文是整体目标设计；当前已有第一阶段源码与第二阶段安全/前端增量，实际范围见[实施计划](native-implementation-plan.md)。标准事实与候选证据集中在[密码学研究](native-cryptography.md)及[来源](research-sources.md)。条件决策见[决策表](decisions.md)，不把设计中的未接通流程记作实现。
+2026-11-11。本文是整体目标设计；当前已有第一/二阶段基础和第三阶段静态收敛增量，实际范围见[实施计划](native-implementation-plan.md)。标准事实与候选证据集中在[密码学研究](native-cryptography.md)及[来源](research-sources.md)。条件决策见[决策表](decisions.md)，不把设计中的未接通流程记作实现。
 
 ## 系统边界
 
@@ -59,10 +59,16 @@ Worker 是职责隔离和串行化工具，同源 XSS 仍能调用它；不是�
 
 源码采用 `src/client/{app,components,features,crypto,styles}`、`src/server/{accounts,identity,devices,delivery,messaging,lifecycle,admin,storage,api}`、`src/shared`，部署配置和运维脚本分放 `deploy`、`scripts`。media处理器未实现，不预建空目录。仅确有复用才进入shared；普通TS/目录kebab-case、React PascalCase、Hook use前缀，遵循工具标准配置名。
 
-当前目录和迁移清单集中在第二阶段报告；包含源码、package声明、未执行增量SQL和部署基础；无node_modules/锁文件/构建产物。架构还不是可上线实现，尤其身份信任、持久化和DS无效Commit仍受[门槛 G1–G6](native-implementation-plan.md)约束。
+当前目录和迁移清单集中在[第三阶段报告](phase-three-report.md)；包含源码、package声明、未执行增量SQL和部署基础；无node_modules/锁文件/构建产物。架构还不是可上线实现，尤其身份信任、持久化和DS无效Commit仍受[门槛 G1–G6](native-implementation-plan.md)约束。
 
 ## 第二阶段已落地边界
 
 服务访问事务使用账号→session→设备→会话→head顺序，读写与会话撤销串行化；目录凭证还要求关联未退休根。它不替代原生身份签名验证。消息服务自身保留总拒写门禁；Commit声明只产生未验证候选并冻结，不推进路由或MLS状态。客户端通知仅唤醒目录刷新，不获取/展示消息或确认游标。
 
-前端保留Echo图标/tokens与原独立Icon、EmptyState、折线图原语/布局；全部主要用户/管理导航路由已建立。Native API提供精确账号查找、目录/操作收据、后台真实表分页与注册增长。聊天创建、明文业务编解码、加解密展示、私人加密同步/恢复尚未实现。完整运营操作和未知来源采集属于第三阶段，不能把页面存在当成完整迁移验收。
+前端保留Echo图标/tokens与原独立Icon、EmptyState、折线图原语/布局；全部主要用户/管理导航路由已建立。Native API提供精确账号查找、目录/操作收据、后台真实表分页与注册增长。聊天创建、明文业务编解码、加解密展示、私人加密同步/恢复尚未实现。本轮第三阶段增加的运营操作见下文；未知来源采集仍缺失，不能把页面存在当成完整迁移验收。
+
+## 第三阶段实际新增边界
+
+accounts 下的 session-management 负责现有会话的分页/撤销，data-routes 只读导出本人服务元数据；不新增认证系统。devices 复用同一撤销事务供本人/超管调用，按账号、会话、目标账号、设备顺序串行化；admin-action-routes 只做运营授权/审计。storage-routes 读取配置媒体路径所在文件系统容量，不读媒体或私钥。
+
+前端 SessionPanel、CSV/DownloadFile 共用真实服务结果；MetadataArchivePanel/metadata-archive 只处理标准 WebCrypto 的有限元数据文件。加密聊天、私人组、密钥恢复及完整备份执行器仍未接入。系统导出绝不收浏览器私钥；本轮没有旧协议代码迁入、运行依赖增加或品牌/Token 重做。

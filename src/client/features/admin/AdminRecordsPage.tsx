@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Button } from "@heroui/react";
+import { api } from "../../app/api";
+import { CsvExport } from "../../components/CsvExport";
 import { useApiQuery } from "../../app/use-api-query";
 import { ServiceState } from "../../components/ServiceState";
 const views = {
@@ -24,12 +26,39 @@ const views = {
   security: {
     title: "安全中心",
     cursor: "before",
-    columns: ["id", "user_id", "kind", "ip", "created_at"],
+    columns: [
+      "id",
+      "user_id",
+      "kind",
+      "ip",
+      "created_at",
+      "reviewed_at",
+      "reviewed_by",
+    ],
   },
   audit: {
     title: "操作审计",
     cursor: "before",
-    columns: ["id", "actor_user_id", "action", "target_id", "created_at"],
+    columns: [
+      "id",
+      "actor_user_id",
+      "action",
+      "target_id",
+      "event_id",
+      "created_at",
+    ],
+  },
+  deletions: {
+    title: "删除状态",
+    cursor: "before",
+    columns: [
+      "id",
+      "message_id",
+      "reason",
+      "state",
+      "created_at",
+      "completed_at",
+    ],
   },
   backups: {
     title: "备份管理",
@@ -37,6 +66,17 @@ const views = {
     columns: ["id", "state", "created_at", "verified_at"],
   },
 } as const;
+const absent: Record<string, string> = {
+  reviewed_at: "未审阅",
+  reviewed_by: "尚无审阅者",
+  revoked_at: "未撤销",
+  completed_at: "未完成",
+  verified_at: "未验证",
+  ip: "未记录",
+  user_id: "未关联账号",
+  target_id: "未指定 UUID 目标",
+  event_id: "不适用",
+};
 export type AdminRecordKind = keyof typeof views;
 type Row = Record<string, string | null> & {
   id: string;
@@ -51,6 +91,8 @@ export function AdminRecordsPage({
   const view = views[kind];
   const [cursor, setCursor] = useState("");
   const [revision, setRevision] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
   const query = useApiQuery<{
     items: Row[];
     next: string | null;
@@ -59,6 +101,37 @@ export function AdminRecordsPage({
     revision,
     sessionId,
   );
+  async function action(row: Row) {
+    if (
+      busy ||
+      !confirm(
+        kind === "devices"
+          ? "撤销此设备的服务访问并冻结关联群组？不会完成 MLS Remove。"
+          : "将事件标记为已审阅？这不表示安全风险已解决。",
+      )
+    )
+      return;
+    setBusy(true);
+    setMessage("");
+    try {
+      await api(
+        `/v1/admin/${kind}/${row.id}/${kind === "devices" ? "revoke" : "review"}`,
+        { method: "POST", audience: "admin", sessionId },
+      );
+      setRevision((v) => v + 1);
+      setMessage(
+        kind === "devices"
+          ? "服务撤销已确认；密码学移除仍 BLOCKED。"
+          : "事件已审阅并审计；未宣称风险已解决。",
+      );
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "操作结果未知，请刷新核实。",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <section>
       <header className="page-heading">
@@ -74,12 +147,12 @@ export function AdminRecordsPage({
       )}
       {kind === "security" && (
         <p>
-          这里只包含登录结果和设备服务撤销事件；完整检测和运营处置留待第三阶段。
+          这里只包含登录结果和设备服务撤销事件；可以记录人工审阅，不能据此声称风险已消除。
         </p>
       )}
       {kind === "devices" && (
         <p>
-          pending 不代表已核验。当前只读目录，密码学授权、设备运营操作和全组
+          pending 不代表已核验。可撤销服务访问并冻结关联组；密码学授权和全组
           Remove 尚未接通。
         </p>
       )}
@@ -96,9 +169,16 @@ export function AdminRecordsPage({
       >
         刷新记录
       </Button>
+      <p role="status">{message}</p>
       <ServiceState {...query} />
       {query.data && (
         <>
+          <CsvExport
+            key={`${kind}:${cursor}:${revision}`}
+            columns={view.columns}
+            rows={query.data.items}
+            name={`echo-${kind}-current-page.csv`}
+          />
           <div className="table-scroll">
             <table>
               <caption>{view.title} · 每页最多 50 条</caption>
@@ -107,6 +187,7 @@ export function AdminRecordsPage({
                   {view.columns.map((column) => (
                     <th key={column}>{column}</th>
                   ))}
+                  {(kind === "devices" || kind === "security") && <th>操作</th>}
                 </tr>
               </thead>
               <tbody>
@@ -114,9 +195,31 @@ export function AdminRecordsPage({
                   <tr key={row.id}>
                     {view.columns.map((column) => (
                       <td key={column}>
-                        {row[column] === null ? "未知" : row[column]}
+                        {row[column] === undefined
+                          ? "缺失"
+                          : row[column] === null
+                            ? (absent[column] ?? "未知")
+                            : row[column]}
                       </td>
                     ))}
+                    {(kind === "devices" || kind === "security") && (
+                      <td>
+                        <Button
+                          variant="secondary"
+                          isDisabled={
+                            busy ||
+                            (kind === "devices"
+                              ? row.status === "revoked"
+                              : row.reviewed_at !== null)
+                          }
+                          onPress={() => {
+                            void action(row);
+                          }}
+                        >
+                          {kind === "devices" ? "撤销服务" : "标记已审阅"}
+                        </Button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

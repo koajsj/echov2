@@ -9,7 +9,7 @@
 | 资源       | 初始预算/实际配置                                                    | 条件与风险                                                                                                                                                                                                                                           |
 | ---------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Node       | heap384MiB，systemd MemoryMax768MiB，TaskMax64                       | 原生Argon2/连接buffer不计入heap；必须实测RSS，超限拒请求而非降密码强度                                                                                                                                                                               |
-| PostgreSQL | 连接20，API池5，shared_buffers128MiB，work_mem2MiB，maintenance32MiB | work_mem按节点/连接增长；API10秒statement/5秒连接timeout；维护单独预算                                                                                                                                                                               |
+| PostgreSQL | 连接20，API池5，shared_buffers128MiB，work_mem2MiB，maintenance32MiB | work_mem按节点/连接增长；API10秒statement、5秒连接/锁等待、15秒idle-in-transaction；维护单独预算                                                                                                                                                     |
 | 密码       | Argon2id 64MiB、t3、p1、有界并发2，无等待队列，认证IP限5/min         | [RFC9106](https://www.rfc-editor.org/rfc/rfc9106.html)内存受限推荐64MiB/t3/p4；本项目p1为单核预算选择，非照抄RFC推荐；[OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)最低19MiB/t2/p1不能当性能理由随意降级 |
 | WSS        | 全局500、单账号10、1KiB入站、64KiB背压、60秒重认证                   | 是限制不是容量承诺；客户端写入WSS关闭，HTTP补齐                                                                                                                                                                                                      |
 | 消息       | envelope256KiB原始上限，API请求352KiB，最多100条且原始密文累计1MiB   | 实际handshake/设备数/低内存页大小需测；参数/CSRF/会话/可信设备验证后的写仍拒绝503                                                                                                                                                                    |
@@ -37,7 +37,7 @@ Fastify关闭自动请求日志，业务错误只输出固定code/request ID；�
 ## 完整备份流程（目标设计，无执行器）
 
 1. 运维取得全局维护锁，拒新认证写入/消息/上传/删除调度，关闭WSS，排空在途事务和文件写入，确保没有外部写者；失败即取消捕获，不把部分文件标完整。
-2. 冻结后记录release、Schema/PG版本、DS各组head、独立删除日志最新已验证头/序号及所有pending操作。捕获唯一echo_native数据库、必要角色/授权描述、密文媒体、AS服务签名key、服务/Caddy/systemd必要配置。MLS私钥、Epoch Secret、用户恢复key和浏览器state不在系统备份。
+2. 冻结后记录release、Schema/PG版本、DS各组head、独立删除日志最新已验证头/序号及所有pending操作。捕获唯一echo_native数据库、必要角色/授权描述、密文媒体、实际存在且经清单登记的AS服务签名key（当前没有该实现，不虚构材料）、服务/Caddy/systemd必要配置。MLS私钥、Epoch Secret、用户恢复key和浏览器state不在系统备份。
 3. [pg_dump](https://www.postgresql.org/docs/18/app-pgdump.html)提供单库一致快照，不能保证媒体/配置/外部日志同点；停写是这份简化方案的跨资源一致性切点。若未来再拆数据库，需要新的统一冻结或一致快照方案，不能各跑dump就称同一时点。
 4. 清单记录每文件路径/大小/SHA-256、对象引用、备份ID、组件版本、公开服务key ID、删除锚和冻结边界。SHA只查损坏，不冒充加密/身份认证。候选[age](https://github.com/FiloSottile/age)流式加密、[minisign](https://jedisct1.github.io/minisign/)签名密文/清单，工具/格式与错误退出尚未集成验证。
 5. 只向独立外部目标流式输出有界内容，成功解密/验证清单并核对计数前不能记verified。备份解密私钥与生产/备份分离，签名验证公钥在独立渠道；AS服务key与备份工具key用途分离。生产端只有备份接收公钥也不等于不会被恶意生产端伪造内容。
@@ -58,3 +58,15 @@ Fastify关闭自动请求日志，业务错误只输出固定code/request ID；�
 `scripts/preflight.sh`只查本地可执行程序，不检查数据库/原生安全。`scripts/provision-admin.ts`是真实离线owner写入工具，本轮未运行；迁移只提供审核文件。没有自动下载/安装/部署/备份脚本；运行和依赖准备待另行授权。下一轮必须证明目标硬件的认证延迟/RSS、WSS背压、磁盘满、崩溃、权限、捕获一致性及隔离恢复，再讨论上线。
 
 管理员密码文件采用O_NOFOLLOW打开、在同一文件描述符核查所有者/权限/普通文件/大小并读取，避免检查与读取指向不同文件；父目录仍必须由可信运维控制。MEDIA_PATH当前仅检查绝对路径与点段，不证明目录所有权、符号链接或媒体服务安全。HOST/PORT固定127.0.0.1:3001，与随附Caddy配置一致。
+
+## 第三阶段静态预算与运维增量
+
+API池仍5、PG连接20、Node heap384MiB/MemoryMax768MiB；新增锁等待5秒和事务空闲15秒上限。systemd关闭core dump，限制NOFILE2048，保护kernel/control groups、禁止SUID/SGID和personality变更；未设置可能破坏V8 JIT/WASM的MemoryDenyWriteExecute。PostgreSQL另关闭duration日志，仍须检查宿主机/pgaudit/崩溃收集，不承诺配置覆盖全部日志来源。Shell先决检查对齐Node24.17最低版本；从未运行该脚本或provision工具。
+
+静态资源预算：前端只用本地SVG/系统字体，没有远程资源；Vite关闭sourcemap。期望普通前端传输≤1 MiB压缩、未来单独MLS chunk≤2 MiB压缩是审查预算而非实际产物大小；未构建、无锁闭包或WASM，当前无法测量，超预算必须审查来源，不能削弱密码/加密。元数据归档最大1 MiB、每集合5000，口令KDF只在客户端；CSV每页≤50条（增长≤30个观测桶），没有全量入内存导出。
+
+后台statfs提供媒体路径所在卷total/available字节，不泄露路径，不等于媒体物理占用；缺目录返回未知+原因，其他错误单独失败。DB附件登记量与卷容量分别显示。附件上传/账号和全站配额执行、磁盘低水位拒写、保留任务、日志容量上限和备份执行器仍BLOCKED；不能上线依赖这些保护的媒体业务。20GB不放本地完整灾备，外部容量/轮转/过期删除证据和隔离恢复介质均须运维确定。
+
+用户元数据文件不包含浏览器私钥，与系统dump/媒体/配置备份及MLS恢复三者分开。没有最新独立删除证据，不执行恢复或purge。G6未解除前不能把数据库备份记录、文件tag校验或pg_dump成功作为灾备验收。目标Debian的Caddy/systemd解析、权限、内存/CPU/磁盘/日志压力均NEEDS_RUNTIME_VERIFICATION，性能NOT_RUN。
+
+既有30秒维护循环增加过期服务会话每批100条清理，与到期删除意图分别记录失败、不因一项失败静默跳过另一项；pool和working门控限制重叠。只清已过期服务凭据，不是消息/备份purge或日志保留执行器。执行与积压/表膨胀验证NOT_RUN。

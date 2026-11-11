@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Button } from "@heroui/react";
 import { api } from "../../app/api";
 import { useApiQuery } from "../../app/use-api-query";
+import { CsvExport } from "../../components/CsvExport";
+import { SessionPanel } from "../devices/SessionPanel";
 import { ServiceState } from "../../components/ServiceState";
 interface User {
   id: string;
@@ -38,6 +40,7 @@ function UserDetailPanel({
           ))}
         </dl>
       )}
+      <SessionPanel sessionId={sessionId} userId={id} audience="admin" />
       <Button variant="ghost" onPress={onClose}>
         收起详情
       </Button>
@@ -45,6 +48,7 @@ function UserDetailPanel({
   );
 }
 export function UsersPage({ sessionId }: { sessionId: string }) {
+  const [filter, setFilter] = useState("");
   const [after, setAfter] = useState("");
   const [revision, setRevision] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -53,7 +57,11 @@ export function UsersPage({ sessionId }: { sessionId: string }) {
   const query = useApiQuery<{
     items: User[];
     next: string | null;
-  }>(`/v1/admin/users${after ? `?after=${after}` : ""}`, revision, sessionId);
+  }>(
+    `/v1/admin/users?${new URLSearchParams({ ...(after ? { after } : {}), ...(filter ? { username: filter } : {}) })}`,
+    revision,
+    sessionId,
+  );
   async function suspend(user: User) {
     if (
       busy ||
@@ -90,9 +98,34 @@ export function UsersPage({ sessionId }: { sessionId: string }) {
         <h1>用户管理</h1>
         <p>账号与服务权限。管理员无法取得用户私钥或聊天明文。</p>
       </header>
+      <form
+        className="form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setFilter(
+            String(new FormData(event.currentTarget).get("username")).trim(),
+          );
+          setAfter("");
+          setSelected(null);
+        }}
+      >
+        <label>
+          精确用户名（不区分大小写，留空显示全部）
+          <input name="username" pattern="[a-zA-Z0-9_]{3,32}" maxLength={32} />
+        </label>
+        <Button type="submit" variant="secondary" isDisabled={busy}>
+          查询用户
+        </Button>
+      </form>
       <ServiceState {...query} />
       {query.data && (
         <>
+          <CsvExport
+            key={`${filter}:${after}:${revision}`}
+            columns={["id", "username", "status"]}
+            rows={query.data.items.map((row) => ({ ...row }))}
+            name="echo-users-current-page.csv"
+          />
           <div className="table-scroll">
             <table>
               <caption>永久 ID keyset 分页</caption>

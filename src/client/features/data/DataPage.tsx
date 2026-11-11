@@ -1,18 +1,11 @@
+import { MetadataArchivePanel } from "./MetadataArchivePanel";
 import { AttachmentPreparationPanel } from "./AttachmentPreparationPanel";
-import type { Capabilities } from "../../../shared/contracts";
+import type { Capabilities, SessionView } from "../../../shared/contracts";
 import { useApiQuery } from "../../app/use-api-query";
 import { ServiceState } from "../../components/ServiceState";
 import { browserPrerequisites } from "../../crypto/readiness";
-export function DataPage({ sessionId }: { sessionId: string }) {
+export function DataPage({ session }: { session: SessionView }) {
   const capabilities = useApiQuery<Capabilities>("/v1/capabilities");
-  const deletions = useApiQuery<{
-    items: {
-      id: string;
-      message_id: string;
-      state: string;
-      reason: string;
-    }[];
-  }>("/v1/deletions/own", 0, sessionId);
   const browser = browserPrerequisites();
   return (
     <section>
@@ -37,6 +30,7 @@ export function DataPage({ sessionId }: { sessionId: string }) {
             )}
         </div>
       )}
+      <MetadataArchivePanel session={session} />
       <AttachmentPreparationPanel />
       <h2>当前浏览器前提</h2>
       <dl className="details">
@@ -47,24 +41,9 @@ export function DataPage({ sessionId }: { sessionId: string }) {
           </div>
         ))}
       </dl>
-      <h2>本人删除请求</h2>
-      <ServiceState {...deletions} />
-      {deletions.data && (
-        <ul className="record-list">
-          {deletions.data.items.map((item) => (
-            <li key={item.id}>
-              <span>{item.message_id}</span>
-              <span>{item.state}</span>
-            </li>
-          ))}
-          {deletions.data.items.length === 0 && (
-            <li>没有已登记的本人删除请求。</li>
-          )}
-        </ul>
-      )}
-      <p className="muted">
-        pending-anchor
-        只表示请求持久化与读取门控，不表示物理删除、离线多设备同步或备份防复活已完成。
+      <p>
+        <a href="#trash">查看分页删除请求与回收边界</a>
+        。待锚请求不表示物理擦除或完整墓碑同步。
       </p>
     </section>
   );

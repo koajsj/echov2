@@ -13,9 +13,10 @@ export function DevicesPage({
   session: SessionView;
   onChanged: () => void;
 }) {
+  const [after, setAfter] = useState("");
   const [revision, setRevision] = useState(0);
-  const query = useApiQuery<{ items: DeviceView[] }>(
-    "/v1/devices",
+  const query = useApiQuery<{ items: DeviceView[]; next: string | null }>(
+    `/v1/devices${after ? `?after=${after}` : ""}`,
     revision,
     session.sessionId,
   );
@@ -97,6 +98,24 @@ export function DevicesPage({
           ))}
           {query.data.items.length === 0 && <li>尚未登记设备。</li>}
         </ul>
+      )}
+      {query.data && (
+        <div className="actions">
+          <Button
+            variant="ghost"
+            isDisabled={!after || pending}
+            onPress={() => setAfter("")}
+          >
+            第一页
+          </Button>
+          <Button
+            variant="secondary"
+            isDisabled={!query.data.next || pending}
+            onPress={() => setAfter(query.data!.next!)}
+          >
+            下一页
+          </Button>
+        </div>
       )}
       {!session.deviceId && (
         <form

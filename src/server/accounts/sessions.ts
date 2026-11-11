@@ -140,6 +140,11 @@ export class SessionService {
       .clearCookie(csrfName(audience), cookieOptions);
     return result?.rows[0]?.id ?? null;
   }
+  async pruneExpired(): Promise<void> {
+    await this.pool.query(`DELETE FROM echo.sessions WHERE id IN (
+      SELECT id FROM echo.sessions WHERE expires_at<=clock_timestamp()
+      ORDER BY expires_at,id LIMIT 100 FOR UPDATE SKIP LOCKED)`);
+  }
   async requireActiveDevice(session: AuthorizedSession): Promise<string> {
     if (!session.deviceId)
       throw new HttpError(403, "TRUSTED_DEVICE_REQUIRED", "需要可信设备。");

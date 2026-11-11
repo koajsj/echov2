@@ -58,3 +58,7 @@
 | 系统/备份                     | AdminSettingsPage/AdminRecordsPage                                                   | 真实capabilities/备份元数据；没有executor不创建假任务             |
 
 仅删除新项目已无引用的`AdminPage.tsx`：原单页职责分为Dashboard、Users、Registration，公用只读元数据页集中管理。旧项目任何文件均未删除/移动/修改；没有恢复BoardUI源码或复制旧密钥、环境、数据库、node_modules、Git历史。
+
+## 第三阶段当前增量
+
+旧项目仍完整只读，未新增任何旧代码迁入。保留原布局、Logo和全部CSS/字体Token；修正图表孤立secondary class为已有muted。Native新增账号/管理员服务会话、设备运营、邀请码撤销、人工事件审阅、CSV/真实容量来源和有限服务元数据加密归档。上表的“留第三阶段”是历史计划，不是当前完成声明；最终功能与剩余缺口以[第三阶段报告](phase-three-report.md)为准。聊天/私密同步/恢复仍关闭。DataPage删除了与TrashPage重复且仅取第一页的删除列表，统一链接到原分页入口；没有删除审计历史文档或不明文件。
