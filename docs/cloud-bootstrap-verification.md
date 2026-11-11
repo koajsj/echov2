@@ -35,7 +35,7 @@ Cloud 隔离 PostgreSQL 17.11，数据库 echo_native。DDL 使用 `SET ROLE ech
 | npm run lint         | 0      | PASS，无禁用规则/忽略文件                                              |
 | npm run format:check | 0      | PASS                                                                   |
 | npm run check:ast    | 0      | PASS，66 TS/TSX 文件、234 本地绑定                                     |
-| npm run check:source | 2      | PARTIAL，110 文件、39 解析、30 JSX 跳过、零失败，退出 2 为脚本覆盖限制 |
+| npm run check:source | 2      | PARTIAL，111 文件、39 解析、30 JSX 跳过、零失败，退出 2 为脚本覆盖限制 |
 | npm run build:client | 0      | PASS                                                                   |
 | npm run build:server | 0      | PASS                                                                   |
 
@@ -54,3 +54,5 @@ Cloud 复核脚本和详细日志保存在 `/workspace/.cloud-setup/browser/fix-
 ## 交付限制
 
 已检查 Git 跟踪差异、迁移原字节、依赖原字节及敏感文件边界。保留全部提交，不覆盖 main，不 force push。GitHub API `api.github.com` 当前被 Cloud 代理 CONNECT 403 拒绝；已保存该域名到环境网络配置草稿，须在环境设置保存应用后才能重试创建 PR。草稿保存不代表网络已生效或环境已发布。分支推送与 PR 的实际结果以交付回复为准。
+
+代码修复提交 `2220d92756103db7d41f7033b5064f00c2de41d2` 已成功推送并核对远端分支。PR 尚未创建，原因是上述 GitHub API 网络阻碍；不是已有 PR 链接遗漏。工作区未提交凭据、Cloud 数据库、缓存或临时测试文件。
