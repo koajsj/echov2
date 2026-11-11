@@ -1,0 +1,54 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+@import "./tokens.css";
+@import "./shell.css";
+
+@layer base {
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--echo-ground); color: var(--echo-text); font: var(--echo-weight-regular) var(--echo-type-body)/var(--echo-leading-body) var(--echo-font); }
+  button,input,select,textarea { font-family: inherit; }
+  h1 { margin: 0; font: var(--echo-weight-regular) var(--echo-type-title)/var(--echo-leading-tight) var(--echo-font-display); text-wrap: balance; }
+  h2 { font: var(--echo-weight-semibold) var(--echo-type-body)/var(--echo-leading-ui) var(--echo-font); }
+  p { overflow-wrap: anywhere; max-width: 68ch; }
+  small { font-size: var(--echo-type-meta); line-height: var(--echo-leading-ui); }
+  a { color: inherit; }
+  input,select { width: 100%; padding: 12px; border: 1px solid var(--echo-control); border-radius: var(--echo-control-radius); background: var(--echo-surface); color: inherit; font-size: var(--echo-type-body); }
+  :focus-visible { outline: 2px solid var(--echo-focus); outline-offset: 3px; }
+  button,a,input,select { transition: color var(--echo-fast) var(--echo-ease),background-color var(--echo-fast) var(--echo-ease),border-color var(--echo-fast) var(--echo-ease); }
+}
+.muted,small { color: var(--echo-muted); }
+.error { color: var(--echo-danger); }
+.panel { padding: 24px; border: 1px solid var(--echo-border); border-radius: var(--echo-radius); background: var(--echo-surface); }
+.form,.auth-form form { display: grid; gap: 20px; max-width: 440px; }
+label { display: grid; gap: 8px; font-size: var(--echo-type-label); }
+.auth-layout { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 64px; min-height: 70vh; }
+.auth-intro h1 { font-size: var(--echo-type-display); max-width: 10em; }
+.eyebrow { font-size: var(--echo-type-meta); }
+.auth-form { max-width: 440px; }
+.page-heading { margin-bottom: 40px; padding-top: 8px; }
+.page-heading p { color: var(--echo-muted); }
+.details { display: grid; gap: 8px; margin-bottom: 32px; overflow-wrap: anywhere; }
+.details dt { color: var(--echo-muted); font-size: var(--echo-type-label); }
+.details dd { margin: 0 0 12px; }
+.record-list { list-style: none; padding: 0; }
+.record-list li { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--echo-border); overflow-wrap: anywhere; }
+.record-list li div { min-width: 0; display: grid; gap: 4px; }
+.split-panels,.metrics { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; margin-bottom: 32px; }
+.metrics>div { display: grid; gap: 8px; padding: 24px 0; border-top: 1px solid var(--echo-border); }
+.metrics span { color: var(--echo-muted); font-size: var(--echo-type-label); }
+.metrics strong { font-size: var(--echo-type-display); font-weight: var(--echo-weight-medium); font-variant-numeric: tabular-nums; }
+.metrics .unknown { font-size: var(--echo-type-title); }
+.table-scroll { overflow: auto; }
+table { width: 100%; border-collapse: collapse; font-size: var(--echo-type-label); font-variant-numeric: tabular-nums; }
+caption { text-align: left; color: var(--echo-muted); padding: 12px 0; }
+th,td { text-align: left; padding: 14px 12px; border-bottom: 1px solid var(--echo-border); overflow-wrap: anywhere; }
+th { font-weight: var(--echo-weight-medium); }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.workspace { display: grid; grid-template-columns: 280px minmax(0,1fr); min-height: 420px; border-block: 1px solid var(--echo-border); }
+.workspace aside { border-right: 1px solid var(--echo-border); padding: 24px; }
+.empty-state { display: grid; justify-items: center; align-content: center; text-align: center; padding: 40px; }
+.empty-state h2 { font: var(--echo-weight-regular) var(--echo-type-title)/var(--echo-leading-tight) var(--echo-font-display); }
+.dark .brand img,.dark .empty-state>img { filter: invert(1); }
+@media(max-width:900px){.auth-layout{grid-template-columns:1fr;gap:32px}.workspace{grid-template-columns:1fr}.workspace aside{border-right:0;border-bottom:1px solid var(--echo-border)}}
+@media(max-width:640px){.split-panels,.metrics{grid-template-columns:1fr}.panel{padding:20px}.empty-state{padding:32px 16px}.record-list li{align-items:flex-start}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none;animation:none;scroll-behavior:auto}}

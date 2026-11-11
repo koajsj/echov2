@@ -1,0 +1,53 @@
+{
+  "name": "echo-native",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Echo Native — Private by Design.",
+  "engines": {
+    "node": ">=24.17.0 <25"
+  },
+  "scripts": {
+    "dev:client": "vite",
+    "dev:server": "tsx src/server/main.ts",
+    "typecheck": "tsc -p tsconfig.client.json && tsc -p tsconfig.server.json && tsc -p tsconfig.tools.json",
+    "lint": "eslint . --max-warnings 0",
+    "format:check": "prettier --check .",
+    "check:source": "node --experimental-vm-modules scripts/check-source.mjs",
+    "build:client": "vite build",
+    "build:server": "tsc -p tsconfig.server.json --noEmit false --outDir dist/server",
+    "start:server": "node --max-old-space-size=384 dist/server/server/main.js",
+    "admin:provision": "tsx scripts/provision-admin.ts"
+  },
+  "dependencies": {
+    "@fastify/helmet": "13.2.0",
+    "@heroui/react": "3.2.7",
+    "@heroui/styles": "3.2.7",
+    "fastify": "5.12.8",
+    "pg": "8.23.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "argon2": "0.45.2",
+    "@fastify/cookie": "11.1.5",
+    "@fastify/websocket": "11.3.7",
+    "@fastify/rate-limit": "11.2.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.5",
+    "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.2.1",
+    "eslint": "10.14.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.14.0",
+    "prettier": "3.9.10",
+    "tailwindcss": "4.3.5",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.1",
+    "vite": "8.3.6",
+    "@types/ws": "8.18.1"
+  }
+}

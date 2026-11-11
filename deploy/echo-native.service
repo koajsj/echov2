@@ -1,0 +1,29 @@
+[Unit]
+Description=Echo Native modular monolith
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=echo-native
+Group=echo-native
+WorkingDirectory=/opt/echo-native/current
+Environment=NODE_ENV=production
+EnvironmentFile=/etc/echo-native/server.env
+ExecStart=/usr/bin/node --max-old-space-size=384 dist/server/server/main.js
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/echo-native
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+MemoryMax=768M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

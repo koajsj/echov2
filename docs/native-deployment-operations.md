@@ -1,0 +1,60 @@
+# 低配部署、删除证据与系统恢复
+
+2026-11-11，Debian / 2GiB RAM / 1核 / 20GB磁盘的候选预算。已编写配置和本地先决工具，但未启动、部署、访问VPS/数据库；不存在已验证备份或恢复执行器。
+
+## 进程、权限与预算
+
+常驻仅Caddy、Fastify单Node进程、PostgreSQL单实例，systemd管理。AS/DS/生命周期在Fastify内，不引入Redis、Kafka、微服务、消息队列、对象存储或监控集群。Rust如被选中只进浏览器MLS/WASM核心，服务器不MLS加解密。
+
+| 资源 | 初始预算/实际配置 | 条件与风险 |
+| --- | --- | --- |
+| Node | heap384MiB，systemd MemoryMax768MiB，TaskMax64 | 原生Argon2/连接buffer不计入heap；必须实测RSS，超限拒请求而非降密码强度 |
+| PostgreSQL | 连接20，API池5，shared_buffers128MiB，work_mem2MiB，maintenance32MiB | work_mem按节点/连接增长；API10秒statement/5秒连接timeout；维护单独预算 |
+| 密码 | Argon2id 64MiB、t3、p1、有界并发2，无等待队列，认证IP限5/min | [RFC9106](https://www.rfc-editor.org/rfc/rfc9106.html)内存受限推荐64MiB/t3/p4；本项目p1为单核预算选择，非照抄RFC推荐；[OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)最低19MiB/t2/p1不能当性能理由随意降级 |
+| WSS | 全局500、单账号10、1KiB入站、64KiB背压、60秒重认证 | 是限制不是容量承诺；客户端写入WSS关闭，HTTP补齐 |
+| 消息 | envelope256KiB原始上限，API请求352KiB，最多100条且原始密文累计1MiB | 实际handshake/设备数/低内存页大小需测；参数/CSRF/会话/可信设备验证后的写仍拒绝503 |
+| 附件 | 每对象10MiB明文建议值，密文+16byte；拟单账号/总量配额 | 只有Schema，没有上传处理器或配额执行器 |
+| 磁盘 | OS4GB、DB/WAL3GB、媒体5GB、日志/临时1GB、保留余量4GB，剩余3GB缓冲 | 示例合计20GB；WAL上限非硬保证，磁盘配额/告警和拒写阈值未实现 |
+
+`deploy/echo-native.service`使用独立非root账号、只写数据目录、严格文件系统保护；release/config不可由API写。Caddy仅serve前端dist，媒体目录不公开，API仅loopback；`deploy/postgresql.conf`是合并参考，不覆盖已有配置。Node二进制路径由运维确认，不盲用本机nvm路径。没有在目标Debian运行systemd/Caddy解析或资源验证。
+
+数据库role分owner/API，运行连接禁止远端/任意库/URL参数；owner只用于明确的迁移/provision操作。运维另撤PUBLIC数据库CONNECT/TEMP、public schema CREATE，禁止API superuser/CREATEROLE/CREATEDB/BYPASSRLS，限制pg_hba本机SCRAM。只固定用户名不能证明实际授予权限，Schema/角色/恢复ACL仍须运行核查。
+
+## 日志、管理与前端交付
+
+Fastify关闭自动请求日志，业务错误只输出固定code/request ID；密码、Cookie、token、正文及原始SQL不记录。PostgreSQL配置禁语句/参数记录，仍须检查主机日志、备份日志及崩溃收集。默认不启用Caddy访问采集；未来依据[官方log过滤/轮转](https://caddyserver.com/docs/caddyfile/directives/log)只取路由模板、状态、字节、经最小化IP/UA。真实采集器不存在时后台流量/地区显示null/未知。
+
+拟保留原始IP7天、安全记录30天、管理员审计180天、匿名每日聚合1年；当前无自动保留清理器，政策审批/法律适用OPEN。GeoIP只能用合法的本地数据库，尚无数据库不调用外部追踪API或编造地区。
+
+前端只用本地原创图标/系统字体、固定依赖声明、HeroUI v3；CSP无远程脚本/字体、禁frame/object、限定同源connect，保留WASM所需候选指令。`style-src 'unsafe-inline'`为组件样式候选折衷，不给脚本unsafe-inline；是否能收紧需真实HeroUI/CSP验证。无SW离线缓存。后续构建锁文件、SBOM、产物清单/外部签名、公钥独立校验、发布回滚不能连带回滚用户数据。
+
+## 独立删除日志：严格恢复保证的前提
+
+同机数据库/同卷文件、备份内的哈希链、本机时间或可回滚签名key，都不能单独提供“这是最新删除状态”的证据。需要生产盘/快照以外的持久目标与受信最新头，采用成熟签名/加密工具和不可覆盖写入能力；本轮没有选择或接入目标，**G6 BLOCKED**。
+
+最小部署替代是运维控制的独立介质/离线登记清单，冻结时人工核对最新删除序号及覆盖范围；它不能提供任意时刻自动灾备恢复保证。严格模式每条删除完成前须取得独立durable收据，目标不可用则保持pending-anchor和读取隐藏，不宣称已安全擦除。不得为满足此需求新增未获授权的常驻日志服务。
+
+## 完整备份流程（目标设计，无执行器）
+
+1. 运维取得全局维护锁，拒新认证写入/消息/上传/删除调度，关闭WSS，排空在途事务和文件写入，确保没有外部写者；失败即取消捕获，不把部分文件标完整。
+2. 冻结后记录release、Schema/PG版本、DS各组head、独立删除日志最新已验证头/序号及所有pending操作。捕获唯一echo_native数据库、必要角色/授权描述、密文媒体、AS服务签名key、服务/Caddy/systemd必要配置。MLS私钥、Epoch Secret、用户恢复key和浏览器state不在系统备份。
+3. [pg_dump](https://www.postgresql.org/docs/18/app-pgdump.html)提供单库一致快照，不能保证媒体/配置/外部日志同点；停写是这份简化方案的跨资源一致性切点。若未来再拆数据库，需要新的统一冻结或一致快照方案，不能各跑dump就称同一时点。
+4. 清单记录每文件路径/大小/SHA-256、对象引用、备份ID、组件版本、公开服务key ID、删除锚和冻结边界。SHA只查损坏，不冒充加密/身份认证。候选[age](https://github.com/FiloSottile/age)流式加密、[minisign](https://jedisct1.github.io/minisign/)签名密文/清单，工具/格式与错误退出尚未集成验证。
+5. 只向独立外部目标流式输出有界内容，成功解密/验证清单并核对计数前不能记verified。备份解密私钥与生产/备份分离，签名验证公钥在独立渠道；AS服务key与备份工具key用途分离。生产端只有备份接收公钥也不等于不会被恶意生产端伪造内容。
+6. 最后解除维护；捕获失败记录具体阶段且不删除既有备份。20GB生产盘不存完整灾备副本或原地展开恢复副本，流式失败不能无限占满tmp。
+
+没有独立介质/密钥保管/最新删除头，灾难恢复能力受限；用户历史和根身份由自己的独立加密归档/恢复材料保障。备份记录表、按钮、dump退出0均不等于完整备份可恢复。
+
+## 隔离恢复、核验与切换
+
+恢复只到新隔离目录/数据库/主机，禁对公网、禁与客户端互通；生产正常数据/备份只读，不覆盖。先由独立公钥验签，解密到有空间配额的私有位置，验证格式版本、路径无链接穿越、清单每项大小/哈希/范围、源系统身份与Schema兼容，未知文件/归属不执行。
+
+取得独立最新删除证据，核验连续/完整覆盖备份至当前受信头，重放删除/注销/媒体清理；pending/缺口/新鲜度不明即停，不以签名日期或本机时间猜测。检查user-device-credential外键、session失效、组路由/head、消息seq/epoch声明、附件引用和文件、AS key匹配/轮换风险、权限及必要审计。服务器只能验证结构，不能解密或证明全部MLS私有状态；需要真实存活客户端验证组状态，新鲜度不明的客户端重新入群。
+
+切换要求维护窗口、旧生产只读快照保护、独立人工批准和受控路由切换；新系统重新签发HTTP session，禁止旧token复活。失败只丢弃本次新隔离目标（须另行授权），保持原生产不变。配置回滚不得回滚数据库/删除日志；若新生产已接收写入，不能直接切回旧快照，须重新核对增量。**本仓库没有activate/restore/purge执行命令，保持BLOCKED，不制造假恢复工具。**
+
+## 当前工具与后续验证
+
+`scripts/preflight.sh`只查本地可执行程序，不检查数据库/原生安全。`scripts/provision-admin.ts`是真实离线owner写入工具，本轮未运行；迁移只提供审核文件。没有自动下载/安装/部署/备份脚本；运行和依赖准备待另行授权。下一轮必须证明目标硬件的认证延迟/RSS、WSS背压、磁盘满、崩溃、权限、捕获一致性及隔离恢复，再讨论上线。
+
+管理员密码文件采用O_NOFOLLOW打开、在同一文件描述符核查所有者/权限/普通文件/大小并读取，避免检查与读取指向不同文件；父目录仍必须由可信运维控制。MEDIA_PATH当前仅检查绝对路径与点段，不证明目录所有权、符号链接或媒体服务安全。HOST/PORT固定127.0.0.1:3001，与随附Caddy配置一致。
