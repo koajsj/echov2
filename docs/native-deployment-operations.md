@@ -6,15 +6,15 @@
 
 常驻仅Caddy、Fastify单Node进程、PostgreSQL单实例，systemd管理。AS/DS/生命周期在Fastify内，不引入Redis、Kafka、微服务、消息队列、对象存储或监控集群。Rust如被选中只进浏览器MLS/WASM核心，服务器不MLS加解密。
 
-| 资源 | 初始预算/实际配置 | 条件与风险 |
-| --- | --- | --- |
-| Node | heap384MiB，systemd MemoryMax768MiB，TaskMax64 | 原生Argon2/连接buffer不计入heap；必须实测RSS，超限拒请求而非降密码强度 |
-| PostgreSQL | 连接20，API池5，shared_buffers128MiB，work_mem2MiB，maintenance32MiB | work_mem按节点/连接增长；API10秒statement/5秒连接timeout；维护单独预算 |
-| 密码 | Argon2id 64MiB、t3、p1、有界并发2，无等待队列，认证IP限5/min | [RFC9106](https://www.rfc-editor.org/rfc/rfc9106.html)内存受限推荐64MiB/t3/p4；本项目p1为单核预算选择，非照抄RFC推荐；[OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)最低19MiB/t2/p1不能当性能理由随意降级 |
-| WSS | 全局500、单账号10、1KiB入站、64KiB背压、60秒重认证 | 是限制不是容量承诺；客户端写入WSS关闭，HTTP补齐 |
-| 消息 | envelope256KiB原始上限，API请求352KiB，最多100条且原始密文累计1MiB | 实际handshake/设备数/低内存页大小需测；参数/CSRF/会话/可信设备验证后的写仍拒绝503 |
-| 附件 | 每对象10MiB明文建议值，密文+16byte；拟单账号/总量配额 | 只有Schema，没有上传处理器或配额执行器 |
-| 磁盘 | OS4GB、DB/WAL3GB、媒体5GB、日志/临时1GB、保留余量4GB，剩余3GB缓冲 | 示例合计20GB；WAL上限非硬保证，磁盘配额/告警和拒写阈值未实现 |
+| 资源       | 初始预算/实际配置                                                    | 条件与风险                                                                                                                                                                                                                                           |
+| ---------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Node       | heap384MiB，systemd MemoryMax768MiB，TaskMax64                       | 原生Argon2/连接buffer不计入heap；必须实测RSS，超限拒请求而非降密码强度                                                                                                                                                                               |
+| PostgreSQL | 连接20，API池5，shared_buffers128MiB，work_mem2MiB，maintenance32MiB | work_mem按节点/连接增长；API10秒statement/5秒连接timeout；维护单独预算                                                                                                                                                                               |
+| 密码       | Argon2id 64MiB、t3、p1、有界并发2，无等待队列，认证IP限5/min         | [RFC9106](https://www.rfc-editor.org/rfc/rfc9106.html)内存受限推荐64MiB/t3/p4；本项目p1为单核预算选择，非照抄RFC推荐；[OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)最低19MiB/t2/p1不能当性能理由随意降级 |
+| WSS        | 全局500、单账号10、1KiB入站、64KiB背压、60秒重认证                   | 是限制不是容量承诺；客户端写入WSS关闭，HTTP补齐                                                                                                                                                                                                      |
+| 消息       | envelope256KiB原始上限，API请求352KiB，最多100条且原始密文累计1MiB   | 实际handshake/设备数/低内存页大小需测；参数/CSRF/会话/可信设备验证后的写仍拒绝503                                                                                                                                                                    |
+| 附件       | 每对象10MiB明文建议值，密文+16byte；拟单账号/总量配额                | 只有Schema，没有上传处理器或配额执行器                                                                                                                                                                                                               |
+| 磁盘       | OS4GB、DB/WAL3GB、媒体5GB、日志/临时1GB、保留余量4GB，剩余3GB缓冲    | 示例合计20GB；WAL上限非硬保证，磁盘配额/告警和拒写阈值未实现                                                                                                                                                                                         |
 
 `deploy/echo-native.service`使用独立非root账号、只写数据目录、严格文件系统保护；release/config不可由API写。Caddy仅serve前端dist，媒体目录不公开，API仅loopback；`deploy/postgresql.conf`是合并参考，不覆盖已有配置。Node二进制路径由运维确认，不盲用本机nvm路径。没有在目标Debian运行systemd/Caddy解析或资源验证。
 

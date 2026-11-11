@@ -12,13 +12,13 @@
 
 ## 实现对比
 
-| 项目 | 版本与维护快照 | License / Provider | 浏览器与成熟度 | 当前决定 |
-| --- | --- | --- | --- | --- |
-| [ts-mls](https://github.com/LukaJCB/ts-mls) | 稳定 v1.6.4，2026-08-28 release；2.0 RC 不是稳定版；main提交2026-11-04 | MIT；标签声明套件1；WebCrypto/HPKE路径，额外算法可引入 peer | TypeScript便于集成；未正式审计；浏览器持久化/平台验证未闭环 | 条件备选；未获生产批准 |
-| [mls-rs](https://github.com/awslabs/mls-rs) | 稳定编号tag0.57.0，2026-10-28提交；无GitHub release条目；main提交2026-11-02 | Apache-2.0 OR MIT；OpenSSL/AWS-LC、RustCrypto、WebCrypto、CryptoKit | wasm方向存在；官方WebCrypto实验性仅列2/5/7，RustCrypto列1/2/3（表中的Experimental限定X.509支持，不代表整个Provider）；官方称无完整第三方审计 | WebCrypto路线因套件1/成熟度 BLOCKED；RustCrypto路线待独立评估 |
-| [OpenMLS](https://github.com/openmls/openmls) | 已发布crate0.9.2/tagv0.9.2，2026-10-22提交；GitHub Latest仍0.9.0；main提交2026-11-10 | MIT；RustCrypto/libcrux provider，明确列套件1/2/3 | 有独立核心审计；`js`可编译WASM，WASM与iOS目标明确未支持、仅CI构建不测试 | 首选开展可行性验证；生产选型 BLOCKED |
-| [mlspp](https://github.com/cisco/mlspp) | 无GitHub release；v0.1.0 tag提交2021-05-26，不冒充当前稳定release；main提交2026-09-21 | BSD-2-Clause；C++17、OpenSSL/BoringSSL | 缺少已核实的浏览器发行/存储/审计证据，C++/WASM/JS桥成本高 | 否决首版浏览器主库，保留未来互操作参考 |
-| [mls-implementations](https://github.com/mlswg/mls-implementations) | main提交2026-10-07，无版本tag/release；API未识别license | 互操作协调、向量、harness | 不是MLS密码库，列入名单不证明当前版本组合通过 | 否决作为运行依赖；只作验证资料 |
+| 项目                                                                | 版本与维护快照                                                                        | License / Provider                                                  | 浏览器与成熟度                                                                                                                               | 当前决定                                                      |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| [ts-mls](https://github.com/LukaJCB/ts-mls)                         | 稳定 v1.6.4，2026-08-28 release；2.0 RC 不是稳定版；main提交2026-11-04                | MIT；标签声明套件1；WebCrypto/HPKE路径，额外算法可引入 peer         | TypeScript便于集成；未正式审计；浏览器持久化/平台验证未闭环                                                                                  | 条件备选；未获生产批准                                        |
+| [mls-rs](https://github.com/awslabs/mls-rs)                         | 稳定编号tag0.57.0，2026-10-28提交；无GitHub release条目；main提交2026-11-02           | Apache-2.0 OR MIT；OpenSSL/AWS-LC、RustCrypto、WebCrypto、CryptoKit | wasm方向存在；官方WebCrypto实验性仅列2/5/7，RustCrypto列1/2/3（表中的Experimental限定X.509支持，不代表整个Provider）；官方称无完整第三方审计 | WebCrypto路线因套件1/成熟度 BLOCKED；RustCrypto路线待独立评估 |
+| [OpenMLS](https://github.com/openmls/openmls)                       | 已发布crate0.9.2/tagv0.9.2，2026-10-22提交；GitHub Latest仍0.9.0；main提交2026-11-10  | MIT；RustCrypto/libcrux provider，明确列套件1/2/3                   | 有独立核心审计；`js`可编译WASM，WASM与iOS目标明确未支持、仅CI构建不测试                                                                      | 首选开展可行性验证；生产选型 BLOCKED                          |
+| [mlspp](https://github.com/cisco/mlspp)                             | 无GitHub release；v0.1.0 tag提交2021-05-26，不冒充当前稳定release；main提交2026-09-21 | BSD-2-Clause；C++17、OpenSSL/BoringSSL                              | 缺少已核实的浏览器发行/存储/审计证据，C++/WASM/JS桥成本高                                                                                    | 否决首版浏览器主库，保留未来互操作参考                        |
+| [mls-implementations](https://github.com/mlswg/mls-implementations) | main提交2026-10-07，无版本tag/release；API未识别license                               | 互操作协调、向量、harness                                           | 不是MLS密码库，列入名单不证明当前版本组合通过                                                                                                | 否决作为运行依赖；只作验证资料                                |
 
 “最新”仅指本轮观察渠道，不混淆tag、crate与release；未发布分支API不能套在稳定版本上。具体ref和许可证见[研究记录](research-sources.md)。
 
@@ -48,13 +48,19 @@ OpenMLS官方提供[Add](https://book.openmls.tech/user_manual/add_members.html)
 
 **推荐与风险。** 以OpenMLS0.9.2 + 上游现有套件1 provider + 最薄WASM边界做候选，不写新provider补缺；禁用content-debug/crypto-debug/实验扩展。WebCrypto用于附件及本地保护，不宣称WASM私钥均是non-extractable CryptoKey。内存、GC、WASM副本和浏览器磁盘均有残留风险；non-extractable也不防同源恶意调用。
 
-| 必须评估 | 本轮状态 | 解除条件 |
-| --- | --- | --- |
-| 桌面Chromium/Firefox/Safari与真实iOS Safari | BLOCKED / NOT_RUN | 固定最低版本、HTTPS、suite1原生生成/加入/解密/移除，无静默降级 |
-| Worker RNG/curve/signature/HPKE/AEAD | BLOCKED | 上游provider源码+向量+目标浏览器验证，无自行修补算法 |
-| IndexedDB加密provider、跨标签互斥、磁盘满/事务中断 | BLOCKED | 原生状态变更与outbox/去重原子持久化，崩溃不回用ratchet |
-| Group State完整性、过期epoch清除、浏览器备份回滚 | BLOCKED | 受保护本地存储/恢复策略；不能证明新鲜度即重新入群 |
-| KeyPackage私钥、消费/过期/撤销、Commit/Welcome | BLOCKED | 验证具体版本语义和崩溃窗口，不复用未知包 |
-| 当前版本互操作、安全审计及provider范围 | BLOCKED | 固定构建互操作证据、审计整改、实际集成独立评审 |
+| 必须评估                                           | 本轮状态          | 解除条件                                                       |
+| -------------------------------------------------- | ----------------- | -------------------------------------------------------------- |
+| 桌面Chromium/Firefox/Safari与真实iOS Safari        | BLOCKED / NOT_RUN | 固定最低版本、HTTPS、suite1原生生成/加入/解密/移除，无静默降级 |
+| Worker RNG/curve/signature/HPKE/AEAD               | BLOCKED           | 上游provider源码+向量+目标浏览器验证，无自行修补算法           |
+| IndexedDB加密provider、跨标签互斥、磁盘满/事务中断 | BLOCKED           | 原生状态变更与outbox/去重原子持久化，崩溃不回用ratchet         |
+| Group State完整性、过期epoch清除、浏览器备份回滚   | BLOCKED           | 受保护本地存储/恢复策略；不能证明新鲜度即重新入群              |
+| KeyPackage私钥、消费/过期/撤销、Commit/Welcome     | BLOCKED           | 验证具体版本语义和崩溃窗口，不复用未知包                       |
+| 当前版本互操作、安全审计及provider范围             | BLOCKED           | 固定构建互操作证据、审计整改、实际集成独立评审                 |
 
 因此首选是**研究顺序**而非生产定稿。若OpenMLS浏览器门槛不能满足，转评ts-mls时仍需完整审计与同样事务/撤权验证；不通过便暂停核心建设，不能以“TS更简单”降低标准。详细准入证据见[实施计划](native-implementation-plan.md)。
+
+## 第二阶段本地核对（2026-11-11）
+
+本轮未重新联网查询上述版本/维护状态；以上为第一阶段来源快照。实际本地package与源码无OpenMLS/ts-mls/mls-rs依赖、Cargo/WASM构建、provider或稳定版本绑定，且禁止下载/安装/构建/运行。无法验证固定API、套件1、WASM导出、Welcome消费或原生storage事务，因此没有新增空适配器/Worker或自造MLS状态机。OpenMLS0.9.2仍只是可行性优先顺序，不能确定为已完成生产选型。
+
+独立附件基础仅使用浏览器标准AES-GCM，见数据生命周期的实际边界；不是MLS集成。浏览器API存在也不证明算法、IndexedDB、跨标签单写者或故障恢复已通过。解除G1–G4至少需要：明确授权准备固定原生库/provider、审查稳定版实际源码/导出、编译WASM或评估ts-mls、运行互操作/真实浏览器与持久化故障验证。当前限制下不能安全完成，聊天/初始化/恢复保持关闭。

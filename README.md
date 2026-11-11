@@ -2,60 +2,48 @@
 
 Private by Design.
 
-自主通信系统的第一阶段研究、架构与实际代码基础，日期 **2026-11-11**。本仓库独立于旧 Echo V2；不使用 Matrix、Synapse 或 Matrix SDK。已有React/Fastify/PostgreSQL源码、配置与未执行迁移；没有安装依赖或启动服务。
+独立于旧Echo V2的自主通信项目。React 19 + TypeScript + Vite + HeroUI v3，Fastify模块化单体，单实例PostgreSQL，HTTPS/WSS，Caddy + systemd。没有Matrix/Synapse依赖、第二套消息队列或密码学协议实现。
 
-**第一阶段交付代码基础；真实MLS集成与第二阶段准入 BLOCKED。** 推荐先验证 OpenMLS 0.9.2 的浏览器可行性，ts-mls 1.6.4 为条件备选；均未选定为生产库。原生库持久化事务、可信设备身份绑定、无效 Commit 处理、Safari/iOS 和独立删除证据仍须满足[准入门槛](docs/native-implementation-plan.md)。公开审计、编译支持和技术设计均不等于本产品安全验收。
+**2026-11-11：第二阶段源码交付为PARTIAL，真实MLS与核心通信仍BLOCKED，聊天写入关闭。** 原生库、可信身份、Group State原子持久化、Commit/Welcome与删除传播尚未接通，不能部署为可用安全聊天产品。第一阶段提交`6b5900e3cac7700e8e1c6ddcdbaf9dbe1da213b3`保留。
 
-## 架构与文档
+## 实际已有与未完成
 
-React + TypeScript + Vite、HeroUI v3；Fastify + TypeScript 模块化单体；PostgreSQL 单实例、单业务数据库；WebSocket 实时提示，HTTPS 游标补齐；客户端 MLS 和附件加密；本地密文媒体；Caddy + systemd。AS 与 DS 是单体内部职责，不是额外服务。Rust 仅在采用原生 MLS/WASM 库时用于客户端密码学核心。
+- 已编写：密码注册/邀请事务、Cookie/CSRF/独立管理audience/重新认证、改名、pending设备/服务撤销、有界目录/不透明投递SQL/原操作查询/cursor、WSS提示、删除意图/数据库到期调度、真实后台元数据操作与页面。
+- 本轮修复：route_version与seq/MLS状态分离、Service内总门禁、Commit候选冻结、事务内会话/当前根目录条件、重复撤销无重复副作用、删除操作绑定/本人到期记录分页、邀请码未知结果幂等。
+- 前端：Echo原创图标、五档系统字体、衬线标题/无衬线正文、Achromatic Ledger、深浅主题、桌面/移动布局；主要用户与管理员页面入口已覆盖。页面存在不等于对应加密功能完成。
+- 附件：仅页内标准AES-256-GCM加解密、临时不可导出key/IV、Object URL释放；未上传、未发送、无MLS传key或持久化。不是生产附件端到端集成。
+- 未实现：真实MLS、根授权/Credential/可信设备、KeyPackage、组创建/角色/Remove、Commit+Welcome、加密消息业务、私人收藏/备注/墓碑、完整离线同步、媒体投递/清理、注销/恢复/备份执行器。无假SDK、Mock聊天或备份成功按钮。
 
-| 文档 | 权威职责 |
-| --- | --- |
-| [架构](docs/native-architecture.md) | 模块、信任边界、数据流、管理端及未来目录 |
-| [密码学研究](docs/native-cryptography.md) | 标准、五个项目比较、Provider、版本、浏览器及原生 API |
-| [身份、设备与恢复](docs/native-identity-devices-recovery.md) | 账号、Credential、设备授权/撤销、恢复边界 |
-| [协议与投递](docs/native-protocol-delivery.md) | 消息 Schema、API、排序、幂等、Commit/Welcome、客户端事务 |
-| [数据与生命周期](docs/native-data-lifecycle.md) | PostgreSQL 逻辑 Schema、附件、删除、到期和归档 |
-| [威胁模型](docs/native-security-threat-model.md) | 全通道矩阵、攻击者、剩余风险与证据要求 |
-| [部署与运维](docs/native-deployment-operations.md) | 低配预算、权限、外部删除日志、系统备份/隔离恢复 |
-| [迁移](docs/native-migration.md) | 只读旧项目、复用筛选与用户设备历史转换 |
-| [实施计划](docs/native-implementation-plan.md) | 三阶段、可验收任务、BLOCKED/OPEN 解除条件 |
-| [研究来源](docs/research-sources.md) | 实际读取的官方证据、版本快照与核验范围 |
-| [决策](docs/decisions.md) | 已决、条件推荐、未决事项及本轮交付检查 |
+服务器仅负责不透明数据及必要元数据，但不能证明任意客户端提交的是合法密文；恶意前端/现成员可泄露内容。服务撤销不等于MLS撤权，删除请求不等于物理擦除，旧备份无新鲜独立删除证据不能自动恢复。
 
-## 关键边界
+## 文档
 
-- MLS 管理客户端群组密钥，不提供完整聊天产品、密码登录、角色治理或删除保证。一对一是两个用户的 MLS 群组，多设备会有两个以上 leaf。
-- 服务器不持有 MLS 私钥、Epoch Secret、完整私有 Group State、恢复密钥或通信正文。参与关系、设备、公钥、流量、时间、密文长度和必要生命周期字段可见。
-- PostgreSQL 能排序不透明 Commit 候选，不能证明其 MLS 有效性；存在无效候选时停止发送，不能以服务端 epoch 计数冒充密钥状态。
-- 移除成员必须由授权客户端完成有效 MLS Commit。封禁、密码重置、HTTP 会话撤销不等于密码学撤权。
-- 删除不能擦除接收者已解密内容、截图或外部副本。旧备份恢复必须取得独立且新鲜的删除证据；缺失时停止恢复。
+| 权威文档                                                                              | 范围                                                     |
+| ------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| [第二阶段报告](docs/phase-two-report.md)                                              | 验收清单、实际迁移、剩余阻塞、文件树与Git交付            |
+| [静态报告](docs/static-verification-report.md)                                        | 实际工具/命令、结果、证据边界                            |
+| [架构](docs/native-architecture.md)                                                   | 模块、数据流与信任边界                                   |
+| [密码学研究](docs/native-cryptography.md)                                             | 固定版本候选、Provider/API/审计范围与本地缺口            |
+| [身份与恢复](docs/native-identity-devices-recovery.md)                                | 账户、设备、根授权和五类恢复                             |
+| [协议](docs/native-protocol-delivery.md)                                              | 当前API、route_version/seq、目标Commit/Welcome与原生门禁 |
+| [数据生命周期](docs/native-data-lifecycle.md)                                         | Schema/事务/权限、附件、删除、归档与注销                 |
+| [威胁模型](docs/native-security-threat-model.md)                                      | 全通道矩阵、保护范围及残余风险                           |
+| [运维](docs/native-deployment-operations.md)                                          | 低配预算、独立删除证据与隔离灾备设计                     |
+| [迁移台账](docs/native-migration.md)                                                  | 旧项目只读、视觉复用、业务重写及历史转换限制             |
+| [实施计划](docs/native-implementation-plan.md)                                        | 三阶段及G1–G7解除条件                                    |
+| [研究来源](docs/research-sources.md)、[决策](docs/decisions.md)、[变更](CHANGELOG.md) | 来源快照、决策与历史                                     |
 
-## 实际代码与使用前提
+## 本地检查与后续准备
 
-已有密码注册/邀请事务、用户与管理员Cookie会话/CSRF/重新认证、用户名修改、待授权设备登记/服务撤销、独立超管provision工具、后台真实查询/分页/注册模式/邀请/封禁审计、WSS通知管理、密文顺序/幂等/分页/cursor事务、删除意图/到期持久调度。
+本仓库无node_modules/锁文件；精确依赖声明见[package.json](package.json)，本轮没有增加运行依赖或安装工具。当前检查不启动应用：
 
-**通过参数、CSRF、会话与可信设备验证的消息写入仍被503门禁拒绝；设备不自动可信。** MLS加解密、根签发、KeyPackage操作、群组创建/Welcome、媒体、私人墓碑、归档恢复/注销、物理清理和备份执行器尚未实现。相关表和设计为后续基础，不把页面、计数或pending状态冒充这些能力。
-
-```text
-echov2/
-  src/client/      app、components、account/devices/messaging/data/admin、crypto、styles
-  src/server/      accounts、identity、devices、delivery、messaging、lifecycle、admin、storage、api
-  src/shared/      contracts、validation、capabilities
-  migrations/     初始Schema/运行权限，仅供审查
-  deploy/         Caddy、systemd、PostgreSQL预算
-  scripts/        静态扫描、离线管理员provision、本地先决检查
-  public/         Echo原创图标
-  docs/           研究、规格、威胁/恢复/迁移/计划、交付记录
+```sh
+node --experimental-vm-modules scripts/check-source.mjs
+node scripts/check-typescript-ast.mjs /absolute/path/to/existing/typescript/lib/typescript.js
 ```
 
-本机没有node_modules，缺失依赖的**精确名称/版本**在[package.json](package.json)；未选定的MLS库没有加入依赖来假装已接入。无锁文件，实际解析树/许可证/SBOM尚未验证；须获授权安装并锁定后才能做完整检查，不能直接npm ci。当前可运行的本地静态命令为`node --experimental-vm-modules scripts/check-source.mjs`，其退出2明确表示缺少完整类型/TSX验证，并非应用失败。
+第一条退出2表示该扫描覆盖PARTIAL；第二条只做AST/本地直接导出，不做类型/运行校验。系统发现已有TypeScript 5.9.3用于AST及局部strict检查；全项目严格检查因缺vite/client与node类型入口退出2，不能记PASS。直接调用本机既有缓存Prettier 3.9.10完成全项目格式检查；ESLint 10.14.0因缺配置插件而阻塞；详见静态报告。
 
-后续获授权准备依赖/数据库时，先审查[migrations说明](migrations/README.md)和[运维](docs/native-deployment-operations.md)。应用不自动迁移；使用受保护环境提供PUBLIC_ORIGIN/DATABASE_URL/MEDIA_PATH，不提交.env。账号页面需要同源HTTPS Cookie，Vite HTTP代理本身不提供生产认证条件。离线provision管理员工具会实际写DB，不在本轮执行；没有“首个HTTP用户自动成为管理员”。
+[migrations](migrations/README.md)按001→002→003→004审查，全部未执行，不自动迁移。003拒绝旧投递历史的静默转换；新源码不能配旧Schema直接启动。正式准备前须获授权安装固定依赖/原生库、审查实际API与锁定供应链、隔离数据库和真实浏览器验证。不能直接npm ci，也不能以手写声明或假模块绕过依赖缺失。
 
-## 本次交付边界
-
-旧项目保持只读，仅[审查后选择性复用](docs/native-migration.md)原创图标、tokens和独立工具配置。未下载文件/源码、克隆、安装、测试、构建、启动服务、执行 SQL、连接 VPS 或部署。允许的网络操作仅为官方资料阅读、GitHub 元数据核查和本仓库获授权的 Git 提交/推送。检查和发布实况见[交付记录](docs/decisions.md)。
-
-第一阶段结束后停止。第二阶段的下载、安装、浏览器原型、测试、构建和服务验证需要另行明确授权；本文中的后续验收步骤没有在本轮执行。
+旧`echo-v2`完整保留、只读。未下载、安装、克隆、测试、构建、启动、执行SQL、连接VPS或部署。阶段发布只限本仓库非强制提交/推送；远程返回和SHA以交付回复为准。交付后停止，等待审查，不自动进入第三阶段。

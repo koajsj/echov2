@@ -1,0 +1,48 @@
+/* Retained Echo chart primitives; only the migrated line series is shipped. */
+.chart-panel {
+  min-width: 0;
+}
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 160px;
+  overflow: visible;
+  font-family: var(--echo-font);
+  font-size: var(--echo-type-meta);
+}
+.chart-axis {
+  stroke: var(--echo-border);
+  stroke-width: 1;
+}
+.chart-line {
+  fill: none;
+  stroke: var(--echo-focus);
+  stroke-width: 2;
+}
+.chart-dot {
+  fill: var(--echo-focus);
+}
+.chart-empty {
+  color: var(--echo-muted);
+  padding: 28px 12px;
+  border-block-end: 1px solid var(--echo-border);
+}
+.chart-note {
+  color: var(--echo-muted);
+  margin-block: 8px 16px;
+  font-size: var(--echo-type-meta);
+  line-height: var(--echo-leading-body);
+}
+.chart-label {
+  fill: var(--echo-muted);
+  font-size: inherit;
+  font-weight: var(--echo-weight-regular);
+  letter-spacing: normal;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 760px) {
+  .chart {
+    min-height: 140px;
+  }
+}

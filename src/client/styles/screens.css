@@ -1,0 +1,127 @@
+/* Migrated Echo workspace geometry; data and trust remain Native-specific. */
+.chat-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  min-height: 480px;
+  border-block: 1px solid var(--echo-border);
+}
+.conversation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  padding: 24px 16px;
+  border-inline-end: 1px solid var(--echo-border);
+}
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.conversation-detail {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 24px;
+  background: var(--echo-surface);
+}
+.room-list {
+  display: grid;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+.room-list button {
+  min-width: 0;
+  text-align: start;
+  padding: 14px 16px;
+  background: transparent;
+  color: var(--echo-text);
+  border: 0;
+  cursor: pointer;
+  font-size: var(--echo-type-label);
+  line-height: var(--echo-leading-ui);
+}
+.room-list button[aria-current="true"] {
+  background: var(--echo-active);
+}
+.room-list button:hover:not([aria-current="true"]) {
+  background: var(--echo-raised);
+}
+.room-list span {
+  display: block;
+  color: var(--echo-muted);
+  margin-top: 6px;
+  font-size: var(--echo-type-meta);
+}
+.operation-list {
+  overflow: hidden;
+  border-radius: var(--echo-radius);
+  border: 1px solid var(--echo-border);
+}
+.operation-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+  background: var(--echo-surface);
+}
+.operation-row + .operation-row {
+  border-block-start: 1px solid var(--echo-border);
+}
+.operation-row > div {
+  min-width: 0;
+}
+.operation-row > span {
+  font-size: var(--echo-type-meta);
+  white-space: nowrap;
+  color: var(--echo-muted);
+}
+.empty-symbol {
+  width: 36px;
+  height: 36px;
+  color: var(--echo-muted);
+}
+.chart-observations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding-inline-start: 20px;
+  font-size: var(--echo-type-meta);
+  font-variant-numeric: tabular-nums;
+}
+fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: 20px;
+}
+section > .panel,
+section > form {
+  margin-block: 24px;
+}
+@media (max-width: 900px) {
+  .chat-layout {
+    grid-template-columns: 1fr;
+  }
+  .conversation-list {
+    border-inline-end: 0;
+    border-block-end: 1px solid var(--echo-border);
+  }
+}
+@media (max-width: 640px) {
+  .conversation-detail {
+    padding: 24px 16px;
+  }
+  .operation-row {
+    padding: 20px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+}

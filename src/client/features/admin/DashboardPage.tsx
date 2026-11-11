@@ -1,0 +1,97 @@
+import { useState } from "react";
+import { Button } from "@heroui/react";
+import { useApiQuery } from "../../app/use-api-query";
+import { ServiceState } from "../../components/ServiceState";
+import {
+  ChartFrame,
+  LineChart,
+  type ChartDatum,
+} from "../../components/Charts";
+interface Overview {
+  counts: Record<string, string>;
+  registration: {
+    registration_mode: string;
+    version: string;
+  };
+  trafficBytes: null;
+  regions: null;
+}
+const labels: Record<string, string> = {
+  users: "注册账号",
+  devices: "活跃服务设备",
+  accepted_envelopes: "持久化 envelope",
+  pending_deletions: "未完成删除",
+};
+export function DashboardPage({
+  sessionId,
+  analytics = false,
+}: {
+  sessionId: string;
+  analytics?: boolean;
+}) {
+  const [revision, setRevision] = useState(0);
+  const query = useApiQuery<Overview>(
+    "/v1/admin/overview",
+    revision,
+    sessionId,
+  );
+  const growth = useApiQuery<{
+    items: ChartDatum[];
+    source: string;
+  }>("/v1/admin/growth", revision, sessionId);
+  return (
+    <section>
+      <header className="page-heading">
+        <h1>{analytics ? "网站分析" : "管理概览"}</h1>
+        <p>来源明确的业务元数据；持久化数量不等于密码学验证成功数。</p>
+      </header>
+      <Button
+        variant="secondary"
+        isDisabled={query.loading || growth.loading}
+        onPress={() => setRevision((value) => value + 1)}
+      >
+        刷新数据
+      </Button>
+      <ServiceState {...query} />
+      {query.data && (
+        <div className="metrics">
+          {Object.entries(query.data.counts).map(([name, value]) => (
+            <div key={name}>
+              <span>{labels[name] ?? name}</span>
+              <strong>{value}</strong>
+            </div>
+          ))}
+        </div>
+      )}
+      <ServiceState {...growth} />
+      {growth.data && (
+        <ChartFrame
+          title="账号增长"
+          kind="过去 30 个 UTC 日的实际注册记录"
+          description="只绘制有观测记录的日期，不插入虚构零值；没有采集流量或地区。"
+        >
+          <LineChart series={growth.data.items} label="每日注册账号" />
+          <ul className="chart-observations">
+            {growth.data.items.map((item) => (
+              <li key={item.bucket}>
+                {item.bucket} · {item.value} 个账号
+              </li>
+            ))}
+          </ul>
+        </ChartFrame>
+      )}
+      <div className="split-panels">
+        <div className="panel">
+          <h2>全站与媒体流量</h2>
+          <p>未知 · Caddy 可信采集器尚未接入。</p>
+        </div>
+        <div className="panel">
+          <h2>IP 属地与浏览器分布</h2>
+          <p>
+            未知 · 没有合法本地 GeoIP 数据库或浏览器解析来源，不推断、不补零。
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}

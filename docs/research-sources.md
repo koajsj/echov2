@@ -4,26 +4,26 @@
 
 ## 标准
 
-| 来源 | 实际用于确认的事实/边界 |
-| --- | --- |
-| [RFC9420](https://www.rfc-editor.org/rfc/rfc9420.html)，尤其§11/17.1 | MLS消息/设备/epoch与套件1基准；没有完整产品认证/删除能力 |
-| [RFC9750](https://www.rfc-editor.org/rfc/rfc9750.html)，§3.7/4/5.2.1/5.3/8 | AS/DS、强一致投递、加密无效Commit与信任边界；Informational |
-| [RFC9180 HPKE](https://www.rfc-editor.org/rfc/rfc9180.html)、[RFC5869 HKDF](https://www.rfc-editor.org/rfc/rfc5869.html) | 采用标准原语，经成熟MLS实现调用，不自写 |
-| [RFC9106 Argon2](https://www.rfc-editor.org/rfc/rfc9106.html)、[OWASP密码存储](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) | 哈希参数事实与本项目预算选择分开 |
-| [RFC7515 JWS](https://www.rfc-editor.org/rfc/rfc7515.html)、[RFC8037 JOSE](https://www.rfc-editor.org/rfc/rfc8037.html)、[RFC7638 thumbprint](https://www.rfc-editor.org/rfc/rfc7638.html) | 身份签发/完整指纹的标准候选，未形成已审计Echo profile |
-| [WebCrypto](https://www.w3.org/TR/webcrypto/)、[Safari17 WebKit说明](https://webkit.org/blog/14205/news-from-wwdc23-webkit-features-in-safari-17-beta/) | 标准算法/浏览器能力资料；Level2是草案，Ed25519支持不证明完整套件或iOS通过 |
+| 来源                                                                                                                                                                                       | 实际用于确认的事实/边界                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| [RFC9420](https://www.rfc-editor.org/rfc/rfc9420.html)，尤其§11/17.1                                                                                                                       | MLS消息/设备/epoch与套件1基准；没有完整产品认证/删除能力                  |
+| [RFC9750](https://www.rfc-editor.org/rfc/rfc9750.html)，§3.7/4/5.2.1/5.3/8                                                                                                                 | AS/DS、强一致投递、加密无效Commit与信任边界；Informational                |
+| [RFC9180 HPKE](https://www.rfc-editor.org/rfc/rfc9180.html)、[RFC5869 HKDF](https://www.rfc-editor.org/rfc/rfc5869.html)                                                                   | 采用标准原语，经成熟MLS实现调用，不自写                                   |
+| [RFC9106 Argon2](https://www.rfc-editor.org/rfc/rfc9106.html)、[OWASP密码存储](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)                           | 哈希参数事实与本项目预算选择分开                                          |
+| [RFC7515 JWS](https://www.rfc-editor.org/rfc/rfc7515.html)、[RFC8037 JOSE](https://www.rfc-editor.org/rfc/rfc8037.html)、[RFC7638 thumbprint](https://www.rfc-editor.org/rfc/rfc7638.html) | 身份签发/完整指纹的标准候选，未形成已审计Echo profile                     |
+| [WebCrypto](https://www.w3.org/TR/webcrypto/)、[Safari17 WebKit说明](https://webkit.org/blog/14205/news-from-wwdc23-webkit-features-in-safari-17-beta/)                                    | 标准算法/浏览器能力资料；Level2是草案，Ed25519支持不证明完整套件或iOS通过 |
 
 ## 五个项目与版本快照
 
 GitHub API读取default branch、license、最新head、tags、前4个release；对下列版本再次读取commit日期。日期为提交UTC，不伪称crate发布日期。表内ref用于复核，实施前仍需再查安全更新。主线文档可能超前于tag/API。
 
-| 项目 | 版本ref / commit | 当前主线commit日期 / 版本渠道 |
-| --- | --- | --- |
-| [ts-mls](https://github.com/LukaJCB/ts-mls) | [v1.6.4](https://github.com/LukaJCB/ts-mls/tree/v1.6.4) / `ddff62aa15d3064fff5d77dda35b3cdf2970870d`，2026-08-28 | 2026-11-04；稳定release1.6.4，另有2.0 RC |
-| [mls-rs](https://github.com/awslabs/mls-rs) | [0.57.0](https://github.com/awslabs/mls-rs/tree/0.57.0) / `a1436f4a5433214ed62349e77835b57a0accdc42`，2026-10-28 | 2026-11-02；tag及[0.57 API](https://docs.rs/mls-rs/0.57.0/mls_rs/group/struct.Group.html)，GitHub releases空 |
-| [OpenMLS](https://github.com/openmls/openmls) | [v0.9.2](https://github.com/openmls/openmls/tree/v0.9.2) / `8a8f83b4b61fc45f28facec25e914992b3465de6`，2026-10-22 | 2026-11-10；[docs.rs发布0.9.2](https://docs.rs/openmls/0.9.2/openmls/)，GitHub Latest仍0.9.0 |
-| [mlspp](https://github.com/cisco/mlspp) | [v0.1.0](https://github.com/cisco/mlspp/tree/v0.1.0) / `21c9a937ac24a2e0bd9b2d062e598fd9161119d9`，2021-05-26 | 2026-09-21；没有GitHub release，不把旧tag称最新生产稳定版 |
-| [mls-implementations](https://github.com/mlswg/mls-implementations) | main `2034fe72e0c805a683ba76165660c834f2a8142a` | 2026-10-07；无tag/release，互操作协调材料非库 |
+| 项目                                                                | 版本ref / commit                                                                                                  | 当前主线commit日期 / 版本渠道                                                                                |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| [ts-mls](https://github.com/LukaJCB/ts-mls)                         | [v1.6.4](https://github.com/LukaJCB/ts-mls/tree/v1.6.4) / `ddff62aa15d3064fff5d77dda35b3cdf2970870d`，2026-08-28  | 2026-11-04；稳定release1.6.4，另有2.0 RC                                                                     |
+| [mls-rs](https://github.com/awslabs/mls-rs)                         | [0.57.0](https://github.com/awslabs/mls-rs/tree/0.57.0) / `a1436f4a5433214ed62349e77835b57a0accdc42`，2026-10-28  | 2026-11-02；tag及[0.57 API](https://docs.rs/mls-rs/0.57.0/mls_rs/group/struct.Group.html)，GitHub releases空 |
+| [OpenMLS](https://github.com/openmls/openmls)                       | [v0.9.2](https://github.com/openmls/openmls/tree/v0.9.2) / `8a8f83b4b61fc45f28facec25e914992b3465de6`，2026-10-22 | 2026-11-10；[docs.rs发布0.9.2](https://docs.rs/openmls/0.9.2/openmls/)，GitHub Latest仍0.9.0                 |
+| [mlspp](https://github.com/cisco/mlspp)                             | [v0.1.0](https://github.com/cisco/mlspp/tree/v0.1.0) / `21c9a937ac24a2e0bd9b2d062e598fd9161119d9`，2021-05-26     | 2026-09-21；没有GitHub release，不把旧tag称最新生产稳定版                                                    |
+| [mls-implementations](https://github.com/mlswg/mls-implementations) | main `2034fe72e0c805a683ba76165660c834f2a8142a`                                                                   | 2026-10-07；无tag/release，互操作协调材料非库                                                                |
 
 **许可证核查：** ts-mls/OpenMLS为MIT；mls-rs仓库明确Apache-2.0 OR MIT（API license字段只给Apache不代表只能选一个）；mlspp为BSD-2-Clause。mlswg API license=null，未取得统一根license，不复制该仓库文件。仅阅读许可字段/项目声明不是全部传递依赖法律审查。
 

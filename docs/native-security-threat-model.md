@@ -12,34 +12,34 @@ HTTPS和诚实服务能控制外层入口/权限，MLS客户端验证密码学�
 
 PASS仅可指列出的静态事实；PARTIAL表示有部分基础源码，BLOCKED表示安全门槛未通过。本表没有运行安全PASS。
 
-| 通道/威胁 | 目标保护与信任主体 | 实际实现/静态证据 | 状态及未保护范围 |
-| --- | --- | --- | --- |
-| 消息/编辑/转发 | 客户端MLS验签解密、严格业务schema、历史作者/目标/墓碑校验 | 明确定义契约，参数/CSRF/会话/可信设备验证后仍拒绝写入503；真实密文投递SQL存在 | BLOCKED：没有MLS适配/客户端展示管线；服务器不能辨认伪装密文 |
-| 群名/描述/头像/联系人备注/收藏 | MLS应用数据，单账号私人组同步个人资料 | 没有服务器明文群资料字段，相关业务未实现 | BLOCKED：schema缺字段是防误存，不证明已加密同步 |
-| Proposal/Commit/Welcome | 库原生验证、AS绑定、strong DS排序和本地事务 | PostgreSQL候选排序/唯一约束；库研究已记录 | BLOCKED：Commit+Welcome/成员投影/无效候选恢复/实际库仍未闭环 |
-| to-device替代通道 | 只允许原生Welcome/经审查设备引导，拒任意明文业务旁路 | 无Matrix to-device或泛化私密载荷接口 | BLOCKED：设备引导方案未选；“没有接口”非全通道运行证明 |
-| account data替代通道 | 私人MLS组；业务schema限本人设备 | 未实现该组；无任意明文设置上传API | BLOCKED：删除/备注/收藏多设备不能声称可用 |
-| 媒体上传/下载/预览 | 每对象AEAD、MLS传key、私有文件服务、本地预览 | Schema和Caddy阻止公开媒体目录；无上传下载处理器 | BLOCKED：不得以只有表就说附件安全完成 |
-| HTTPS历史/离线同步 | 归属、设备/跨度、游标、到期/待删除门控 | delivery-service真实参数化SQL，写依赖可信设备及crypto gate | PARTIAL：尚无删日志高水位/客户端MLS处理；不供未授权设备读取 |
-| WSS | 有限通知、认证/Origin、背压/上限、断线HTTPS恢复 | 实际@fastify/websocket注册、连接管理/60秒重认证及撤session关闭 | PARTIAL：依赖未安装/运行；不承载聊天写入或私密内容 |
-| 后台密钥接收 | 原生库在Worker内，已验证凭证/顺序后才能merge | 没有虚构后台SDK或私钥API | BLOCKED：provider/Worker/持久化尚未集成 |
-| 搜索/缓存/导出 | 本地解密后搜索，受删除与授权门控；加密归档 | 没有远程正文搜索/历史重发/活跃state导入 | BLOCKED：本地索引/归档未实现；内存与浏览器副本难保证擦除 |
-| 日志/分析/通知 | 固定元数据白名单、无正文、无token/密码、无URL Preview | Fastify禁自动请求日志/敏感redact，错误仅固定码；Caddy无访问采集 | PARTIAL：实际代理、DB日志/崩溃日志需核验；没有已接通全站流量 |
-| 其它客户端/管理员 | 无通用业务明文路由；管理员只看业务元数据 | 无Matrix入口；管理员查表/配置/服务封禁，不能调用MLS | PARTIAL：恶意客户端可上传非MLS字节/主动泄密，不能承诺服务器绝无明文 |
-| 前端供应链/发布 | 同源资源、CSP、固定版本、无第三方脚本；独立交付审查 | 原图标与tokens选择性迁移；Caddy CSP；无远程字体/脚本 | PARTIAL：无lock/SBOM/构建验签，WASM CSP/inline style仍需实测 |
+| 通道/威胁                      | 目标保护与信任主体                                        | 实际实现/静态证据                                                             | 状态及未保护范围                                                                             |
+| ------------------------------ | --------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 消息/编辑/转发                 | 客户端MLS验签解密、严格业务schema、历史作者/目标/墓碑校验 | 明确定义契约，参数/CSRF/会话/可信设备验证后仍拒绝写入503；真实密文投递SQL存在 | BLOCKED：没有MLS适配/客户端展示管线；Service内拒写，Commit不推进版本；服务器不能辨认伪装密文 |
+| 群名/描述/头像/联系人备注/收藏 | MLS应用数据，单账号私人组同步个人资料                     | 没有服务器明文群资料字段，相关业务未实现                                      | BLOCKED：schema缺字段是防误存，不证明已加密同步                                              |
+| Proposal/Commit/Welcome        | 库原生验证、AS绑定、strong DS排序和本地事务               | PostgreSQL候选排序/唯一约束；库研究已记录                                     | BLOCKED：Commit+Welcome/成员投影/无效候选恢复/实际库仍未闭环                                 |
+| to-device替代通道              | 只允许原生Welcome/经审查设备引导，拒任意明文业务旁路      | 无Matrix to-device或泛化私密载荷接口                                          | BLOCKED：设备引导方案未选；“没有接口”非全通道运行证明                                        |
+| account data替代通道           | 私人MLS组；业务schema限本人设备                           | 未实现该组；无任意明文设置上传API                                             | BLOCKED：删除/备注/收藏多设备不能声称可用                                                    |
+| 媒体上传/下载/预览             | 每对象AEAD、MLS传key、私有文件服务、本地预览              | Schema和Caddy阻止公开媒体目录；页内标准AEAD基础；无上传下载处理器             | BLOCKED：不得以只有表就说附件安全完成                                                        |
+| HTTPS历史/离线同步             | 归属、设备/跨度、游标、到期/待删除门控                    | delivery-service真实参数化SQL，写依赖可信设备及crypto gate                    | PARTIAL：尚无完整删日志高水位/客户端MLS处理；不供未授权设备读取                              |
+| WSS                            | 有限通知、认证/Origin、背压/上限、断线HTTPS恢复           | 实际@fastify/websocket注册、连接管理/60秒重认证及撤session关闭                | PARTIAL：依赖未安装/运行；不承载聊天写入或私密内容                                           |
+| 后台密钥接收                   | 原生库在Worker内，已验证凭证/顺序后才能merge              | 没有虚构后台SDK或私钥API                                                      | BLOCKED：provider/Worker/持久化尚未集成                                                      |
+| 搜索/缓存/导出                 | 本地解密后搜索，受删除与授权门控；加密归档                | 没有远程正文搜索/历史重发/活跃state导入                                       | BLOCKED：本地索引/归档未实现；内存与浏览器副本难保证擦除                                     |
+| 日志/分析/通知                 | 固定元数据白名单、无正文、无token/密码、无URL Preview     | Fastify禁自动请求日志/敏感redact，错误仅固定码；Caddy无访问采集               | PARTIAL：实际代理、DB日志/崩溃日志需核验；没有已接通全站流量                                 |
+| 其它客户端/管理员              | 无通用业务明文路由；管理员只看业务元数据                  | 无Matrix入口；管理员查表/配置/服务封禁，不能调用MLS                           | PARTIAL：恶意客户端可上传非MLS字节/主动泄密，不能承诺服务器绝无明文                          |
+| 前端供应链/发布                | 同源资源、CSP、固定版本、无第三方脚本；独立交付审查       | 原图标与tokens选择性迁移；Caddy CSP；无远程字体/脚本                          | PARTIAL：无lock/SBOM/构建验签，WASM CSP/inline style仍需实测                                 |
 
 允许服务器可见：User/Device/Group UUID及路由关系、公开Credential/KeyPackage、roles投影、外层消息/操作ID、序号/声明epoch、到期/删除目标、密文对象及大小、时间、IP和必要认证日志。不得把这些称为“零元数据”。不采集正文分析、私人组名、联系人备注、附件文件名/MIME或客户端私钥。
 
 ## 身份与密钥攻击
 
-| 威胁 | 设计控制 | 当前缺口/最小替代 |
-| --- | --- | --- |
-| 盗密码→假设备 | pending设备不能通信；根授权绑定实际MLS公钥 | 原生profile未审查；登记真实pending，但无激活接口/运行权限 |
-| AS替换根/凭证 | 根pin、JWS/X.509标准候选、Add/Update/Welcome全部验证 | G4 BLOCKED；首次核验需独立通道，不相信目录本身 |
-| 跨标签/中断复用ratchet | 逐组单写者、native变更+outbox原子持久化、原样重投 | G3 BLOCKED；不使用旧snapshot恢复可发送状态 |
-| 恢复覆盖新epoch | 重新注册新设备、重新邀请；归档只读 | 初始化/活跃state导入关闭；根恢复不等于完整历史 |
-| 老成员获新key | 有效Remove Commit/new epoch，冻结过渡写入 | G5 BLOCKED；HTTP撤销已写、MLS移除未实现；串通成员仍可转发 |
-| 服务端假Commit/无效epoch | 客户端native校验后merge，失败freeze而不盲从head | G2 BLOCKED；候选槽是DS状态，不是MLS有效性认证 |
+| 威胁                     | 设计控制                                             | 当前缺口/最小替代                                         |
+| ------------------------ | ---------------------------------------------------- | --------------------------------------------------------- |
+| 盗密码→假设备            | pending设备不能通信；根授权绑定实际MLS公钥           | 原生profile未审查；登记真实pending，但无激活接口/运行权限 |
+| AS替换根/凭证            | 根pin、JWS/X.509标准候选、Add/Update/Welcome全部验证 | G4 BLOCKED；首次核验需独立通道，不相信目录本身            |
+| 跨标签/中断复用ratchet   | 逐组单写者、native变更+outbox原子持久化、原样重投    | G3 BLOCKED；不使用旧snapshot恢复可发送状态                |
+| 恢复覆盖新epoch          | 重新注册新设备、重新邀请；归档只读                   | 初始化/活跃state导入关闭；根恢复不等于完整历史            |
+| 老成员获新key            | 有效Remove Commit/new epoch，冻结过渡写入            | G5 BLOCKED；HTTP撤销已写、MLS移除未实现；串通成员仍可转发 |
+| 服务端假Commit/无效epoch | 客户端native校验后merge，失败freeze而不盲从head      | G2 BLOCKED；候选槽是DS状态，不是MLS有效性认证             |
 
 详细状态与解除条件分别在[身份](native-identity-devices-recovery.md)和[投递](native-protocol-delivery.md)，不新增第二套密钥/共识协议来填坑。
 
@@ -52,3 +52,11 @@ KeyPackage一次消费、历史epoch清理、用户归档和key销毁会影响FS
 ## 必须单列的验证
 
 当前静态检查仅检查可用工具覆盖的语法/引用/Schema文本、调用链、敏感候选与Diff；完整类型/TSX/依赖审计工具若不可用就NOT_AVAILABLE。后续需获授权在固定版本进行真实浏览器、原生向量/互操作、Commit冲突、撤权、离线删除、数据库事务/权限、磁盘满与隔离恢复验证；独立安全审查必须包含实际provider、存储、前端和AS/DS。编译成功、上游审计、HTTP200与源码存在均不能替代这些证据。
+
+## 第二阶段证据与残余风险
+
+- FIXED：Service总门禁、版本语义、候选冻结、事务内会话/根目录条件、删除操作绑定/本人到期可查、设备重复撤销。静态证据为调用链和增量SQL；并发运行证据NOT_RUN。
+- PARTIAL：页内附件标准AEAD、有界目录与原操作查询、WSS重连/非秘密session context匹配、真实管理员元数据页面。源码与AST/局部类型核查不替代运行。
+- BLOCKED：真实MLS、设备Credential绑定、Group State+outbox原子持久化、Commit/Welcome、历史/未来隔离、加密墓碑及删除高水位、媒体投递、注销/恢复/备份。
+
+前端未启用正文通知、typing/presence/read receipt，没有把用户备注或收藏写入localStorage。布局迁移不携带旧协议hook或SDK。AS/DS首次身份替换、前端供应链、恶意现成员和外部副本风险不因本轮静态修复消失。静态结果和准确缺口见两份阶段报告。

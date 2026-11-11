@@ -4,13 +4,13 @@
 
 ## 本轮已经复用的内容
 
-| 来源 | 新位置/处理 | 审查边界 |
-| --- | --- | --- |
-| `src/client/styles/tokens.css` | 同相对位置，保留字体/颜色/Motion/HeroUI桥接 | 与Matrix无关，系统字体，无远程资源 |
-| `public/echo.svg` | 同相对位置，作为原创Echo品牌标识 | 只有静态原创SVG；未取第三方图标 |
-| 根tsconfig族、eslint.config.js | 独立配置作为起点，tools范围加入新脚本 | 不继承旧项目路径或Matrix类型；严格配置未等于类型检查通过 |
-| package.json | 从已阅读的依赖版本记录选择React/HeroUI/Fastify/pg/工具版本，新建Native清单 | 不复制锁文件；删Matrix/SDK/react-router；新增必要Cookie/WSS/rate-limit/Argon2依赖声明，未安装 |
-| UI文档/Taste方向 | 采用Achromatic Ledger及衬线标题/无衬线正文、深浅主题/响应式原则 | 页面按Native账号/设备/阻塞状态重写，不复制Matrix组件/管理员认证 |
+| 来源                           | 新位置/处理                                                                | 审查边界                                                                                      |
+| ------------------------------ | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `src/client/styles/tokens.css` | 同相对位置，保留字体/颜色/Motion/HeroUI桥接                                | 与Matrix无关，系统字体，无远程资源                                                            |
+| `public/echo.svg`              | 同相对位置，作为原创Echo品牌标识                                           | 只有静态原创SVG；未取第三方图标                                                               |
+| 根tsconfig族、eslint.config.js | 独立配置作为起点，tools范围加入新脚本                                      | 不继承旧项目路径或Matrix类型；严格配置未等于类型检查通过                                      |
+| package.json                   | 从已阅读的依赖版本记录选择React/HeroUI/Fastify/pg/工具版本，新建Native清单 | 不复制锁文件；删Matrix/SDK/react-router；新增必要Cookie/WSS/rate-limit/Argon2依赖声明，未安装 |
+| UI文档/Taste方向               | 采用Achromatic Ledger及衬线标题/无衬线正文、深浅主题/响应式原则            | 页面按Native账号/设备/阻塞状态重写，不复制Matrix组件/管理员认证                               |
 
 其它代码均本轮新写。旧Brand的视觉思路用于新链接/图标组件，但不复制react-router入口、旧SDK、管理员上游凭据、消息/房间对象或crypto状态。未恢复BoardUI源码。
 
@@ -33,3 +33,28 @@
 ## 保护证据
 
 接管时记录旧目录所有185份非.git文件的SHA-256清单，交付前重核；不拿旧仓库无HEAD的空git diff证明只读。清单只作本轮完整性证据，不是用户数据库备份。Git管理/提交/推送均只在新echov2目录，旧origin和未提交文件不参与。具体静态结果见[决策与交付](decisions.md)。
+
+## 第二阶段前端迁移台账
+
+本轮授权已扩展为完整前端迁移，但不把旧协议实现整体复制。以下为实际源码状态；页面入口已覆盖，尚未接通业务的“完整功能迁移”仍PARTIAL/BLOCKED。
+
+| 旧区域                        | 新实现/复用                                                                          | 实际业务状态                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| Logo/tokens                   | 原样保留；无需重新设计                                                               | 源码PASS，视觉NOT_RUN                                             |
+| components/Icon、EmptyState   | 独立视觉逻辑复用、统一格式                                                           | 已被导航/空状态真实引用                                           |
+| components/Charts、charts.css | 仅迁移使用的ChartFrame/LineChart及依赖轴，删未用area/bar/donut/heat/ranking代码/样式 | 真实注册数据；没有流量/地区不绘制                                 |
+| app/Shell/navigation/样式     | Native hash导航、用户/admin隔离，保留232px侧栏/中性面板、移动折叠                    | 不复制react-router/旧session hooks；品牌/五档字体/主题/Motion不变 |
+| 登录/注册、设置               | 保留新账号流程，优化旧页面节奏/表单；Native API                                      | 注册/登录/改名/重新认证源码已接入；注销/密码恢复BLOCKED           |
+| 聊天/会话列表                 | ConversationsPage保留双栏/列表/空状态；真实受限目录+WSS提示                          | 无MLS就不展示消息或开放输入；编辑/转发/多选等未迁移为可用业务     |
+| 联系人/备注                   | ContactsPage精确查Native目录                                                         | 备注/加密私人同步BLOCKED，不存明文替代                            |
+| 私人收藏/回收站               | SavedPage/TrashPage入口与原视觉结构                                                  | 收藏/七天恢复BLOCKED；本人服务删除状态真实分页                    |
+| 设备/密钥恢复                 | DevicesPage/RecoveryPage使用Native服务/根目录                                        | pending/服务撤销真实；可信授权/恢复BLOCKED                        |
+| 数据/备份                     | DataPage能力与浏览器前提、页内附件AEAD                                               | 历史/联系人/设置导出与恢复、系统备份未实现，无假执行按钮          |
+| 后台Dashboard/分析            | DashboardPage，迁移独立折线图                                                        | 业务计数/注册增长真实；全站/媒体流量与地区未知                    |
+| 用户/详情/设备                | UsersPage、UserDetailPanel、AdminRecordsPage                                         | 真实分页/详情/服务暂停；完整设备运营留第三阶段                    |
+| 登录/IP/地区/浏览器           | AdminRecordsPage认证事件                                                             | IP真实数据库来源；地区/UA未采集；成功是密码认证结果非会话签发证明 |
+| 安全/审计                     | AdminRecordsPage按类查询                                                             | 真实事件/审计；完整检测处置留第三阶段                             |
+| 注册/邀请                     | RegistrationPage                                                                     | CAS模式、邀请幂等创建/一次凭据/分页，未知结果沿原操作重试         |
+| 系统/备份                     | AdminSettingsPage/AdminRecordsPage                                                   | 真实capabilities/备份元数据；没有executor不创建假任务             |
+
+仅删除新项目已无引用的`AdminPage.tsx`：原单页职责分为Dashboard、Users、Registration，公用只读元数据页集中管理。旧项目任何文件均未删除/移动/修改；没有恢复BoardUI源码或复制旧密钥、环境、数据库、node_modules、Git历史。

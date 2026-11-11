@@ -17,7 +17,8 @@
     "build:client": "vite build",
     "build:server": "tsc -p tsconfig.server.json --noEmit false --outDir dist/server",
     "start:server": "node --max-old-space-size=384 dist/server/server/main.js",
-    "admin:provision": "tsx scripts/provision-admin.ts"
+    "admin:provision": "tsx scripts/provision-admin.ts",
+    "check:ast": "node scripts/check-typescript-ast.mjs"
   },
   "dependencies": {
     "@fastify/helmet": "13.2.0",
