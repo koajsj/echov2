@@ -78,3 +78,21 @@ Cloud Docker 官方 Node 镜像 `node:24.22.1-trixie-slim` digest `sha256:89c524
 ## 审阅与清理
 
 完整 Diff、历史 SQL 指纹、锁文件、源代码/文档链接、敏感信息与 Git 状态分别复核。保留历史提交、必要迁移/安全证据，不改旧项目，不 force push、不自动合并部署。临时数据库、测试凭据、TLS 测试根、生成物、下载缓存和测试文件在验证后清理；最终实际状态写入 evidence，未执行项目不得预先标 PASS。
+
+## 本轮最终复核 — 基线55a742f之后
+
+最新可复核数据见 [final-review.json](evidence/final-review.json)；此前verification.json为前一轮基线。所有命令仍在Cloud。七项工程检查最终独立执行，源码链接检查包含本轮截图引用。Rust fmt/native release/wasm release/wasm-bindgen均退出0，真实MLS和本地存储/附件浏览器检查退出0；实验与产品集成严格区分。
+
+新增 `CONFIRM_CLOUD_AUTH=echo_native PGHOST=<临时Cloud socket> PGPORT=55432 node --import tsx scripts/check-expiry-races.mjs`，运行前必须有明确隔离数据库。观察到真实账户/设置锁等待后制造过期，断言拒绝且设备/注册零写入、邀请码零消费。观察者是临时集群测试管理员，业务Pool用非超级API角色。`check-auth-workflow.mjs`新增普通用户对11个管理读取入口的401及Origin/CSRF/过期标签页会话负例。
+
+`check-app-browser.mjs`现在收集全部console error与HTTP错误。匿名session401、缺可信设备的conversations403是预期拒绝；二者分别保留明细，其他console或HTTP错误令脚本失败。原React保留key属性错误已实际复现并修复。pageerror=[]、unexpectedConsole=[]、unexpectedHttp=[]；不再沿用前文console未运行结论。手机安全记录表新增局部滚动、键盘右方向键和页面不溢出断言。七张截图位于[截图示例](screenshots/user-auth-desktop.png)，桌面1440×1000/1280×900、手机390×844，使用fullPage，不含测试密码或会话凭据。
+
+Mermaid 11.4.1真实解析README图表、github-slugger 2.0.0校验目录锚点、所有相对链接和截图路径存在性；验证工具仅安装在Cloud临时目录，未改项目依赖。截图均来自真实Chromium，不是生成图。
+
+本轮Semgrep重新运行同一官方固定规则提交，62发现（48 INFO、13 WARNING、1 ERROR）、0扫描错误，未关闭规则或把非零发现写成零发现。npm audit退出0、零公告；Cargo audit退出1、三项公告，活动WASM树仍含crypto-bigint 0.5.5，不采用不兼容的强制patch。npm/Cargo锁闭SBOM组件及许可证元数据复核，锁文件与依赖声明未变。SQL用pglast重新解析：旧001保留预期authorization语法错误，独立基线与002–006通过；真实双路径迁移/权限回归通过。未修改历史迁移来制造通过。
+
+低配Docker重新请求memory=2g、memory-swap=2g、cpus=1，Debian trixie-slim实际读取memory.max=34359738368、cpu.max=400000 100000、memory.swap.max=max，Docker CgroupDriver=none；宿主cgroup未被委派。低配BLOCKED，持续负载、20GB配额、隔离应用峰值NOT_RUN。镜像digest与观测在最新证据中。
+
+逐问题编号、原因、修复、位置和验证见[第三阶段最新台账](phase-three-report.md#最终深度复核与截图交付--2026-11-12)。最终审查覆盖Diff、锁文件、历史SQL、截图、秘密模式与工作区；远端SHA/完整文件树和blob哈希在推送后实际核对，结果以最终交付为准。
+
+本轮最终SAST新增1项ERROR级工具发现位于 `scripts/check-auth-workflow.mjs` 的隔离测试HTTP请求：目标固定为127.0.0.1:3001，用于向真实API发送不同合成来源、CSRF和Origin负例；不发送真实凭据到外部网络，生产入口仍强制HTTPS。该项记录为经复核的测试传输告警，不忽略规则、不把扫描结果称为零发现；安全扫描整体仍PARTIAL。

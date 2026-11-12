@@ -74,3 +74,7 @@ API池仍5、PG连接20、Node heap384MiB/MemoryMax768MiB；新增锁等待5秒�
 用户元数据文件不包含浏览器私钥，与系统dump/媒体/配置备份及MLS恢复三者分开。没有最新独立删除证据，不执行恢复或purge。G6未解除前不能把数据库备份记录、文件tag校验或pg_dump成功作为灾备验收。目标Debian的Caddy/systemd解析、权限、内存/CPU/磁盘/日志压力均NEEDS_RUNTIME_VERIFICATION，性能NOT_RUN。
 
 既有30秒维护循环增加过期服务会话每批100条清理，与到期删除意图分别记录失败、不因一项失败静默跳过另一项；pool和working门控限制重叠。只清已过期服务凭据，不是消息/备份purge或日志保留执行器。执行与积压/表膨胀验证NOT_RUN。
+
+## 最终资源复核
+
+2026-11-12再次请求Docker 2GB/1核/swap=2GB，实际仍为32GB/4核、swap=max，CgroupDriver=none。资源准入BLOCKED；本轮不运行或宣称受限持续压力、20GB磁盘配额及应用峰值验收。解除条件为Cloud提供实际生效的cgroup委派及磁盘配额，随后重新执行负载和恢复。详见[最新验证证据](evidence/final-review.json)。

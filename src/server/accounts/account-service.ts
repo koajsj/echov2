@@ -58,7 +58,7 @@ export class AccountService {
         if (!input.invitation)
           throw new HttpError(403, "INVITATION_REQUIRED", "需要有效邀请码。");
         const invitation = await db.query(
-          "UPDATE echo.invitations SET uses=uses+1 WHERE token_hash=$1 AND revoked_at IS NULL AND expires_at>now() AND uses<max_uses RETURNING id",
+          "UPDATE echo.invitations SET uses=uses+1 WHERE token_hash=$1 AND revoked_at IS NULL AND expires_at>clock_timestamp() AND uses<max_uses RETURNING id",
           [tokenHash(input.invitation)],
         );
         if (!invitation.rowCount)

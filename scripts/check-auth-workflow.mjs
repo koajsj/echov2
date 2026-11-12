@@ -171,6 +171,72 @@ try {
     ).rows[0].n,
     1,
   );
+  for (const path of [
+    "overview",
+    "users",
+    "devices",
+    "logins",
+    "audit",
+    "security",
+    "growth",
+    "invitations",
+    "backups",
+    "deletions",
+    "storage",
+  ]) {
+    await request(
+      `user denied admin ${path}`,
+      `/v1/admin/${path}`,
+      "GET",
+      undefined,
+      401,
+    );
+  }
+  for (const [label, headers, expected, code] of [
+    [
+      "CSRF denied",
+      {
+        Origin: "https://localhost:8443",
+        "X-Echo-CSRF": "invalid",
+        "X-Echo-Session": session,
+      },
+      403,
+      "CSRF_DENIED",
+    ],
+    [
+      "origin denied",
+      {
+        Origin: "https://example.invalid",
+        "X-Echo-CSRF": csrf,
+        "X-Echo-Session": session,
+      },
+      403,
+      "ORIGIN_DENIED",
+    ],
+    [
+      "stale tab denied",
+      {
+        Origin: "https://localhost:8443",
+        "X-Echo-CSRF": csrf,
+        "X-Echo-Session": randomUUID(),
+      },
+      409,
+      "SESSION_CHANGED",
+    ],
+  ]) {
+    const response = await fetch("http://127.0.0.1:3001/v1/account/export", {
+      method: "POST",
+      headers: {
+        ...headers,
+        Cookie: cookie,
+        "X-Forwarded-For": `192.0.2.${20 + results.length}`,
+      },
+    });
+    // Each adversarial check uses a distinct synthetic source to preserve the export rate limit.
+    assert.equal(response.status, expected, label);
+    assert.equal((await response.json()).error.code, code);
+    results.push({ label, status: response.status });
+  }
   const adminId = randomUUID();
   await db.query(
     "INSERT INTO echo.sessions(id,token_hash,user_id,audience,expires_at) VALUES($1,$2,$3,'admin',now()+interval '1 hour')",

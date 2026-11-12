@@ -1,0 +1,561 @@
+{
+  "date": "2026-11-12",
+  "environment": "Codex Cloud only; temporary PostgreSQL and synthetic accounts",
+  "status": "PARTIAL",
+  "baseSha": "55a742f5b2151ab362d230cfdfe05b021398c016",
+  "mainAtReview": "26626711139c97cd57bb041200c3657a4c4373e6",
+  "migrationHistory": "UNKNOWN; historical SQL unchanged",
+  "migration": {
+    "newPath": "PASS",
+    "legacyPath": "PASS",
+    "proof": {
+      "value": "000102ff",
+      "length": 4
+    },
+    "schemaDump": "identical",
+    "catalog": "identical",
+    "baseTables": 23,
+    "permissionDenials": 10,
+    "advisoryLock": "PASS",
+    "checksums": "PASS",
+    "failedReceipt": "PASS",
+    "unknownOutcome": "PASS",
+    "noAdoption": "PASS",
+    "pendingNonemptyRefused": "PASS",
+    "initializationRollback": "PASS",
+    "suppressedReceiptRefused": "PASS",
+    "legacy003Guard": "PASS",
+    "invalid006States": 7,
+    "fixture": "0eaf99e9235e4330984eb3261392c18638f13dc1de407039a0b4834b25d6e943"
+  },
+  "auth": {
+    "status": "PASS",
+    "checks": [
+      {
+        "label": "registration mode",
+        "status": 200
+      },
+      {
+        "label": "register",
+        "status": 201
+      },
+      {
+        "label": "operation retry",
+        "status": 201
+      },
+      {
+        "label": "digest conflict",
+        "status": 409
+      },
+      {
+        "label": "username unique",
+        "status": 409
+      },
+      {
+        "label": "invite consume",
+        "status": 201
+      },
+      {
+        "label": "invite retry",
+        "status": 201
+      },
+      {
+        "label": "invite exhausted",
+        "status": 403
+      },
+      {
+        "label": "login",
+        "status": 200
+      },
+      {
+        "label": "session",
+        "status": 200
+      },
+      {
+        "label": "user denied admin overview",
+        "status": 401
+      },
+      {
+        "label": "user denied admin users",
+        "status": 401
+      },
+      {
+        "label": "user denied admin devices",
+        "status": 401
+      },
+      {
+        "label": "user denied admin logins",
+        "status": 401
+      },
+      {
+        "label": "user denied admin audit",
+        "status": 401
+      },
+      {
+        "label": "user denied admin security",
+        "status": 401
+      },
+      {
+        "label": "user denied admin growth",
+        "status": 401
+      },
+      {
+        "label": "user denied admin invitations",
+        "status": 401
+      },
+      {
+        "label": "user denied admin backups",
+        "status": 401
+      },
+      {
+        "label": "user denied admin deletions",
+        "status": 401
+      },
+      {
+        "label": "user denied admin storage",
+        "status": 401
+      },
+      {
+        "label": "CSRF denied",
+        "status": 403
+      },
+      {
+        "label": "origin denied",
+        "status": 403
+      },
+      {
+        "label": "stale tab denied",
+        "status": 409
+      },
+      {
+        "label": "user audience isolation",
+        "status": 200
+      },
+      {
+        "label": "user cannot revoke admin",
+        "status": 200
+      },
+      {
+        "label": "reauthenticate",
+        "status": 200
+      },
+      {
+        "label": "rename",
+        "status": 200
+      },
+      {
+        "label": "logout",
+        "status": 204
+      },
+      {
+        "label": "revoked session",
+        "status": 401
+      },
+      {
+        "label": "closed mode",
+        "status": 200
+      },
+      {
+        "label": "closed rejection",
+        "status": 403
+      }
+    ],
+    "invitationUses": 1,
+    "registrationRows": 1,
+    "sessionAfterLogout": 0,
+    "syntheticSources": "RFC 5737 addresses isolate rate-limit scenarios; rules unchanged"
+  },
+  "expiryRaces": {
+    "status": "PASS",
+    "deviceExpiry": "rejected after observed account lock wait",
+    "invitationExpiry": "rejected after observed settings lock wait",
+    "createdDevices": 0,
+    "consumedInvitations": 0,
+    "registeredAccounts": 0
+  },
+  "deletion": {
+    "status": "PASS",
+    "concurrentRequests": 2,
+    "operationRows": 1,
+    "hiddenMessages": 1,
+    "conflict": "409 OPERATION_CONFLICT",
+    "retry": "pending-anchor",
+    "scope": "SQL transaction test only; no deletion anchor, purge or offline propagation"
+  },
+  "browser": {
+    "status": "PASS",
+    "registration": "201 plus real row",
+    "login": "real session",
+    "reauth": "PASS",
+    "metadataArchive": "authenticated export, download, encrypted preview",
+    "csv": "real admin query, correct filename and contents, 3 repeated downloads",
+    "urlCreated": 4,
+    "urlRevoked": 4,
+    "logout": "keyboard plus database row removed",
+    "navigation": 9,
+    "mobile390": "no horizontal overflow",
+    "reducedMotion": "media preference applied",
+    "pageErrors": [],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 ()",
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Failed to load resource: the server responded with a status of 401 ()",
+      "Failed to load resource: the server responded with a status of 401 ()",
+      "Failed to load resource: the server responded with a status of 401 ()"
+    ],
+    "httpErrors": [
+      {
+        "path": "/v1/session",
+        "status": 401
+      },
+      {
+        "path": "/v1/conversations",
+        "status": 403
+      },
+      {
+        "path": "/v1/conversations",
+        "status": 403
+      },
+      {
+        "path": "/v1/session",
+        "status": 401
+      },
+      {
+        "path": "/v1/session",
+        "status": 401
+      },
+      {
+        "path": "/v1/session",
+        "status": 401
+      }
+    ],
+    "unexpectedConsole": [],
+    "unexpectedHttp": [],
+    "screenshots": [
+      "user-auth-desktop",
+      "user-conversations-desktop",
+      "user-devices-mobile",
+      "admin-dashboard-desktop",
+      "admin-users-desktop",
+      "admin-devices-desktop",
+      "admin-security-mobile"
+    ],
+    "limitations": "Chromium only; no iOS hardware, comprehensive accessibility audit or messaging E2E"
+  },
+  "mlsLab": {
+    "provider": "OpenMLS 0.9.2/RustCrypto 0.6.0",
+    "suite": 1,
+    "independentBrowserContexts": 2,
+    "KeyPackage": "PASS",
+    "Welcome": "PASS",
+    "Commit": "PASS",
+    "Application": "PASS",
+    "ReplayRejected": "PASS",
+    "InvalidCommitRejected": "PASS",
+    "DiscardPending": "PASS",
+    "DiscardReceivedStagedCommit": "PASS",
+    "Remove": "PASS",
+    "Epoch": "1->2",
+    "removedSenderRejected": true,
+    "scope": "provider laboratory only; no account binding or production persistence"
+  },
+  "localCryptoPrerequisites": {
+    "status": "PASS",
+    "multiTabCAS": "one winner",
+    "reload": "state and ciphertext recovered together",
+    "duplicateOperation": "rejected",
+    "injectedQuotaFailure": "atomic rollback",
+    "attachmentAEAD": "roundtrip, independent key/IV, tamper and 10MiB boundary",
+    "limitations": "no physical disk exhaustion, OS crash or provider snapshot recovery; synthetic opaque state only"
+  },
+  "rustCommands": {
+    "rust-format": {
+      "command": ["cargo", "fmt", "--all", "--", "--check"],
+      "exitCode": 0
+    },
+    "rust-release": {
+      "command": ["cargo", "build", "--release", "--locked", "-j2"],
+      "exitCode": 0
+    },
+    "wasm-release": {
+      "command": [
+        "cargo",
+        "build",
+        "--release",
+        "--locked",
+        "--target",
+        "wasm32-unknown-unknown",
+        "-j2"
+      ],
+      "exitCode": 0
+    },
+    "wasm-bindgen": {
+      "command": [
+        "/workspace/.cloud-tools/wasm-bindgen/bin/wasm-bindgen",
+        "target/wasm32-unknown-unknown/release/echo_mls_lab.wasm",
+        "--out-dir",
+        "pkg",
+        "--target",
+        "web"
+      ],
+      "exitCode": 0
+    }
+  },
+  "sqlParsing": [
+    {
+      "file": "migrations/001-initial.sql",
+      "status": "BLOCKED",
+      "error": "syntax error at or near \"authorization\", at index 3309"
+    },
+    {
+      "file": "migrations/002-runtime-permissions.sql",
+      "statements": 24,
+      "status": "PASS"
+    },
+    {
+      "file": "migrations/003-route-version-and-delivery.sql",
+      "statements": 13,
+      "status": "PASS"
+    },
+    {
+      "file": "migrations/004-invitation-idempotency.sql",
+      "statements": 5,
+      "status": "PASS"
+    },
+    {
+      "file": "migrations/005-admin-lifecycle.sql",
+      "statements": 15,
+      "status": "PASS"
+    },
+    {
+      "file": "migrations/006-authorization-proof.sql",
+      "statements": 4,
+      "status": "PASS"
+    },
+    {
+      "file": "migrations/baselines/echo-native-v1/001-initial.sql",
+      "statements": 45,
+      "status": "PASS"
+    }
+  ],
+  "npmAudit": {
+    "exitCode": 0,
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    }
+  },
+  "cargoAudit": {
+    "exitCode": 1,
+    "ignore": [],
+    "advisories": [
+      {
+        "id": "RUSTSEC-2026-0387",
+        "package": "crypto-bigint",
+        "version": "0.5.5",
+        "patched": [">=0.7.6"]
+      },
+      {
+        "id": "RUSTSEC-2026-0331",
+        "package": "libcrux-kem",
+        "version": "0.0.9",
+        "patched": [">=0.0.10"]
+      },
+      {
+        "id": "RUSTSEC-2026-0330",
+        "package": "libcrux-kem",
+        "version": "0.0.9",
+        "patched": [">=0.0.10"]
+      }
+    ],
+    "warnings": ["unmaintained"]
+  },
+  "sast": {
+    "exitCode": 0,
+    "ruleCommit": "a5ad1714f00c9f7fde980cab0ea1d6dc6d414fd2",
+    "findings": 62,
+    "severity": {
+      "WARNING": 13,
+      "ERROR": 1,
+      "INFO": 48
+    },
+    "errors": 0,
+    "scope": "src, scripts and crypto/mls-lab/src; official JavaScript/TypeScript/Rust rules; finite static coverage",
+    "reviewedError": {
+      "file": "scripts/check-auth-workflow.mjs",
+      "line": 227,
+      "rule": "typescript.react.security.react-insecure-request",
+      "classification": "isolated Cloud loopback HTTP test transport; no production or external credential transport; retained unsuppressed"
+    }
+  },
+  "resources": {
+    "status": "BLOCKED",
+    "requested": {
+      "memoryBytes": 2147483648,
+      "cpus": 1,
+      "memoryAndSwapBytes": 2147483648
+    },
+    "actual": {
+      "status": "BLOCKED",
+      "memoryMax": "34359738368",
+      "cpuMax": "400000 100000",
+      "scope": "limit admission only; not a workload, disk quota or VPS capacity test"
+    },
+    "swapMax": "max",
+    "dockerCgroupDriver": "none",
+    "imageDigest": "sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2",
+    "sustainedLoad": "NOT_RUN",
+    "diskQuota": "NOT_RUN",
+    "isolatedApplicationPeak": "NOT_RUN"
+  },
+  "screenshots": [
+    {
+      "file": "docs/screenshots/admin-dashboard-desktop.png",
+      "bytes": 156449,
+      "sha256": "c5e717d469bf3fafe55b3a36af6f15717643a93b9c6e477df4c5ebc7508300a9",
+      "width": 1280,
+      "height": 2053
+    },
+    {
+      "file": "docs/screenshots/admin-devices-desktop.png",
+      "bytes": 124910,
+      "sha256": "4fbf823ec5f71527b087f28f6f89ae4be817357de7f1746f9918eb1aecf65b44",
+      "width": 1280,
+      "height": 1002
+    },
+    {
+      "file": "docs/screenshots/admin-security-mobile.png",
+      "bytes": 185548,
+      "sha256": "07aea7c45a82f9b3733fc4cce033777ab4bba2643268a34078803b7ea9f7a5f3",
+      "width": 390,
+      "height": 3647
+    },
+    {
+      "file": "docs/screenshots/admin-users-desktop.png",
+      "bytes": 197213,
+      "sha256": "559b33381fd03a2ddd7d7331462b15e169614d98eb235a337afc9865eda653f7",
+      "width": 1280,
+      "height": 1943
+    },
+    {
+      "file": "docs/screenshots/user-auth-desktop.png",
+      "bytes": 69957,
+      "sha256": "b40722c82b8999b5a060cbab962ea7d201b596090d64855458566ff978b49649",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "file": "docs/screenshots/user-conversations-desktop.png",
+      "bytes": 89217,
+      "sha256": "35de883dd96bf484111b0cf4c846af6d3bb92ec44d38b4de218cf779cce76c66",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "file": "docs/screenshots/user-devices-mobile.png",
+      "bytes": 79775,
+      "sha256": "3b025af79bd02bba93953c48c523a2d514c8ffc466bbabc87d9e1befbc6eebc4",
+      "width": 390,
+      "height": 1520
+    }
+  ],
+  "productionReady": false,
+  "cryptoGate": "BLOCKED; unconditional rejection preserved",
+  "cleanup": {
+    "temporaryClusterAndSyntheticData": "removed after pg_ctl fast stop",
+    "localHttpsRoot": "removed from NSS trust and deleted with temporary TLS keys",
+    "generatedWasmAndTarget": "removed after verification; hashes retained",
+    "projectDependencies": "retained in Cloud node_modules; not tracked",
+    "productionAccess": "none"
+  },
+  "wasm": {
+    "bytes": 2706375,
+    "sha256": "65ede485f5b065ba153c65b21c14d50584169787dbb24b0bbe748c2684308610"
+  },
+  "unchangedLockAndMigrationHashes": {
+    "package-lock.json": "33926e234e97e868d72f122be0fdaaf41c8c02f2000c3b94346ba886c3cf923f",
+    "crypto/mls-lab/Cargo.lock": "9ca0ca55441b04fc379e5f8e3bfacd20ec03d87464ab5d2d3efdbe2ec62760e6",
+    "migrations/001-initial.sql": "bc404f56cf0658c138c2177a1d277a74ca4292d234a4269aba6c51fde5fb96e6",
+    "migrations/002-runtime-permissions.sql": "8d94e1f7e4eca7814d7bd145978c73d098cfa8d971feeeabf0fa14f1ae076962",
+    "migrations/003-route-version-and-delivery.sql": "8c4bf81e53fa51af3c891a5530388b75334d0e5a1dc6394b024e9c0a2fef1ccf",
+    "migrations/004-invitation-idempotency.sql": "5f79462433d0d182c331767b599f3187e709cf993120945089f1632a422008bb",
+    "migrations/005-admin-lifecycle.sql": "ccb640eb1f7e5c6b1fb740b6f6c2fe1d9291899fc1f306ac90ed3cbb54c0d65e",
+    "migrations/006-authorization-proof.sql": "ba2faca6bf545b5ba1002d82d178ac4ab5092e2207d9305589f9b825793ab999",
+    "migrations/baselines/echo-native-v1/001-initial.sql": "22afb6fd24d654824f0021b77ba6ce5ec3efbffcac35647ba8e0bf46f011a2e8"
+  },
+  "sbom": {
+    "npm": {
+      "components": 381,
+      "missingLicenseMetadata": 0,
+      "scope": "lock closure; not legal audit or runtime reachability"
+    },
+    "rust": {
+      "components": 191,
+      "missingLicenseMetadata": 0,
+      "scope": "lock closure; not legal audit or runtime reachability"
+    }
+  },
+  "initialAttempts": [
+    "Database fixture missing PUBLIC TEMP revocation rejected by permission regression; recreated both empty databases and reran full migration harness.",
+    "Race observer lacked cross-role pg_stat_activity visibility; changed only test observer to temporary cluster administrator.",
+    "Race dummy password hash rejected by SQL constraint; corrected fixture.",
+    "Concurrent scripts changing global registration mode interfered; final stateful scripts rerun sequentially.",
+    "Browser exposed React key error; fixed and reran.",
+    "Mermaid Node harness required DOM Element; supplied jsdom global, no diagram code changed."
+  ],
+  "engineering": {
+    "typecheck": {
+      "exitCode": 0,
+      "tail": "\n> echo-native@0.1.0 typecheck\n> tsc -p tsconfig.client.json && tsc -p tsconfig.server.json && tsc -p tsconfig.tools.json\n\n"
+    },
+    "lint": {
+      "exitCode": 0,
+      "tail": "\n> echo-native@0.1.0 lint\n> eslint . --max-warnings 0\n\n"
+    },
+    "format:check": {
+      "exitCode": 0,
+      "tail": "\n> echo-native@0.1.0 format:check\n> prettier --check .\n\nChecking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    "check:ast": {
+      "exitCode": 0,
+      "tail": "\n> echo-native@0.1.0 check:ast\n> node scripts/check-typescript-ast.mjs\n\n{\n  \"status\": \"PASS\",\n  \"typescript\": \"5.9.3\",\n  \"files\": 67,\n  \"localBindings\": 234,\n  \"errors\": [],\n  \"scope\": \"TS/TSX syntax and direct local named exports only; no types, package exports, SQL or runtime validation\"\n}\n"
+    },
+    "check:source": {
+      "exitCode": 0,
+      "tail": " TypeScript types, ESLint, Prettier or SQL semantics.\",\n    \"Literal references do not prove exports, runtime routes or cryptographic correctness.\",\n    \"No application module was imported, linked or evaluated.\"\n  ]\n}\n(node:7087) ExperimentalWarning: VM Modules is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:7087) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time\n"
+    },
+    "build:client": {
+      "exitCode": 0,
+      "tail": "\n> echo-native@0.1.0 build:client\n> vite build\n\nvite v8.3.6 building client environment for production...\ntransforming...\n✓ 1800 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/client/index.html                   0.59 kB │ gzip:   0.35 kB\ndist/client/assets/index-CuVYjSyb.css  494.48 kB │ gzip:  46.50 kB\ndist/client/assets/index-A8ZVUZpT.js   362.50 kB │ gzip: 113.51 kB\n\n✓ built in 930ms\n"
+    },
+    "build:server": {
+      "exitCode": 0,
+      "tail": "\n> echo-native@0.1.0 build:server\n> tsc -p tsconfig.server.json --noEmit false --outDir dist/server\n\n"
+    }
+  },
+  "readme": {
+    "status": "PASS",
+    "mermaid": "11.4.1 parser",
+    "anchors": 13,
+    "screenshots": 7
+  },
+  "commandExitCodes": {
+    "migration-regression": 0,
+    "auth-workflow": 0,
+    "expiry-races": 0,
+    "deletion-race": 0,
+    "app-browser": 0,
+    "mls-browser-lab": 0,
+    "local-crypto-browser": 0,
+    "npm-audit": 0,
+    "cargo-audit": 1,
+    "sast": 0,
+    "resource-admission": 1,
+    "readme-parser-links": 0
+  }
+}

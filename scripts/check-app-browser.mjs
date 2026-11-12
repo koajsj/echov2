@@ -1,6 +1,6 @@
 // Full real-account UI check against the explicitly confirmed temporary Cloud DB.
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdir } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import pg from "pg";
 import { chromium } from "playwright";
@@ -31,6 +31,31 @@ const browser = await chromium.launch({
 const context = await browser.newContext({ acceptDownloads: true });
 const page = await context.newPage();
 const errors = [];
+const consoleErrors = [];
+const screenshots = [];
+const httpErrors = [];
+page.on("response", (response) => {
+  if (response.status() >= 400)
+    httpErrors.push({
+      path: new URL(response.url()).pathname,
+      status: response.status(),
+    });
+});
+await mkdir("docs/screenshots", { recursive: true });
+async function capture(name) {
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForFunction(
+    () => !document.querySelector('[aria-busy="true"]'),
+  );
+  await page.screenshot({
+    path: `docs/screenshots/${name}.png`,
+    fullPage: true,
+  });
+  screenshots.push(name);
+}
+page.on("console", (message) => {
+  if (message.type() === "error") consoleErrors.push(message.text());
+});
 page.on("pageerror", (e) => errors.push(e.message));
 const username = "browser_" + randomBytes(5).toString("hex");
 const password = randomBytes(24).toString("base64url");
@@ -39,6 +64,8 @@ try {
   await db.query("UPDATE echo.site_settings SET registration_mode='open'");
   await page.goto("https://localhost:8443/");
   await page.getByText("当前开放注册", { exact: true }).waitFor();
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await capture("user-auth-desktop");
   await page.getByRole("button", { name: "创建新账号", exact: true }).click();
   await page.locator('input[name="username"]').fill(username);
   await page.locator('input[name="password"]').fill(password);
@@ -61,6 +88,10 @@ try {
   await page.locator('input[name="password"]').fill(password);
   await page.getByRole("button", { name: "登录", exact: true }).click();
   await page.getByRole("button", { name: "登出", exact: true }).waitFor();
+  await page
+    .getByRole("heading", { name: "你的交流空间", exact: true })
+    .waitFor();
+  await capture("user-conversations-desktop");
   await page.getByRole("link", { name: "设备", exact: true }).click();
   await page
     .getByRole("heading", { name: "设备与身份", exact: true })
@@ -70,6 +101,9 @@ try {
   await page
     .getByText("已重新认证，敏感操作有效期五分钟。", { exact: true })
     .waitFor();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await capture("user-devices-mobile");
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.getByRole("link", { name: "数据与备份", exact: true }).click();
   await page.evaluate(() => {
     window.urlEvents = { created: [], revoked: [] };
@@ -183,10 +217,13 @@ try {
   await page.locator('input[name="password"]').fill(password);
   await page.getByRole("button", { name: "登录", exact: true }).click();
   await page.getByRole("button", { name: "登出", exact: true }).waitFor();
+  await page.getByRole("heading", { name: "管理概览", exact: true }).waitFor();
+  await capture("admin-dashboard-desktop");
   await page.getByRole("link", { name: "用户管理", exact: true }).click();
   await page
     .getByRole("button", { name: "准备当前页 CSV", exact: true })
     .waitFor();
+  await capture("admin-users-desktop");
   page.on("dialog", (dialog) => dialog.accept());
   await page
     .getByRole("button", { name: "准备当前页 CSV", exact: true })
@@ -207,6 +244,27 @@ try {
       window.urlEvents.created.length === 4 &&
       window.urlEvents.revoked.length === 4,
   );
+  await page.getByRole("link", { name: "设备管理", exact: true }).click();
+  await page.getByRole("heading", { name: "设备管理", exact: true }).waitFor();
+  await capture("admin-devices-desktop");
+  await page.getByRole("link", { name: "安全中心", exact: true }).click();
+  await page.getByRole("heading", { name: "安全中心", exact: true }).waitFor();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await capture("admin-security-mobile");
+  const tableRegion = page.getByRole("region", {
+    name: "安全中心记录表，可横向滚动",
+  });
+  await tableRegion.focus();
+  await page.keyboard.press("ArrowRight");
+  await page.waitForFunction(
+    () => document.querySelector(".table-scroll").scrollLeft > 0,
+  );
+  assert.equal(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+    true,
+  );
   await page.getByRole("button", { name: "登出", exact: true }).click();
   await page
     .getByRole("heading", { name: "管理员登录", exact: true })
@@ -221,6 +279,21 @@ try {
     0,
   );
   assert.deepEqual(errors, []);
+  const unexpectedConsole = consoleErrors.filter(
+    (message) =>
+      !/^Failed to load resource: the server responded with a status of (401|403) \(\)$/.test(
+        message,
+      ),
+  );
+  const unexpectedHttp = httpErrors.filter(
+    ({ path, status }) =>
+      !(
+        (path === "/v1/session" && status === 401) ||
+        (path === "/v1/conversations" && status === 403)
+      ),
+  );
+  assert.deepEqual(unexpectedConsole, []);
+  assert.deepEqual(unexpectedHttp, []);
   console.log(
     JSON.stringify({
       status: "PASS",
@@ -236,6 +309,11 @@ try {
       mobile390: "no horizontal overflow",
       reducedMotion: "media preference applied",
       pageErrors: errors,
+      consoleErrors,
+      httpErrors,
+      unexpectedConsole,
+      unexpectedHttp,
+      screenshots,
       limitations:
         "Chromium only; no iOS hardware, comprehensive accessibility audit or messaging E2E",
     }),

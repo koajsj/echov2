@@ -72,3 +72,53 @@
 ## GitHub 审查交付
 
 草稿 PR：[koajsj/echov2#2](https://github.com/koajsj/echov2/pull/2)，目标 main。已验证实现提交：`26567956cbd1c26b653dd2a25728a58b29bab6e1`。GitHub 远端 132 份 blob 文件与本地提交树完全相同，历史迁移、006、基线/manifest、npm/Cargo 锁文件另做远端内容 SHA-256 比较，全部一致。随后仅补充交付记录；最终文档提交 SHA 见 PR head 和交付回复。没有合并或部署，等待审查。
+
+## 最终深度复核与截图交付 — 2026-11-12
+
+本节为 `55a742f` 之后本轮的最新结论，前文数据保留为基线证据。整体 **PARTIAL**，没有新增阶段。全程 Codex Cloud，真实临时 PostgreSQL、合成账户和实际浏览器；未连接生产、未修改旧项目。当前证据集中在 [final-review.json](evidence/final-review.json)，基线证据仍在原 verification.json。本轮由主代理执行，没有新增代理委派；自动扫描与源码审查不等于第三方审计。
+
+### 原子问题台账
+
+| 编号     | 文件 / 位置                                                                | 严重度 | 原因与修复                                                                                                            | 验证及状态                                                                                                |
+| -------- | -------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| FINAL-01 | `src/server/devices/device-service.ts` / register，会话查询                | 中     | `now()` 固定在事务开始，账户行锁等待可跨越过期点；改用 `clock_timestamp()` 判断会话过期与重新认证有效期               | `node --import tsx scripts/check-expiry-races.mjs`：观察到真实锁等待后使会话过期，拒绝且无设备写入；FIXED |
+| FINAL-02 | `src/server/accounts/account-service.ts` / register，邀请码 UPDATE         | 中     | 设置行锁等待后用旧事务时间消费已过期邀请；改用实际时钟                                                                | 同一隔离竞争测试：拒绝已过期邀请，uses=0、注册行=0；FIXED                                                 |
+| FINAL-03 | `src/client/app/use-api-query.ts` / 返回结果                               | 低     | 内部请求 key 随结果 spread 进入 JSX，React 报保留属性错误；返回仅含 data/error/loading 的公共结果，保留取消和会话隔离 | `node scripts/check-app-browser.mjs`：原错误真实复现，修复后 unexpectedConsole=[]；FIXED                  |
+| FINAL-04 | `src/client/components/ServiceState.tsx` / loading                         | 低     | 加载段缺少明确 busy 标记，自动截图无法可靠等待查询结束；增加 aria-busy                                                | 浏览器截图等待 busy 消失；FIXED                                                                           |
+| FINAL-05 | `src/client/styles/app.css` / table；`AdminRecordsPage.tsx` / table-scroll | 中     | 手机多列记录挤成逐字符长列；设置表/单元格最小宽度，保留容器横向滚动和键盘聚焦区域                                     | 手机真实截图、右方向键滚动和页面无横向溢出断言；FIXED                                                     |
+| FINAL-06 | README / 产品状态与界面                                                    | 低     | 旧首页说明不足且没有真实截图；全面重写、保留实际安全边界、嵌入七张截图及权威索引                                      | Prettier、源码链接检查、真实 Mermaid 解析、锚点与图片存在检查；FIXED                                      |
+
+测试脚本首次试运行遇到的配置/夹具错误也保留在执行记录说明中：临时数据库尚未撤销 PUBLIC TEMP 导致权限断言拒绝；修正建库配置后重新创建空库再完整执行迁移。竞争测试观察者需要查看 API 角色的锁等待，现明确使用临时集群测试管理员，业务操作仍由 API 角色执行。首轮浏览器真实捕获 React key 错误，现已修复。并行运行会改全局 registration_mode 的脚本造成一次测试互扰，最终认证/浏览器/竞争验证均按顺序独立重跑。未跳过失败迁移或放宽断言。
+
+### 全项目范围与实际结果
+
+复核前端页面/Hooks/API 调用、Fastify 认证/授权、迁移与 SQL 权限、投递/删除事务、MLS 实验与存储前置、附件/元数据归档、管理统计及部署配置。源码无 Matrix 运行时或明文替代聊天。保留有效历史迁移及必要主题文档；文件命名沿用普通文件 kebab-case、组件 PascalCase、Hook use 前缀。未发现需要安全删除的依赖或有效文档，不为减少数量删除审计证据。锁文件、依赖声明、数据库历史 SQL、部署栈不变。
+
+| 范围                                   | 状态                       | 本轮结果与限制                                                                                                                                   |
+| -------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 账户 / 邀请 / 会话                     | PASS                       | 真实注册201、幂等201、摘要/唯一冲突409、邀请耗尽403、登录/重新认证200、退出204、关闭注册403及实际数据库记录                                      |
+| 认证 / 权限                            | PASS                       | 新增11个管理读取入口对普通用户401、CSRF403、Origin403、过期标签页会话409；保留双 audience 隔离验证，不代表所有可能组合穷举                       |
+| 迁移 / 最小权限                        | PASS                       | 全新与合成旧路径001–006逐份退出0，23表、33外键、55索引、3业务触发器、10项权限拒绝、回执/并发锁负例通过；实际应用非超级用户                       |
+| 持久化迁移历史                         | BLOCKED                    | 仍UNKNOWN；未访问未经授权环境，未修改已发布历史SQL。独立基线与006兼容路径继续保留                                                                |
+| MLS / WASM                             | PARTIAL                    | native/wasm release、KeyPackage/Welcome/Commit/Remove/epoch实验再次通过；不包含真实账号绑定、完整provider快照或产品投递集成                      |
+| IndexedDB / 附件                       | PARTIAL                    | 双标签CAS、原子回滚、刷新恢复、重复ID拒绝、AES-GCM篡改拒绝及10MiB边界通过；不等于MLS Outbox闭环                                                  |
+| 消息 / 删除 / 恢复                     | BLOCKED                    | 删除SQL幂等竞争通过；缺独立锚、purge、离线墓碑、可信恢复。聊天、编辑、转发、搜索、置顶、草稿、收藏、联系人仍依赖安全内核；不制作伪功能           |
+| 用户端                                 | PARTIAL                    | 认证、设备目录、设置/隐私说明、元数据导出/下载/预览真实可操作；聊天和密钥恢复如实阻塞                                                            |
+| 管理端                                 | PARTIAL                    | 真实Dashboard/增长、用户/设备、登录/审计/安全事件、注册邀请与CSV；流量/GeoIP/浏览器画像未知，系统备份执行器未实现                                |
+| 浏览器                                 | PASS                       | Chromium桌面/手机、导航、键盘、下载文件名/内容与4个URL全部释放；无pageerror或意外console错误；匿名401/未授权设备403如实记录                      |
+| 截图 / README                          | PASS                       | docs/screenshots中七张真实页面，含未实现状态、真实合成统计和手机记录表；无密码、Cookie、私钥；README已嵌入                                       |
+| 类型 / Lint / 格式 / AST / 链接 / 构建 | PASS                       | 七项命令独立退出码与最终回归见工程报告和证据                                                                                                     |
+| SAST / npm audit / SBOM                | PARTIAL                    | Semgrep 62项发现（48 INFO/13 WARNING/1 ERROR）、0扫描错误，人工复核未新增确认漏洞；npm零公告；SBOM锁闭与许可证元数据复核，不是法律合规或安全认证 |
+| Cargo依赖安全                          | BLOCKED                    | 三项公告仍在锁闭：crypto-bigint活动WASM路径时序漏洞；libcrux-kem两项无活动WASM路径。未忽略、未伪造升级                                           |
+| 低配资源                               | BLOCKED                    | 再次Docker请求2GB/1核/swap=2GB，实际memory.max=34359738368、cpu.max=400000 100000、swap=max；CgroupDriver=none。不是低配PASS                     |
+| 持续负载 / 磁盘配额 / 应用峰值         | NOT_RUN                    | 资源准入不成立，不用宿主机峰值冒充应用或2GB验收；20GB配额未施加                                                                                  |
+| Firefox / WebKit / iOS                 | NOT_AVAILABLE              | 本轮仅Chromium；既有下载策略阻塞记录保留，无iOS实机                                                                                              |
+| 产品密码学 / 多设备离线 / 灾备         | NEEDS_RUNTIME_VERIFICATION | 先完成可信身份、完整provider+Outbox、Commit冲突恢复、删除新鲜性与独立恢复设计及安全审查，再运行产品级验证                                        |
+
+### 阻塞解除条件与审查交付
+
+crypto-gate保持关闭；没有可安全的小补丁可以把独立库实验变成完整通信产品。需受支持的上游依赖修复、可信根/设备Credential和SAS/QR、完整Group State原子持久化与投递恢复、群成员Add/Remove及Welcome/epoch闭环、独立删除证据和防回滚恢复，逐项验证后再评审门禁。低配需实际可写且被委派的cgroup及磁盘配额环境，再执行持续负载。**目前不具备生产部署条件。**
+
+继续更新现有草稿PR [#2](https://github.com/koajsj/echov2/pull/2)，不合并、不部署。最终SHA以交付回复和PR head为准，避免把当前提交自身SHA写进自身内容。推送后另行读取远端分支、树和blob核对。本轮结束后停止等待审查。
+
+本轮最终SAST新增1项ERROR级工具发现位于 `scripts/check-auth-workflow.mjs` 的隔离测试HTTP请求：目标固定为127.0.0.1:3001，用于向真实API发送不同合成来源、CSRF和Origin负例；不发送真实凭据到外部网络，生产入口仍强制HTTPS。该项记录为经复核的测试传输告警，不忽略规则、不把扫描结果称为零发现；安全扫描整体仍PARTIAL。

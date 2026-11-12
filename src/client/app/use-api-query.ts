@@ -45,7 +45,7 @@ export function useApiQuery<T>(path: string, revision = 0, sessionId?: string) {
     return () => controller.abort();
   }, [path, revision, sessionId, key]);
   return state.key === key
-    ? state
+    ? { data: state.data, error: state.error, loading: state.loading }
     : {
         data: null,
         error: null,

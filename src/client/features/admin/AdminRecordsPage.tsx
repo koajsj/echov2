@@ -179,7 +179,12 @@ export function AdminRecordsPage({
             rows={query.data.items}
             name={`echo-${kind}-current-page.csv`}
           />
-          <div className="table-scroll">
+          <div
+            className="table-scroll"
+            role="region"
+            aria-label={`${view.title}记录表，可横向滚动`}
+            tabIndex={0}
+          >
             <table>
               <caption>{view.title} · 每页最多 50 条</caption>
               <thead>

@@ -36,7 +36,7 @@ export class DeviceService {
       const session = await db.query<{
         device_id: string | null;
       }>(
-        "SELECT device_id FROM echo.sessions WHERE id=$1 AND user_id=$2 AND audience='user' AND expires_at>now() AND reauthenticated_at>now()-interval '5 minutes' FOR UPDATE",
+        "SELECT device_id FROM echo.sessions WHERE id=$1 AND user_id=$2 AND audience='user' AND expires_at>clock_timestamp() AND reauthenticated_at>clock_timestamp()-interval '5 minutes' FOR UPDATE",
         [sessionId, userId],
       );
       if (!session.rows[0])

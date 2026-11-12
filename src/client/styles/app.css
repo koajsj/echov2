@@ -173,10 +173,12 @@ label {
   font-size: var(--echo-type-title);
 }
 .table-scroll {
+  max-width: 100%;
   overflow: auto;
 }
 table {
   width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
   font-size: var(--echo-type-label);
   font-variant-numeric: tabular-nums;
@@ -190,10 +192,12 @@ th,
 td {
   text-align: left;
   padding: 14px 12px;
+  min-width: 7rem;
   border-bottom: 1px solid var(--echo-border);
   overflow-wrap: anywhere;
 }
 th {
+  white-space: nowrap;
   font-weight: var(--echo-weight-medium);
 }
 .actions {
