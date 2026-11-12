@@ -110,6 +110,7 @@ export const adminNavigation: NavigationItem[] = [
   },
 ];
 export function pageTitle(page: string): string {
+  if (page === "login") return "登录";
   return (
     [...userNavigation, ...adminNavigation].find((item) => item.id === page)
       ?.label ?? "页面不存在"

@@ -1,6 +1,7 @@
+import { PublicUserId } from "../../components/PublicUserId";
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Button } from "@heroui/react";
+import { Button, Input, Form } from "@heroui/react";
 import type { SessionView } from "../../../shared/contracts";
 import { api } from "../../app/api";
 export function AccountPage({
@@ -49,14 +50,16 @@ export function AccountPage({
         <p>用户名可以修改，身份不随名字改变。</p>
       </header>
       <dl className="details">
-        <dt>永久 User ID</dt>
-        <dd>{session.account.id}</dd>
+        <dt>公共 User ID</dt>
+        <dd>
+          <PublicUserId value={session.account.publicId} />
+        </dd>
         <dt>用户名</dt>
         <dd>{session.account.username}</dd>
         <dt>设备绑定</dt>
         <dd>{session.deviceId ?? "未登记"}</dd>
       </dl>
-      <form
+      <Form
         className="panel form"
         onSubmit={(event) => {
           void rename(event);
@@ -65,7 +68,7 @@ export function AccountPage({
         <h2>修改用户名</h2>
         <label>
           新用户名
-          <input
+          <Input
             name="username"
             required
             pattern="[a-zA-Z0-9_]{3,32}"
@@ -75,7 +78,7 @@ export function AccountPage({
         </label>
         <label>
           重新输入密码
-          <input
+          <Input
             name="password"
             type="password"
             required
@@ -88,7 +91,7 @@ export function AccountPage({
           确认修改
         </Button>
         <p role="status">{message}</p>
-      </form>
+      </Form>
     </section>
   );
 }

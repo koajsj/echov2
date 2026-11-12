@@ -1,132 +1,144 @@
 <div align="center">
-  <img src="public/echo.svg" alt="Echo 标志" width="88" />
+  <img src="public/echo.svg" alt="Echo Logo" width="84" />
   <h1>Echo Native</h1>
   <p><strong>Private by Design.</strong></p>
-  <p>面向自主通信的模块化单体：让身份、投递和端到端加密各有清晰的边界。</p>
-  <p>React 19 · HeroUI v3 · Fastify · PostgreSQL · MLS / WASM 实验</p>
+  <p>自主身份 · 密文投递 · 清晰的客户端信任边界</p>
+  <p>React 19 / HeroUI v3 / BoardUI · Fastify · PostgreSQL · OpenMLS / WASM 实验</p>
 </div>
 
-> ⚠️ **当前状态：PARTIAL，不具备生产上线条件。** 账户与数据库工作流已在 Cloud 临时环境验证；产品级 MLS、可信设备与加密通信仍未完成。聊天写入保持 `503 MLS_NOT_READY`，独立密码学实验不能证明产品已实现端到端加密。
+> 🛡️ **当前整体 PARTIAL，尚不具备生产部署条件。** 账户、迁移、管理元数据和桌面界面已在 Cloud 隔离环境验证；产品级 MLS、可信设备、离线删除和恢复仍阻塞。聊天写入继续拒绝 `503 MLS_NOT_READY`。
 
-[项目简介](#项目简介) · [核心能力](#-核心能力) · [技术架构](#-技术架构) · [安全设计](#-安全设计) · [开发与验证](#-开发与验证) · [文档](#-项目文档) · [限制与路线图](#-当前限制与路线图)
+[项目](#项目简介) · [能力](#-核心能力) · [架构](#-系统架构) · [安全](#-安全与元数据) · [界面](#-pc-用户端与管理端) · [截图](#-真实界面截图) · [开发](#-开发与验证) · [文档](#-权威文档) · [限制](#-当前限制与路线图)
 
 ## 项目简介
 
-Echo Native 是一个自主通信项目，目标是让用户通过自己的服务管理账户和密文投递，同时将私密内容的密码学处理留在客户端。它采用独立的 Identity、Delivery 与 Messaging 边界，使用模块化单体控制运维复杂度。
+Echo Native 探索一种可自主部署的通信架构：服务端管理账户、路由和密文投递，客户端负责私钥、设备信任和消息密码学。采用模块化单体，控制部署与运维复杂度。
 
-项目选择独立的原生通信架构，不依赖 Matrix/Synapse 运行时；这是架构取舍，并不意味着已完成与 Matrix 等同的功能。群组加密计划采用 RFC 9420 MLS，借助成熟库处理成员、密钥和 epoch，而非自行设计群组密码协议。
-
-◆ **职责边界：** 客户端目标是管理设备密钥、验证身份并处理 MLS；服务器负责账户、权限、密文存储与投递排序。当前服务端能力和独立 MLS 实验已有验证，但两者尚未形成可用的加密通信闭环。
+项目不依赖 Matrix/Synapse，选择独立 Identity、Delivery、Messaging 边界；这是架构取舍，不代表已具备 Matrix 的成熟功能。群组密码学采用 RFC 9420 MLS 和成熟 OpenMLS 实现，避免自创群组加密协议。独立库实验已经运行，产品通信集成尚未完成。
 
 ## 💬 核心能力
 
-状态含义：✅ 已实现并验证特定范围 · 🟡 部分实现 · ⛔ 尚未实现或阻塞。
+✅ 表示指定范围已实现并验证；🟡 表示部分实现；⛔ 表示阻塞或尚未实现。
 
-| 能力         | 状态 | 当前范围                                                                          |
-| ------------ | ---- | --------------------------------------------------------------------------------- |
-| 账户与身份   | 🟡   | 注册、邀请、Argon2id 登录、会话与改名已验证；密码学根身份绑定未完成               |
-| 设备管理     | 🟡   | pending 设备目录与服务访问撤销；可信授权、SAS/QR 未完成                           |
-| E2EE         | ⛔   | 真实 MLS 库仅在独立 WASM 实验中运行；产品发送门禁关闭                             |
-| 一对一通信   | ⛔   | 尚无可用的端到端消息闭环                                                          |
-| 群组通信     | 🟡   | 实验验证 Welcome、Commit、Remove 与 epoch；未接入产品群组                         |
-| 离线同步     | ⛔   | 缺完整 provider 持久化、outbox 与重连协议                                         |
-| 附件加密     | 🟡   | 本地 AES-256-GCM 加解密已验证；上传和 MLS 密钥分发未接通                          |
-| 消息生命周期 | 🟡   | 删除请求、隐藏和到期调度有服务端基础；墓碑传播与物理清理未完成                    |
-| 密钥恢复     | ⛔   | 缺恢复凭据、设备授权和状态新鲜性验证                                              |
-| 管理后台     | 🟡   | 账户、设备、注册、审计和当前页 CSV 有真实数据；部分统计与备份功能缺数据源或执行器 |
-| 数据备份     | 🟡   | ✅ 服务元数据加密归档及只读预览已验证；聊天历史与系统隔离恢复阻塞                 |
+| 范围            | 状态 | 当前真实能力                                                                                  |
+| --------------- | ---- | --------------------------------------------------------------------------------------------- |
+| 账户            | ✅   | 注册、邀请码、Argon2id 登录、改名、重新认证、退出和受众隔离                                   |
+| 公共用户 ID     | ✅   | 随机12位 Base32、数据库唯一约束、碰撞重试、旧账号回填、显示/复制/查询；内部 UUID 保留         |
+| 设备            | 🟡   | pending 登记、目录和服务访问撤销；根授权、Credential、SAS/QR 未完成                           |
+| 端到端通信      | ⛔   | 私聊、群聊和离线消息没有产品级安全闭环；不提供明文替代                                        |
+| MLS / WASM      | 🟡   | 独立实验验证 Welcome、Commit、Application、Remove 与 epoch；未接入账号和投递                  |
+| 本地存储 / 附件 | 🟡   | IndexedDB 原子操作前置、附件 AEAD 已验证；完整 Group State、Outbox 和 MLS 分发未完成          |
+| 删除与恢复      | 🟡   | 删除意图、隐藏、到期调度和幂等基础；独立锚、物理 purge、离线墓碑及可信恢复阻塞                |
+| 用户归档        | ✅   | 服务元数据加密下载与只读预览；保留旧格式 UUID 绑定，不包含聊天、私钥或恢复能力                |
+| 管理后台        | 🟡   | 实际账户、设备、登录、安全事件、审计、邀请、CSV 和业务趋势；流量/GeoIP/灾备仍缺数据源或执行器 |
 
-## 🧩 技术架构
+## 🧩 系统架构
 
 ```mermaid
 flowchart LR
-  Browser["浏览器客户端<br/>React / HeroUI · 部分实现"]
-  MLS["MLS / WASM<br/>独立实验 · 未接入产品"]
-  Caddy["Caddy<br/>HTTPS / WSS 入口"]
+  User["PC 用户端 /<br/>UserApp / HeroUI"]
+  Admin["PC 管理端 /admin<br/>AdminApp / BoardUI / HeroUI"]
+  MLS["OpenMLS / WASM<br/>独立实验，未接入产品"]
+  Edge["Caddy · HTTPS / WSS"]
   API["Fastify 模块化单体"]
-  Identity["Echo Identity<br/>账户已实现 · 设备信任建设中"]
-  Delivery["Echo Delivery<br/>投递基础 · 写入受门禁限制"]
-  Messaging["Echo Messaging<br/>产品消息闭环阻塞"]
-  DB[("PostgreSQL<br/>账户与服务数据")]
-  Media["密文附件存储<br/>目标 · 上传下载未接通"]
-  Browser --> Caddy --> API
-  Browser -. "独立浏览器实验" .-> MLS
+  Identity["Echo Identity<br/>账号可用，设备信任建设中"]
+  Delivery["Echo Delivery<br/>路由与投递基础"]
+  Messaging["Echo Messaging<br/>产品消息写入阻塞"]
+  DB[("PostgreSQL<br/>内部 UUID + 公共 ID")]
+  Media["密文附件存储<br/>目标，未接通上传下载"]
+  User --> Edge
+  Admin --> Edge
+  User -. "实验" .-> MLS
+  Edge --> API
   API --> Identity --> DB
   API --> Delivery --> DB
   API --> Messaging
   API -. "目标" .-> Media
 ```
 
-虚线表示独立实验或尚未接通的目标能力；服务端不会因消息的外层类型推断 MLS 状态。
+◆ 两个入口有独立布局、导航和工作区；共享基础组件不共享管理员权限。虚线表示实验或目标能力。
 
 ## ⚙️ 技术栈
 
-| 技术                  | 声明或验证版本                             | 职责                                            |
-| --------------------- | ------------------------------------------ | ----------------------------------------------- |
-| React / React DOM     | 19.3.1                                     | 浏览器界面                                      |
-| HeroUI / Tailwind CSS | 3.2.7 / 4.3.5                              | 组件与样式                                      |
-| TypeScript / Vite     | 5.9.3 / 8.3.6                              | 类型检查与前端构建                              |
-| Node.js               | `>=24.17.0 <25`；Cloud 验证 24.22.1        | 应用运行时                                      |
-| Fastify / pg          | 5.12.8 / 8.23.1                            | HTTP、WebSocket 与数据库访问                    |
-| PostgreSQL            | Cloud 验证 17.11                           | 业务数据和事务；基线 manifest 当前验证 major 17 |
-| OpenMLS / RustCrypto  | 0.9.2 / 0.6.0                              | 独立 RFC 9420 WASM 实验，尚未接入产品           |
-| Rust / wasm-bindgen   | 工具链 1.99.1 / 0.2.105                    | 实验构建与浏览器绑定                            |
-| Caddy / systemd       | Cloud 实验 Caddy 2.6.2；systemd 未锁定版本 | HTTPS 入口与目标服务管理                        |
+| 技术                       | 实际声明 / 验证版本                    | 职责                                            |
+| -------------------------- | -------------------------------------- | ----------------------------------------------- |
+| React / React DOM          | 19.3.1                                 | 桌面浏览器界面                                  |
+| HeroUI / Tailwind CSS      | 3.2.7 / 4.3.5                          | 基础交互、表单、表格与样式                      |
+| BoardUI                    | 官方 MCP CLI 0.5.9 获取的免费源码      | KPI、面积/折线组合与柱状图卡片                  |
+| Recharts / Remixicon React | 3.9.2 / 4.9.0                          | BoardUI 内部图表与图标；用户已明确允许          |
+| TypeScript / Vite          | 5.9.3 / 8.3.6                          | 类型检查与客户端构建                            |
+| Fastify / pg               | 5.12.8 / 8.23.1                        | HTTP、WebSocket 与 PostgreSQL                   |
+| Node.js / PostgreSQL       | Cloud 24.22.1 / 17.11                  | 应用与临时数据库验证；Node 声明 `>=24.17.0 <25` |
+| OpenMLS / RustCrypto       | 0.9.2 / 0.6.0                          | 独立 MLS 实验                                   |
+| Rust / wasm-bindgen        | 1.99.1 / 0.2.105                       | native/WASM 构建                                |
+| Caddy / systemd            | Cloud 实验 Caddy 2.6.2；systemd 未锁版 | 目标 HTTPS 入口与进程管理                       |
 
-npm 依赖见 [package.json](package.json) 和 [package-lock.json](package-lock.json)；实验依赖见 [Cargo.toml](crypto/mls-lab/Cargo.toml) 和 [Cargo.lock](crypto/mls-lab/Cargo.lock)。
+依赖以 [package.json](package.json)、[npm 锁文件](package-lock.json)、[Cargo.toml](crypto/mls-lab/Cargo.toml) 和 [Cargo.lock](crypto/mls-lab/Cargo.lock) 为准。BoardUI 以源码分发，不虚构运行时包版本；版权、修改范围和 MIT 文本见[来源说明](src/client/components/boardui/notice.md)。未复制未授权 Pro 源码。
 
-## 🔐 安全设计
+## 🔐 安全与元数据
 
-- **MLS 与密钥：** 实验固定 `MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519`，真实验证了两个独立 Chromium 上下文中的加解密和成员移除。客户端私有 group state 的安全持久化与账户绑定仍是准入条件。
-- **设备身份：** 密码登录和设备目录登记不等于设备可信。根身份授权、指纹核验和 SAS/QR 尚未完成；服务端撤销会话也不等于 MLS 成员撤权。
-- **密文与附件：** 服务器目标是保存不透明密文，不持有浏览器私钥、epoch secret 或完整私有 group state。本地附件 AEAD 已验证，但密钥经 MLS 分发、授权上传和下载仍未实现。
-- **删除与恢复：** 服务端已有删除意图与隐藏基础；离线加密墓碑、独立删除证据、物理清理及旧备份防回滚仍阻塞。元数据归档的只读预览不能恢复聊天或证明删除状态新鲜。
+- **标准密码学：** MLS 实验使用真实 OpenMLS，固定套件 `MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519`。实验通过不证明 Echo 已完成端到端通信。
+- **客户端密钥：** 私钥、epoch secret 和完整私有 Group State 的目标边界在客户端；可信身份、完整持久化和原子 Outbox 仍是准入条件。
+- **设备与撤权：** 密码登录、pending 目录和 HTTP 会话撤销均不证明密码学信任或群成员撤权；产品 Add/Remove、Welcome/epoch 一致性仍待接通。
+- **附件与删除：** 本地 AES-GCM 是附件前置能力；MLS 密钥分发、墓碑传播、独立删除证据和物理清理未完成。不能保证追回截图或已解密副本。
+- **备份防回滚：** 元数据预览不恢复密钥或状态。系统灾备、离线删除新鲜性及旧备份防复活仍阻塞。
+- **公共 ID：** 60位随机展示标识，不是认证凭据；不替代 UUID、权限或密码学身份。
 
-服务器可见账户、设备和会话目录、IP/登录与审计记录、成员关系、投递时间/顺序/长度、删除目标及附件引用等元数据。服务器仍可能拒绝服务或删除数据；不能承诺追回截图、外部备份或已解密副本。
+服务器可见账户和设备目录、会话、IP/登录事件、审计、成员/路由关系、投递时间/长度/顺序、删除目标及附件引用。管理员无法通过现有 API 获取聊天明文、附件明文或用户私钥；服务器仍可拒绝服务，元数据真实性和可用性也有局限。
 
-> 🛡️ **已知安全阻塞：** Cargo audit 报告的 `crypto-bigint` 时序公告进入当前 WASM 依赖树；可选锁闭中还有其他公告。未忽略公告，也未解除产品门禁。详情见[密码学审查](docs/native-cryptography.md)和[工程验证](docs/static-verification-report.md)。
+> ⛔ **供应链安全准入未通过：** `crypto-bigint` 时序公告进入当前 WASM 依赖树；Cargo 锁闭另有公告。未忽略公告、未强制套用不兼容补丁，crypto-gate 持续关闭。详情见[密码学](docs/native-cryptography.md)。
 
-## 📁 项目结构
+## 👤 PC 用户端与管理端
 
-```text
-echov2/
-├── src/client/          浏览器界面、本地加密前置模块
-├── src/server/          账户、设备、投递、生命周期与管理 API
-├── src/shared/          客户端与服务端共享契约
-├── crypto/mls-lab/      独立 OpenMLS / WASM 实验
-├── migrations/          历史迁移、版本化基线与执行说明
-├── scripts/             迁移、工程和 Cloud 验证工具
-├── deploy/              Caddy、systemd 与 PostgreSQL 配置样例
-├── docs/                架构、安全、验证报告及 SBOM
-└── public/echo.svg      Echo 品牌标志
-```
+仅支持 PC 和笔记本桌面浏览器，布局下限为 **1024 CSS px**；保留窗口缩放、深浅主题和 `prefers-reduced-motion`。已移除移动导航、折叠菜单及手机/平板专用断点。
 
-## 🎨 界面与设计
+| 入口     | 登录与布局                                   | 操作范围                                            |
+| -------- | -------------------------------------------- | --------------------------------------------------- |
+| `/`      | 默认用户登录，支持注册；认证后独立用户工作台 | 聊天门禁、设备目录、设置、隐私、归档和当前能力说明  |
+| `/admin` | 独立管理员登录与控制台；未认证路由跳转登录   | 真实元数据、账户/设备管理、注册邀请、安全事件与审计 |
 
-界面使用 React 19、HeroUI v3 和 **Taste / Achromatic Ledger** 视觉方向：Claude 式衬线标题、无衬线正文、系统字体和深浅主题。布局面向桌面与手机，使用微动效并尊重 `prefers-reduced-motion`，提供键盘与无障碍基础。
+用户登录页提供明显的「管理员登录」按钮；用户工作台不显示后台导航。admin audience、Cookie、Session、API 权限与审计独立，没有公开管理员注册。
 
-Cloud 中已验证 Chromium 390px 页面无横向溢出、reduced-motion 偏好和键盘退出；这不是完整的跨浏览器视觉或无障碍审计。以下截图由 Cloud Chromium 实际运行生成，桌面视口为 1440×1000（管理端 1280×900）、手机为 390×844；长页面保留完整滚动内容。使用临时 PostgreSQL 与合成账户，未填充模拟聊天或固定统计。
+界面沿用 Echo Logo、**Achromatic Ledger**、系统原生字体、Claude 式衬线标题与无衬线正文。BoardUI 免费卡片接入真实 PostgreSQL 数据，HeroUI v3 提供基础操作；删除原有手写 SVG 图表。统计支持7/30/90日筛选，区分真实零值、未知、空范围、加载和失败。没有可靠流量、GeoIP、浏览器或 OS 数据时不绘制分布图；独立环形图/横向排行等 Pro 卡片暂无授权。
 
-### 🌐 真实界面
+## 🌐 真实界面截图
 
-| 用户端                                                                                     | 管理端                                                                              |
-| ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| **登录 / 注册入口 · 桌面**<br/>![用户登录注册](docs/screenshots/user-auth-desktop.png)     | **Dashboard · 桌面**<br/>![管理概览](docs/screenshots/admin-dashboard-desktop.png)  |
-| **聊天主界面 · 桌面**<br/>![聊天安全门禁](docs/screenshots/user-conversations-desktop.png) | **用户管理 · 桌面**<br/>![真实合成账户](docs/screenshots/admin-users-desktop.png)   |
-| **设备与身份 · 手机**<br/>![手机设备页](docs/screenshots/user-devices-mobile.png)          | **安全中心 · 手机**<br/>![手机安全中心](docs/screenshots/admin-security-mobile.png) |
+Cloud Chromium 实际运行，临时 PostgreSQL 与合成账户；桌面视口1440×1000、1366×900或1280×900，长页面保留完整滚动内容。没有生成产品图、模拟聊天或固定统计。
+
+| 用户端                                                                                     | 管理端                                                                                          |
+| ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| **登录 / 注册**<br/>![用户登录](docs/screenshots/user-auth-desktop.png)                    | **Dashboard · 真实 BoardUI 图表**<br/>![管理概览](docs/screenshots/admin-dashboard-desktop.png) |
+| **聊天 · 当前安全门禁**<br/>![聊天工作台](docs/screenshots/user-conversations-desktop.png) | **用户管理 · 短 ID 与真实查询**<br/>![用户管理](docs/screenshots/admin-users-desktop.png)       |
+| **设备与身份**<br/>![设备页](docs/screenshots/user-devices-desktop.png)                    | **安全中心**<br/>![安全事件](docs/screenshots/admin-security-desktop.png)                       |
 
 <details>
-<summary>设备管理 · 桌面</summary>
+<summary>独立管理员登录与设备管理</summary>
 
+![管理员登录](docs/screenshots/admin-auth-desktop.png)
 ![设备管理](docs/screenshots/admin-devices-desktop.png)
 
 </details>
 
-聊天页显示可信设备和 MLS 准入阻塞；设备目录中的 pending 不代表可信。Dashboard 数值来自本轮临时数据库，未知地区、流量和可信在线设备保持未知。手机记录表支持键盘及触摸横向滚动。
+## 📁 项目目录
+
+```text
+echov2/
+├── src/client/app/         PC 双入口、独立工作区与共享 Hooks
+├── src/client/features/    账户、设备、数据与管理页面
+├── src/client/components/  HeroUI 组合及 BoardUI 免费源码
+├── src/server/             认证、身份、投递、生命周期与管理 API
+├── src/shared/             类型契约与输入校验
+├── crypto/mls-lab/         独立 OpenMLS / WASM 实验
+├── migrations/             历史 SQL、独立基线和增量迁移
+├── scripts/                Cloud 迁移、并发、浏览器与工程验证
+├── deploy/                 Caddy、PostgreSQL 和 systemd 样例
+├── docs/                   权威技术文档、报告、截图及 SBOM
+└── public/echo.svg         Echo 品牌标志
+```
 
 ## 🔍 开发与验证
 
-项目使用 **Codex Cloud** 进行远程开发与验证；本机无需安装项目依赖。仅在获授权的隔离 Cloud 环境执行以下工程检查，依赖由锁文件固定：
+使用 **Codex Cloud** 远程开发；Mac 本机不安装、下载或构建项目依赖。锁文件固定依赖解析，在获授权的 Cloud 中运行：
 
 ```sh
 npm ci
@@ -139,37 +151,37 @@ npm run build:client
 npm run build:server
 ```
 
-本轮七项工程检查均重新执行，实际退出码见[工程验证](docs/static-verification-report.md)。Rust native/WASM 构建、OpenMLS 浏览器实验及两标签 IndexedDB 测试的前提与命令见 [MLS 实验说明](crypto/mls-lab/README.md)。两个独立浏览器上下文不是两台物理设备；Firefox/WebKit 下载曾受 Cloud 网络策略阻止，iOS 实机未验证。
+Rust/WASM 和库实验命令见 [MLS 实验](crypto/mls-lab/README.md)。真实数据库、认证、短 ID、删除竞争及浏览器脚本需要明确隔离环境参数，不对任意数据库直接运行。命令与实际退出码见[工程验证](docs/static-verification-report.md)。
 
-数据库迁移使用独立修正版基线 → 002 → 003 → 004 → 005 → 006。新库与 **synthetic legacy fixture** 已在临时 PostgreSQL 验证并得到一致业务 Schema；这不证明未知持久化环境的迁移历史。应用启动不会自动迁移，操作前请阅读[迁移说明](migrations/README.md)。
+新库使用修正版独立基线001 → 002 → 003 → 004 → 005 → 006 → **007公共ID**。已有已核验前缀仅追加007；未知持久化环境不得自动迁移。应用启动不执行迁移。操作前阅读[迁移说明](migrations/README.md)。
 
 ## 🚀 部署与资源
 
-目标环境为 **Debian · 2 GB RAM · 1 核 CPU · 20 GB SSD**，采用 Fastify 单进程、PostgreSQL 单实例、Caddy 和 systemd；目标附件存储为本地密文文件。配置样例不代表生产部署已完成。
+目标为 **Debian / 2 GB RAM / 1 核 CPU / 20 GB SSD**，保持 Fastify + PostgreSQL + Caddy + systemd，不引入 Redis、Kafka、Kubernetes 或微服务。
 
-Cloud 短时真实全栈请求已运行，但 Docker 的 2 GB / 1 核限制实际未生效，磁盘配额和持续压力测试也未完成。因此低配容量、灾备及生产部署均未验收。详见[部署与运维](docs/native-deployment-operations.md)。
+Cloud 实际 cgroup 仍为32 GB / 4核，swap 无限制；Docker 请求2 GB / 1核未实际生效。短时功能负载与 Node 进程观测单独记录，**不是低配容量验收**。20 GB磁盘配额、真实受限持续负载、系统隔离恢复尚未通过。配置样例不代表已完成生产部署。
 
-## 📚 项目文档
+## 📚 权威文档
 
-| 分类           | 权威资料                                                                                                                                                                                    |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 项目状态与证据 | [第三阶段报告](docs/phase-three-report.md) · [工程验证](docs/static-verification-report.md) · [本轮验证数据](docs/evidence/final-review.json) · [基线验证](docs/evidence/verification.json) |
-| 架构与协议     | [原生架构](docs/native-architecture.md) · [投递协议](docs/native-protocol-delivery.md)                                                                                                      |
-| 密码学与身份   | [密码学](docs/native-cryptography.md) · [身份、设备与恢复](docs/native-identity-devices-recovery.md) · [MLS 实验](crypto/mls-lab/README.md)                                                 |
-| 数据与迁移     | [迁移操作](migrations/README.md) · [Cloud 数据库验证](docs/cloud-bootstrap-verification.md) · [数据生命周期](docs/native-data-lifecycle.md)                                                 |
-| 安全与运维     | [威胁模型](docs/native-security-threat-model.md) · [部署与运维](docs/native-deployment-operations.md) · [实施准入](docs/native-implementation-plan.md) · [决策记录](docs/decisions.md)      |
-| 依赖清单       | [npm SBOM](docs/evidence/npm-sbom.json) · [Rust SBOM](docs/evidence/rust-sbom.json)                                                                                                         |
+| 分类           | 文档                                                                                                                                                                         |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 当前状态与证据 | [第三阶段报告](docs/phase-three-report.md) · [工程验证](docs/static-verification-report.md) · [PC改造证据](docs/evidence/pc-review.json)                                     |
+| 架构与投递     | [原生架构](docs/native-architecture.md) · [投递协议](docs/native-protocol-delivery.md)                                                                                       |
+| 密码学与身份   | [密码学](docs/native-cryptography.md) · [身份、设备与恢复](docs/native-identity-devices-recovery.md) · [MLS实验](crypto/mls-lab/README.md)                                   |
+| 数据与迁移     | [迁移](migrations/README.md) · [Cloud数据库](docs/cloud-bootstrap-verification.md) · [生命周期](docs/native-data-lifecycle.md)                                               |
+| 安全与运维     | [威胁模型](docs/native-security-threat-model.md) · [部署](docs/native-deployment-operations.md) · [准入计划](docs/native-implementation-plan.md) · [决策](docs/decisions.md) |
+| 供应链         | [npm SBOM](docs/evidence/npm-sbom.json) · [Rust SBOM](docs/evidence/rust-sbom.json) · [BoardUI许可](src/client/components/boardui/notice.md)                                 |
 
 ## 🧭 当前限制与路线图
 
-- ✅ **已验证：** 临时库双路径迁移与权限、注册/邀请/登录/会话、七项工程检查，以及限定范围的 Chromium、附件 AEAD 和 MLS 库实验。
-- 🟡 **部分完成：** 设备目录、投递基础、删除意图、管理后台、本地附件加密与服务元数据归档。
-- ⛔ **BLOCKED：** 可信设备与 MLS 产品集成、私聊和群聊、离线墓碑、密钥恢复、系统备份隔离恢复及依赖安全准入。
-- 🌐 **待运行验证：** Firefox、WebKit、iOS 实机、真实掉电/磁盘满、完整无障碍审计、受限资源下的持续负载和恢复演练。
-- 🚀 **生产部署限制：** 在安全门禁、删除与恢复保障、依赖公告和容量验证解决前，不具备生产上线条件。
+- ✅ **已验证范围：** 账户、公共ID迁移、权限和幂等；PC双入口；真实元数据图表、查询、复制及下载；工程检查与独立MLS实验。
+- 🟡 **部分完成：** 设备目录、消息投递基础、删除意图、本地附件、元数据归档、管理后台与有限静态扫描。
+- ⛔ **BLOCKED：** 活动密码学依赖公告、可信设备、产品MLS、私聊/群聊、离线同步与墓碑、密钥恢复、灾备和低配资源验收。
+- 🔍 **NEEDS_RUNTIME_VERIFICATION：** 安全内核接通后的产品级多设备、Commit冲突、真实崩溃/磁盘满、删除新鲜性、隔离恢复与完整可访问性验证。
+- ◆ **交付边界：** 第三阶段继续收敛，不增加第四阶段，不自动合并或生产部署。
 
 ## 🤝 许可证与贡献
 
-仓库目前没有确认的项目级 LICENSE；请勿将第三方依赖的许可证视为 Echo Native 的项目许可证。第三方依赖清单见上方 SBOM；分发前需要核对各依赖义务。
+项目根目录没有确认的整体 LICENSE，不擅自声明开源授权。BoardUI 免费源码单独保留上游 MIT 许可，其他依赖义务见 SBOM；这不授予本项目整体许可证。
 
-欢迎通过 Issue 或 Pull Request 提供可复现的问题与变更说明。涉及迁移、密码学、设备信任或数据删除的贡献，应说明兼容路径、验证范围与未覆盖的风险。
+欢迎提交可复现 Issue 或 PR。涉及迁移、密码学、设备信任、删除或恢复的变更，应附兼容路径、实际验证和未覆盖风险。重要功能变更须同步更新本页与对应权威文档。

@@ -1,0 +1,1423 @@
+{
+  "date": "2026-11-12",
+  "status": "PARTIAL",
+  "productionAdmission": "BLOCKED",
+  "environment": "Codex Cloud only, disposable PostgreSQL and synthetic data",
+  "baseSha": "32f09d8faf24a5a731f4aa86f899905030e90518",
+  "mainAtReview": "26626711139c97cd57bb041200c3657a4c4373e6",
+  "delivery": {
+    "pr": "https://github.com/koajsj/echov2/pull/2",
+    "branch": "codex/echo-native-final",
+    "finalSha": "verified in final delivery reply and remote Git history; cannot self-reference this commit"
+  },
+  "network": {
+    "observedRevision": 4,
+    "observationsCurrent": true,
+    "policy": "enforced",
+    "customAllowedHosts": ["api.github.com", "boardui.com"],
+    "githubFreshRead": "PASS"
+  },
+  "issues": [
+    {
+      "id": "PC-01",
+      "status": "FIXED",
+      "details": "docs/phase-three-report.md#原子问题与修复证据",
+      "locations": [
+        {
+          "file": "migrations/007-public-user-id.sql",
+          "line": 3,
+          "sha256": "b95faf65f901d3be46a9bd7c5ed23dea319c20e0c21471f90469d853d425f5e8"
+        },
+        {
+          "file": "src/server/accounts/account-service.ts",
+          "line": 67,
+          "sha256": "0a96d3a8017ce001c358b3bb8b2232df2ac97c3f5ff72ed13df9da82084babcc"
+        }
+      ]
+    },
+    {
+      "id": "PC-02",
+      "status": "FIXED",
+      "details": "docs/phase-three-report.md#原子问题与修复证据",
+      "locations": [
+        {
+          "file": "src/client/components/UserLookupMode.tsx",
+          "line": 2,
+          "sha256": "8ccb55dfde1dabce5a6b3955f023f9de8adf693a606b35c18f1e052636a5e02b"
+        },
+        {
+          "file": "src/server/accounts/account-routes.ts",
+          "line": 264,
+          "sha256": "c5d1d7587e12dca241c700c6ce038ef9cb075c08160e1b571c8ba2bb8f3de5ef"
+        }
+      ]
+    },
+    {
+      "id": "PC-03",
+      "status": "FIXED",
+      "details": "docs/phase-three-report.md#原子问题与修复证据",
+      "locations": [
+        {
+          "file": "src/client/app/App.tsx",
+          "line": 6,
+          "sha256": "494bf20345c29dec2f8547619c3c78564ed294c88e3ba27c46ccfdbae83d827e"
+        },
+        {
+          "file": "src/client/app/AdminApp.tsx",
+          "line": 10,
+          "sha256": "8f138b54da4da476c6005e0eb8178d9c5c4046aef1db4ac4b7b72ffa172a385a"
+        },
+        {
+          "file": "src/client/app/UserApp.tsx",
+          "line": 10,
+          "sha256": "39d82f4c8fefaad0abeb550f4ac5c6bc05c4e8084714717f5a83e74543030168"
+        }
+      ]
+    },
+    {
+      "id": "PC-04",
+      "status": "FIXED",
+      "details": "docs/phase-three-report.md#原子问题与修复证据",
+      "locations": [
+        {
+          "file": "src/client/styles/shell.css",
+          "line": 3,
+          "sha256": "03f7f9dab400b959eed5e6f63177177596eedc735ee5db388d9e38a53885a2d1"
+        }
+      ]
+    },
+    {
+      "id": "PC-05",
+      "status": "FIXED",
+      "details": "docs/phase-three-report.md#原子问题与修复证据",
+      "locations": [
+        {
+          "file": "src/client/components/boardui/RevenueChartCard.tsx",
+          "line": 52,
+          "sha256": "2cb41b07ae7a3bdc3e7d81ee932a87b0794d9d25cea7887ae615a11692a9eb5c"
+        },
+        {
+          "file": "src/client/components/boardui/OrdersChartCard.tsx",
+          "line": 23,
+          "sha256": "e199b351b5fbe9476056ebc32c6185682d7cccd28cb47eb09e770e1204f98ce9"
+        }
+      ]
+    },
+    {
+      "id": "PC-06",
+      "status": "FIXED",
+      "details": "docs/phase-three-report.md#原子问题与修复证据",
+      "locations": [
+        {
+          "file": "src/server/admin/admin-read-routes.ts",
+          "line": 217,
+          "sha256": "9b9fdeb831ce71dac3158d372441bc3887a90f2ebd4b4b6cfdaec2adc2035a04"
+        },
+        {
+          "file": "src/server/admin/admin-routes.ts",
+          "line": 65,
+          "sha256": "6a19f3a289c85d7a582531e189b9e0c9b18dbf3dd9b8d9e8dced6c621f04451b"
+        }
+      ]
+    },
+    {
+      "id": "PC-07",
+      "status": "FIXED",
+      "details": "docs/phase-three-report.md#原子问题与修复证据",
+      "locations": [
+        {
+          "file": "src/client/components/PublicUserId.tsx",
+          "line": 4,
+          "sha256": "828a7c515b1f6748752b27ce30e851840cad6b0c67f3c5ece9141ef29c813012"
+        },
+        {
+          "file": "src/client/features/admin/UsersPage.tsx",
+          "line": 4,
+          "sha256": "6f9bfc13442cddcbf78de985823479cba486ecef8c1ab399804af0c176471969"
+        }
+      ]
+    }
+  ],
+  "migrationHistory": "UNKNOWN for other persistent environments; no production connection/adoption",
+  "immutableSql": [
+    {
+      "file": "migrations/001-initial.sql",
+      "sha256": "bc404f56cf0658c138c2177a1d277a74ca4292d234a4269aba6c51fde5fb96e6",
+      "unchangedFromBase": true
+    },
+    {
+      "file": "migrations/002-runtime-permissions.sql",
+      "sha256": "8d94e1f7e4eca7814d7bd145978c73d098cfa8d971feeeabf0fa14f1ae076962",
+      "unchangedFromBase": true
+    },
+    {
+      "file": "migrations/003-route-version-and-delivery.sql",
+      "sha256": "8c4bf81e53fa51af3c891a5530388b75334d0e5a1dc6394b024e9c0a2fef1ccf",
+      "unchangedFromBase": true
+    },
+    {
+      "file": "migrations/004-invitation-idempotency.sql",
+      "sha256": "5f79462433d0d182c331767b599f3187e709cf993120945089f1632a422008bb",
+      "unchangedFromBase": true
+    },
+    {
+      "file": "migrations/005-admin-lifecycle.sql",
+      "sha256": "ccb640eb1f7e5c6b1fb740b6f6c2fe1d9291899fc1f306ac90ed3cbb54c0d65e",
+      "unchangedFromBase": true
+    },
+    {
+      "file": "migrations/006-authorization-proof.sql",
+      "sha256": "ba2faca6bf545b5ba1002d82d178ac4ab5092e2207d9305589f9b825793ab999",
+      "unchangedFromBase": true
+    }
+  ],
+  "baselineSqlSha256": "22afb6fd24d654824f0021b77ba6ce5ec3efbffcac35647ba8e0bf46f011a2e8",
+  "newMigration": {
+    "file": "migrations/007-public-user-id.sql",
+    "sha256": "b95faf65f901d3be46a9bd7c5ed23dea319c20e0c21471f90469d853d425f5e8",
+    "manifest": {
+      "baseline_id": "echo-native-v1",
+      "postgres_major_min": 17,
+      "postgres_major_max": 17,
+      "source": {
+        "path": "migrations/001-initial.sql",
+        "sha256": "bc404f56cf0658c138c2177a1d277a74ca4292d234a4269aba6c51fde5fb96e6"
+      },
+      "differences": [
+        "Rename authorization to authorization_proof and explicitly name its length CHECK; no other schema changes."
+      ],
+      "migrations": [
+        {
+          "version": "001",
+          "migration_name": "echo-native-v1",
+          "path": "migrations/baselines/echo-native-v1/001-initial.sql",
+          "sha256": "22afb6fd24d654824f0021b77ba6ce5ec3efbffcac35647ba8e0bf46f011a2e8"
+        },
+        {
+          "version": "002",
+          "migration_name": "002-runtime-permissions",
+          "path": "migrations/002-runtime-permissions.sql",
+          "sha256": "8d94e1f7e4eca7814d7bd145978c73d098cfa8d971feeeabf0fa14f1ae076962"
+        },
+        {
+          "version": "003",
+          "migration_name": "003-route-version-and-delivery",
+          "path": "migrations/003-route-version-and-delivery.sql",
+          "sha256": "8c4bf81e53fa51af3c891a5530388b75334d0e5a1dc6394b024e9c0a2fef1ccf"
+        },
+        {
+          "version": "004",
+          "migration_name": "004-invitation-idempotency",
+          "path": "migrations/004-invitation-idempotency.sql",
+          "sha256": "5f79462433d0d182c331767b599f3187e709cf993120945089f1632a422008bb"
+        },
+        {
+          "version": "005",
+          "migration_name": "005-admin-lifecycle",
+          "path": "migrations/005-admin-lifecycle.sql",
+          "sha256": "ccb640eb1f7e5c6b1fb740b6f6c2fe1d9291899fc1f306ac90ed3cbb54c0d65e"
+        },
+        {
+          "version": "006",
+          "migration_name": "006-authorization-proof",
+          "path": "migrations/006-authorization-proof.sql",
+          "sha256": "ba2faca6bf545b5ba1002d82d178ac4ab5092e2207d9305589f9b825793ab999"
+        },
+        {
+          "version": "007",
+          "migration_name": "007-public-user-id",
+          "path": "migrations/007-public-user-id.sql",
+          "sha256": "b95faf65f901d3be46a9bd7c5ed23dea319c20e0c21471f90469d853d425f5e8"
+        }
+      ]
+    }
+  },
+  "migration": {
+    "newPath": "PASS",
+    "legacyPath": "PASS",
+    "proof": {
+      "value": "000102ff",
+      "length": 4
+    },
+    "schemaDump": "identical",
+    "catalog": "identical",
+    "baseTables": 23,
+    "permissionDenials": 10,
+    "advisoryLock": "PASS",
+    "checksums": "PASS",
+    "failedReceipt": "PASS",
+    "unknownOutcome": "PASS",
+    "noAdoption": "PASS",
+    "pendingNonemptyRefused": "PASS",
+    "initializationRollback": "PASS",
+    "suppressedReceiptRefused": "PASS",
+    "legacy003Guard": "PASS",
+    "invalid006States": 7,
+    "fixture": "0eaf99e9235e4330984eb3261392c18638f13dc1de407039a0b4834b25d6e943",
+    "artifacts": "/tmp/echo-synthetic-legacy-eXUqWW"
+  },
+  "migrationPerFileFirstNewAndLegacy": [
+    {
+      "version": "001",
+      "sha256": "22afb6fd24d654824f0021b77ba6ce5ec3efbffcac35647ba8e0bf46f011a2e8",
+      "status": "applied",
+      "exitCode": 0
+    },
+    {
+      "version": "002",
+      "sha256": "8d94e1f7e4eca7814d7bd145978c73d098cfa8d971feeeabf0fa14f1ae076962",
+      "status": "applied",
+      "exitCode": 0
+    },
+    {
+      "version": "003",
+      "sha256": "8c4bf81e53fa51af3c891a5530388b75334d0e5a1dc6394b024e9c0a2fef1ccf",
+      "status": "applied",
+      "exitCode": 0
+    },
+    {
+      "version": "004",
+      "sha256": "5f79462433d0d182c331767b599f3187e709cf993120945089f1632a422008bb",
+      "status": "applied",
+      "exitCode": 0
+    },
+    {
+      "version": "005",
+      "sha256": "ccb640eb1f7e5c6b1fb740b6f6c2fe1d9291899fc1f306ac90ed3cbb54c0d65e",
+      "status": "applied",
+      "exitCode": 0
+    },
+    {
+      "version": "006",
+      "sha256": "ba2faca6bf545b5ba1002d82d178ac4ab5092e2207d9305589f9b825793ab999",
+      "status": "applied",
+      "exitCode": 0
+    },
+    {
+      "version": "007",
+      "sha256": "b95faf65f901d3be46a9bd7c5ed23dea319c20e0c21471f90469d853d425f5e8",
+      "status": "applied",
+      "exitCode": 0
+    },
+    {
+      "version": "001",
+      "sha256": "0eaf99e9235e4330984eb3261392c18638f13dc1de407039a0b4834b25d6e943",
+      "status": "applied",
+      "exitCode": 0
+    },
+    {
+      "version": "002",
+      "sha256": "8d94e1f7e4eca7814d7bd145978c73d098cfa8d971feeeabf0fa14f1ae076962",
+      "status": "applied",
+      "exitCode": 0
+    },
+    {
+      "version": "003",
+      "sha256": "8c4bf81e53fa51af3c891a5530388b75334d0e5a1dc6394b024e9c0a2fef1ccf",
+      "status": "applied",
+      "exitCode": 0
+    },
+    {
+      "version": "004",
+      "sha256": "5f79462433d0d182c331767b599f3187e709cf993120945089f1632a422008bb",
+      "status": "applied",
+      "exitCode": 0
+    },
+    {
+      "version": "005",
+      "sha256": "ccb640eb1f7e5c6b1fb740b6f6c2fe1d9291899fc1f306ac90ed3cbb54c0d65e",
+      "status": "applied",
+      "exitCode": 0
+    },
+    {
+      "version": "006",
+      "sha256": "ba2faca6bf545b5ba1002d82d178ac4ab5092e2207d9305589f9b825793ab999",
+      "status": "applied",
+      "exitCode": 0
+    },
+    {
+      "version": "007",
+      "sha256": "b95faf65f901d3be46a9bd7c5ed23dea319c20e0c21471f90469d853d425f5e8",
+      "status": "applied",
+      "exitCode": 0
+    }
+  ],
+  "catalog": {
+    "tables": 23,
+    "foreignKeys": 33,
+    "uniqueConstraints": 17,
+    "indexes": 56,
+    "triggers": 3,
+    "functions": 4,
+    "rlsEnabledTables": 0
+  },
+  "rls": "0 enabled tables; authorization depends on service transaction checks and column ACL, not tenant RLS",
+  "publicId": {
+    "status": "PASS",
+    "backfill": "UUID and device FK preserved",
+    "generated": 5000,
+    "unique": 5000,
+    "collisionRetry": "second candidate succeeds",
+    "idempotent": true,
+    "concurrentIdempotent": true,
+    "exhaustion": "503 and zero rows",
+    "apiUpdateDenied": true,
+    "uniqueConstraint": true
+  },
+  "auth": {
+    "status": "PASS",
+    "checks": [
+      {
+        "label": "registration mode",
+        "status": 200
+      },
+      {
+        "label": "register",
+        "status": 201
+      },
+      {
+        "label": "operation retry",
+        "status": 201
+      },
+      {
+        "label": "digest conflict",
+        "status": 409
+      },
+      {
+        "label": "username unique",
+        "status": 409
+      },
+      {
+        "label": "invite consume",
+        "status": 201
+      },
+      {
+        "label": "invite retry",
+        "status": 201
+      },
+      {
+        "label": "invite exhausted",
+        "status": 403
+      },
+      {
+        "label": "login",
+        "status": 200
+      },
+      {
+        "label": "session",
+        "status": 200
+      },
+      {
+        "label": "user denied admin overview",
+        "status": 401
+      },
+      {
+        "label": "user denied admin users",
+        "status": 401
+      },
+      {
+        "label": "user denied admin devices",
+        "status": 401
+      },
+      {
+        "label": "user denied admin logins",
+        "status": 401
+      },
+      {
+        "label": "user denied admin audit",
+        "status": 401
+      },
+      {
+        "label": "user denied admin security",
+        "status": 401
+      },
+      {
+        "label": "user denied admin growth",
+        "status": 401
+      },
+      {
+        "label": "user denied admin invitations",
+        "status": 401
+      },
+      {
+        "label": "user denied admin backups",
+        "status": 401
+      },
+      {
+        "label": "user denied admin deletions",
+        "status": 401
+      },
+      {
+        "label": "user denied admin storage",
+        "status": 401
+      },
+      {
+        "label": "user denied admin trends",
+        "status": 401
+      },
+      {
+        "label": "CSRF denied",
+        "status": 403
+      },
+      {
+        "label": "origin denied",
+        "status": 403
+      },
+      {
+        "label": "stale tab denied",
+        "status": 409
+      },
+      {
+        "label": "public ID lookup",
+        "status": 200
+      },
+      {
+        "label": "user audience isolation",
+        "status": 200
+      },
+      {
+        "label": "user cannot revoke admin",
+        "status": 200
+      },
+      {
+        "label": "reauthenticate",
+        "status": 200
+      },
+      {
+        "label": "rename",
+        "status": 200
+      },
+      {
+        "label": "logout",
+        "status": 204
+      },
+      {
+        "label": "revoked session",
+        "status": 401
+      },
+      {
+        "label": "closed mode",
+        "status": 200
+      },
+      {
+        "label": "closed rejection",
+        "status": 403
+      }
+    ],
+    "invitationUses": 1,
+    "registrationRows": 1,
+    "sessionAfterLogout": 0,
+    "syntheticSources": "RFC 5737 addresses isolate rate-limit scenarios; rules unchanged"
+  },
+  "authExits": {
+    "auth": 0,
+    "expiry-races": 0
+  },
+  "expiryRace": {
+    "status": "PASS",
+    "deviceExpiry": "rejected after observed account lock wait",
+    "invitationExpiry": "rejected after observed settings lock wait",
+    "createdDevices": 0,
+    "consumedInvitations": 0,
+    "registeredAccounts": 0
+  },
+  "deletion": {
+    "status": "PASS",
+    "concurrentRequests": 2,
+    "operationRows": 1,
+    "hiddenMessages": 1,
+    "conflict": "409 OPERATION_CONFLICT",
+    "retry": "pending-anchor",
+    "scope": "SQL transaction test only; no deletion anchor, purge or offline propagation"
+  },
+  "browser": {
+    "status": "PASS",
+    "registration": "201 plus real row",
+    "login": "real session",
+    "reauth": "PASS",
+    "metadataArchive": "authenticated export, download, encrypted preview",
+    "csv": "real admin query, correct filename and contents, 3 repeated downloads",
+    "urlCreated": 4,
+    "urlRevoked": 4,
+    "logout": "keyboard plus database row removed",
+    "navigation": 9,
+    "desktop1024": "no page horizontal overflow",
+    "publicIdCopyAndLookup": "PASS",
+    "independentEntries": "PASS",
+    "boardui": "three real official free charts; time filter verified",
+    "reducedMotion": "media preference applied",
+    "pageErrors": [],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 ()",
+      "Failed to load resource: the server responded with a status of 401 ()",
+      "Failed to load resource: the server responded with a status of 401 ()",
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Failed to load resource: the server responded with a status of 401 ()",
+      "Failed to load resource: the server responded with a status of 401 ()",
+      "Failed to load resource: the server responded with a status of 401 ()"
+    ],
+    "httpErrors": [
+      {
+        "path": "/v1/session",
+        "status": 401
+      },
+      {
+        "path": "/v1/session",
+        "status": 401
+      },
+      {
+        "path": "/v1/session",
+        "status": 401
+      },
+      {
+        "path": "/v1/conversations",
+        "status": 403
+      },
+      {
+        "path": "/v1/conversations",
+        "status": 403
+      },
+      {
+        "path": "/v1/session",
+        "status": 401
+      },
+      {
+        "path": "/v1/session",
+        "status": 401
+      },
+      {
+        "path": "/v1/session",
+        "status": 401
+      }
+    ],
+    "unexpectedConsole": [],
+    "unexpectedHttp": [],
+    "screenshots": [
+      "user-auth-desktop",
+      "user-conversations-desktop",
+      "user-devices-desktop",
+      "admin-auth-desktop",
+      "admin-dashboard-desktop",
+      "admin-users-desktop",
+      "admin-devices-desktop",
+      "admin-security-desktop"
+    ],
+    "limitations": "PC Chromium only; no comprehensive accessibility audit or product messaging E2E"
+  },
+  "screenshots": [
+    {
+      "file": "docs/screenshots/admin-auth-desktop.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "19ab3b46a88d5e3ccdb2653b1afac7f756163cde0fc5a21c8ef305c21c085eff",
+      "sensitiveContent": "reviewed: synthetic account metadata only; no passwords, cookies or private keys"
+    },
+    {
+      "file": "docs/screenshots/admin-dashboard-desktop.png",
+      "width": 1280,
+      "height": 1635,
+      "sha256": "8c7802778575037d01ed98bb512273a816dbead701d6914c566be392187525ae",
+      "sensitiveContent": "reviewed: synthetic account metadata only; no passwords, cookies or private keys"
+    },
+    {
+      "file": "docs/screenshots/admin-devices-desktop.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "e362d95feec0ab71ae98b31686fdcaf0d25e6c9618a1b42566c47539a611bb36",
+      "sensitiveContent": "reviewed: synthetic account metadata only; no passwords, cookies or private keys"
+    },
+    {
+      "file": "docs/screenshots/admin-security-desktop.png",
+      "width": 1440,
+      "height": 1312,
+      "sha256": "a2f11bee3d73c818bdb3803c2d1e23b66b55bb1ba0708e65a652b57f0a20b7bc",
+      "sensitiveContent": "reviewed: synthetic account metadata only; no passwords, cookies or private keys"
+    },
+    {
+      "file": "docs/screenshots/admin-users-desktop.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "555f49eb95ac7ec0c050a4704ecdbdf2509e2f94932de1614c3bbec75e6159f9",
+      "sensitiveContent": "reviewed: synthetic account metadata only; no passwords, cookies or private keys"
+    },
+    {
+      "file": "docs/screenshots/user-auth-desktop.png",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "066b2ea5135d205eefbcaa7f2293bea90726a8680ff00926ad59cb05547a0ca2",
+      "sensitiveContent": "reviewed: synthetic account metadata only; no passwords, cookies or private keys"
+    },
+    {
+      "file": "docs/screenshots/user-conversations-desktop.png",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "ec6762fc5f5b10891a8795169322453834cbaf814b443d33cdc30fdedff04c11",
+      "sensitiveContent": "reviewed: synthetic account metadata only; no passwords, cookies or private keys"
+    },
+    {
+      "file": "docs/screenshots/user-devices-desktop.png",
+      "width": 1366,
+      "height": 948,
+      "sha256": "298ac932b44663b139787c7dd004a7633e091365cd03299bafab552da5e1f0e6",
+      "sensitiveContent": "reviewed: synthetic account metadata only; no passwords, cookies or private keys"
+    }
+  ],
+  "localCrypto": {
+    "status": "PASS",
+    "multiTabCAS": "one winner",
+    "reload": "state and ciphertext recovered together",
+    "duplicateOperation": "rejected",
+    "injectedQuotaFailure": "atomic rollback",
+    "attachmentAEAD": "roundtrip, independent key/IV, tamper and 10MiB boundary",
+    "limitations": "no physical disk exhaustion, OS crash or provider snapshot recovery; synthetic opaque state only"
+  },
+  "mlsLab": {
+    "provider": "OpenMLS 0.9.2/RustCrypto 0.6.0",
+    "suite": 1,
+    "independentBrowserContexts": 2,
+    "KeyPackage": "PASS",
+    "Welcome": "PASS",
+    "Commit": "PASS",
+    "Application": "PASS",
+    "ReplayRejected": "PASS",
+    "InvalidCommitRejected": "PASS",
+    "DiscardPending": "PASS",
+    "DiscardReceivedStagedCommit": "PASS",
+    "Remove": "PASS",
+    "Epoch": "1->2",
+    "removedSenderRejected": true,
+    "scope": "provider laboratory only; no account binding or production persistence"
+  },
+  "rustCommands": {
+    "cargo-audit": {
+      "command": ["cargo", "audit", "--json"],
+      "exitCode": 1
+    },
+    "rust-format": {
+      "command": ["cargo", "fmt", "--all", "--", "--check"],
+      "exitCode": 0
+    },
+    "rust-release": {
+      "command": ["cargo", "build", "--release", "--locked", "-j2"],
+      "exitCode": 0
+    },
+    "wasm-release": {
+      "command": [
+        "cargo",
+        "build",
+        "--release",
+        "--locked",
+        "--target",
+        "wasm32-unknown-unknown",
+        "-j2"
+      ],
+      "exitCode": 0
+    },
+    "wasm-bindgen": {
+      "command": [
+        "/workspace/.cloud-tools/wasm-bindgen/bin/wasm-bindgen",
+        "target/wasm32-unknown-unknown/release/echo_mls_lab.wasm",
+        "--out-dir",
+        "pkg",
+        "--target",
+        "web"
+      ],
+      "exitCode": 0
+    }
+  },
+  "wasmArtifacts": {
+    "crypto/mls-lab/target/wasm32-unknown-unknown/release/echo_mls_lab.wasm": "2a135c436422d42d912972a7c094ff3440e376c92dcc7386dddde278784cd31b",
+    "crypto/mls-lab/pkg/echo_mls_lab_bg.wasm": "65ede485f5b065ba153c65b21c14d50584169787dbb24b0bbe748c2684308610"
+  },
+  "npmAudit": {
+    "exitCode": 0,
+    "metadata": {
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      },
+      "dependencies": {
+        "prod": 187,
+        "dev": 235,
+        "optional": 78,
+        "peer": 3,
+        "peerOptional": 0,
+        "total": 425
+      }
+    }
+  },
+  "cargoAudit": {
+    "exitCode": 1,
+    "status": "BLOCKED",
+    "advisories": [
+      {
+        "id": "RUSTSEC-2026-0387",
+        "package": "crypto-bigint",
+        "version": "0.5.5",
+        "title": "Multiple timing variability issues in operations intended to be constant-time"
+      },
+      {
+        "id": "RUSTSEC-2026-0331",
+        "package": "libcrux-kem",
+        "version": "0.0.9",
+        "title": "Panic on Decoding Short Hybrid Keys"
+      },
+      {
+        "id": "RUSTSEC-2026-0330",
+        "package": "libcrux-kem",
+        "version": "0.0.9",
+        "title": "Hybrid Encapsulation from Seed Panics on Short Seed"
+      }
+    ],
+    "warnings": {
+      "unmaintained": [
+        {
+          "kind": "unmaintained",
+          "package": {
+            "name": "proc-macro-error2",
+            "version": "2.0.1",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "checksum": "11ec05c52be0a07b08061f7dd003e7d7092e0472bc731b4af7bb1ef876109802",
+            "dependencies": [
+              {
+                "name": "proc-macro-error-attr2",
+                "version": "2.0.0",
+                "source": "registry+https://github.com/rust-lang/crates.io-index"
+              },
+              {
+                "name": "proc-macro2",
+                "version": "1.0.107",
+                "source": "registry+https://github.com/rust-lang/crates.io-index"
+              },
+              {
+                "name": "quote",
+                "version": "1.0.47",
+                "source": "registry+https://github.com/rust-lang/crates.io-index"
+              },
+              {
+                "name": "syn",
+                "version": "2.0.119",
+                "source": "registry+https://github.com/rust-lang/crates.io-index"
+              }
+            ],
+            "replace": null
+          },
+          "advisory": {
+            "id": "RUSTSEC-2026-0173",
+            "package": "proc-macro-error2",
+            "title": "proc-macro-error2 is unmaintained",
+            "description": "The author of `proc-macro-error2` has [confirmed](https://github.com/GnomedDev/proc-macro-error-2/issues/17#issuecomment-4643215473) that the crate is no longer maintained and recommends that users migrate away from it.\n\n`proc-macro-error2` was originally created as a maintained fork of [`proc-macro-error`](https://crates.io/crates/proc-macro-error) (see [RUSTSEC-2024-0370](https://rustsec.org/advisories/RUSTSEC-2024-0370)). Both the original crate and this fork are now unmaintained.\n\n## Possible Alternative(s)\n\n- [manyhow](https://crates.io/crates/manyhow)\n- [proc-macro2-diagnostics](https://github.com/SergioBenitez/proc-macro2-diagnostics)",
+            "date": "2026-06-07",
+            "aliases": [],
+            "related": [],
+            "collection": "crates",
+            "categories": [],
+            "keywords": [],
+            "cvss": null,
+            "informational": "unmaintained",
+            "references": [],
+            "source": null,
+            "url": "https://github.com/GnomedDev/proc-macro-error-2/issues/17",
+            "withdrawn": null,
+            "license": "CC0-1.0"
+          },
+          "affected": null,
+          "versions": {
+            "patched": [],
+            "unaffected": []
+          }
+        }
+      ]
+    }
+  },
+  "sbom": {
+    "npm": {
+      "components": 418,
+      "missing": [],
+      "licenseReview": "inventory only; not a legal opinion"
+    },
+    "rust": {
+      "components": 191,
+      "missing": [],
+      "licenseReview": "inventory only; not a legal opinion"
+    }
+  },
+  "sast": {
+    "status": "PARTIAL",
+    "exitCode": 0,
+    "ruleSource": "https://github.com/semgrep/semgrep-rules",
+    "ruleCommit": "a5ad1714f00c9f7fde980cab0ea1d6dc6d414fd2",
+    "rulesRun": 213,
+    "scannedFiles": 94,
+    "severities": {
+      "WARNING": 13,
+      "ERROR": 1,
+      "INFO": 55
+    },
+    "scanErrors": 0,
+    "findings": [
+      {
+        "rule": "javascript.lang.correctness.no-stringify-keys",
+        "file": "scripts/check-auth-workflow.mjs",
+        "line": 50,
+        "severity": "WARNING"
+      },
+      {
+        "rule": "typescript.react.security.react-insecure-request",
+        "file": "scripts/check-auth-workflow.mjs",
+        "line": 228,
+        "severity": "ERROR"
+      },
+      {
+        "rule": "javascript.lang.correctness.no-replaceall",
+        "file": "scripts/check-migrations.mjs",
+        "line": 39,
+        "severity": "WARNING"
+      },
+      {
+        "rule": "javascript.lang.correctness.no-replaceall",
+        "file": "scripts/check-migrations.mjs",
+        "line": 39,
+        "severity": "WARNING"
+      },
+      {
+        "rule": "javascript.lang.correctness.no-replaceall",
+        "file": "scripts/check-migrations.mjs",
+        "line": 219,
+        "severity": "WARNING"
+      },
+      {
+        "rule": "javascript.lang.correctness.no-stringify-keys",
+        "file": "scripts/check-migrations.mjs",
+        "line": 477,
+        "severity": "WARNING"
+      },
+      {
+        "rule": "javascript.lang.correctness.missing-template-string-indicator",
+        "file": "scripts/migrate.mjs",
+        "line": 193,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.correctness.missing-template-string-indicator",
+        "file": "scripts/migrate.mjs",
+        "line": 193,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/app/AdminApp.tsx",
+        "line": 18,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/app/AdminApp.tsx",
+        "line": 26,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/app/AdminApp.tsx",
+        "line": 33,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/app/UserApp.tsx",
+        "line": 24,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/app/UserApp.tsx",
+        "line": 43,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/app/Workspace.tsx",
+        "line": 31,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/components/Brand.tsx",
+        "line": 5,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/components/Brand.tsx",
+        "line": 6,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.best-practice.javascript-confirm",
+        "file": "src/client/components/CsvExport.tsx",
+        "line": 16,
+        "severity": "WARNING"
+      },
+      {
+        "rule": "javascript.lang.correctness.no-replaceall",
+        "file": "src/client/components/CsvExport.tsx",
+        "line": 27,
+        "severity": "WARNING"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/account/AuthPage.tsx",
+        "line": 77,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/account/AuthPage.tsx",
+        "line": 82,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/account/AuthPage.tsx",
+        "line": 155,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/account/PrivacyPage.tsx",
+        "line": 26,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/account/PrivacyPage.tsx",
+        "line": 36,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.best-practice.javascript-confirm",
+        "file": "src/client/features/admin/AdminRecordsPage.tsx",
+        "line": 108,
+        "severity": "WARNING"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/admin/AdminRecordsPage.tsx",
+        "line": 154,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/admin/AdminRecordsPage.tsx",
+        "line": 160,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/admin/AdminRecordsPage.tsx",
+        "line": 174,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/admin/AdminSettingsPage.tsx",
+        "line": 17,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/admin/AdminSettingsPage.tsx",
+        "line": 44,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/admin/AdminSettingsPage.tsx",
+        "line": 70,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/admin/DashboardPage.tsx",
+        "line": 46,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/admin/DashboardPage.tsx",
+        "line": 48,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/admin/DashboardPage.tsx",
+        "line": 84,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/admin/DashboardPage.tsx",
+        "line": 111,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.best-practice.javascript-confirm",
+        "file": "src/client/features/admin/RegistrationPage.tsx",
+        "line": 116,
+        "severity": "WARNING"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/admin/RegistrationPage.tsx",
+        "line": 145,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.best-practice.javascript-confirm",
+        "file": "src/client/features/admin/RegistrationPage.tsx",
+        "line": 219,
+        "severity": "WARNING"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/admin/RegistrationPage.tsx",
+        "line": 232,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/admin/UsersPage.tsx",
+        "line": 35,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.correctness.missing-template-string-indicator",
+        "file": "src/client/features/admin/UsersPage.tsx",
+        "line": 69,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.correctness.missing-template-string-indicator",
+        "file": "src/client/features/admin/UsersPage.tsx",
+        "line": 69,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.correctness.missing-template-string-indicator",
+        "file": "src/client/features/admin/UsersPage.tsx",
+        "line": 69,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.correctness.missing-template-string-indicator",
+        "file": "src/client/features/admin/UsersPage.tsx",
+        "line": 69,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.correctness.missing-template-string-indicator",
+        "file": "src/client/features/admin/UsersPage.tsx",
+        "line": 69,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.correctness.missing-template-string-indicator",
+        "file": "src/client/features/admin/UsersPage.tsx",
+        "line": 69,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.correctness.missing-template-string-indicator",
+        "file": "src/client/features/admin/UsersPage.tsx",
+        "line": 69,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.best-practice.javascript-confirm",
+        "file": "src/client/features/admin/UsersPage.tsx",
+        "line": 76,
+        "severity": "WARNING"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/admin/UsersPage.tsx",
+        "line": 132,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.correctness.missing-template-string-indicator",
+        "file": "src/client/features/contacts/ContactsPage.tsx",
+        "line": 27,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.correctness.missing-template-string-indicator",
+        "file": "src/client/features/contacts/ContactsPage.tsx",
+        "line": 27,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/contacts/ContactsPage.tsx",
+        "line": 82,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/data/DataPage.tsx",
+        "line": 16,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/devices/DevicesPage.tsx",
+        "line": 78,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/devices/RecoveryPage.tsx",
+        "line": 18,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/devices/RecoveryPage.tsx",
+        "line": 32,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/devices/RecoveryPage.tsx",
+        "line": 34,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/devices/RecoveryPage.tsx",
+        "line": 39,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/devices/RecoveryPage.tsx",
+        "line": 46,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.best-practice.javascript-confirm",
+        "file": "src/client/features/devices/SessionPanel.tsx",
+        "line": 40,
+        "severity": "WARNING"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/devices/SessionPanel.tsx",
+        "line": 94,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/messaging/ConversationsPage.tsx",
+        "line": 32,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/messaging/ConversationsPage.tsx",
+        "line": 45,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/messaging/ConversationsPage.tsx",
+        "line": 100,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/messaging/ConversationsPage.tsx",
+        "line": 102,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/personal/TrashPage.tsx",
+        "line": 28,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/personal/TrashPage.tsx",
+        "line": 29,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.best-practice.react-props-spreading",
+        "file": "src/client/features/personal/TrashPage.tsx",
+        "line": 41,
+        "severity": "INFO"
+      },
+      {
+        "rule": "typescript.react.portability.i18next.jsx-not-internationalized",
+        "file": "src/client/features/personal/TrashPage.tsx",
+        "line": 73,
+        "severity": "INFO"
+      },
+      {
+        "rule": "javascript.lang.correctness.no-stringify-keys",
+        "file": "src/server/accounts/account-service.ts",
+        "line": 104,
+        "severity": "WARNING"
+      }
+    ],
+    "errorReview": "loopback HTTP synthetic authentication fixture, not production transport; rule and finding retained; scan not a security audit"
+  },
+  "sql": [
+    {
+      "file": "migrations/001-initial.sql",
+      "status": "BLOCKED",
+      "reason": "syntax error at or near \"authorization\", at index 3309"
+    },
+    {
+      "file": "migrations/002-runtime-permissions.sql",
+      "status": "PASS",
+      "statements": 24
+    },
+    {
+      "file": "migrations/003-route-version-and-delivery.sql",
+      "status": "PASS",
+      "statements": 13
+    },
+    {
+      "file": "migrations/004-invitation-idempotency.sql",
+      "status": "PASS",
+      "statements": 5
+    },
+    {
+      "file": "migrations/005-admin-lifecycle.sql",
+      "status": "PASS",
+      "statements": 15
+    },
+    {
+      "file": "migrations/006-authorization-proof.sql",
+      "status": "PASS",
+      "statements": 4
+    },
+    {
+      "file": "migrations/007-public-user-id.sql",
+      "status": "PASS",
+      "statements": 11
+    },
+    {
+      "file": "migrations/baselines/echo-native-v1/001-initial.sql",
+      "status": "PASS",
+      "statements": 45
+    }
+  ],
+  "boardui": {
+    "status": "PARTIAL",
+    "cli": "boardui@0.5.9",
+    "transport": "actual MCP stdio",
+    "calls": [
+      "get_started",
+      "list_components (all tiers)",
+      "get_skill",
+      "get_component:stat-cards/revenue-chart-card/orders-chart-card/line-chart-card/bar-list-card/area-chart-card"
+    ],
+    "upstream": "https://github.com/BoardUI/boardui",
+    "upstreamCommit": "ec5c5eb3e29c2441be63b9422cd54f411ef23466",
+    "freeComponents": ["stat-cards", "revenue-chart-card", "orders-chart-card"],
+    "sourceSha256": {
+      "revenue-chart-card": "060bee7d6484cfa36d07796c7aa62ffbe1fbb62850a6cc0f4094866f3592279e",
+      "orders-chart-card": "38f48d0d5d02785210d1926659670a6d4d1ca94fe949126614677bf31225ddc4",
+      "stat-cards": "dae486b140863e7ea10978575cd51cadeab8ed1185835084b0248437e1072125"
+    },
+    "license": "MIT, upstream text retained in src/client/components/boardui/notice.md",
+    "pro": "No authorized Pro source; line-chart-card, bar-list-card, area-chart-card calls returned licensing boundary. Radial and ranking cards catalogued Pro. Required distribution source also unavailable.",
+    "rechartsException": "User explicitly permits only underlying official BoardUI components",
+    "demoData": "all removed; required API data props only",
+    "remixLicense": {
+      "name": "Remix Icon License 1.0",
+      "url": "https://github.com/Remix-Design/remixicon/blob/v4.9.0/License",
+      "blobSha": "996917ee688557176a34e369fa1a37a0a4ef77a2",
+      "scope": "functional app icons; no brand reuse; non-SPDX named license added to SBOM from actual package declaration"
+    }
+  },
+  "resources": {
+    "status": "BLOCKED",
+    "memoryMax": "34359738368",
+    "cpuMax": "400000 100000",
+    "scope": "limit admission only; not a workload, disk quota or VPS capacity test"
+  },
+  "resourceExitCode": 1,
+  "functionalLoad": {
+    "status": "PASS",
+    "scope": "30-second functional load on unrestricted Cloud; not 2GB/1core/20GB acceptance",
+    "requests": 60,
+    "durationSeconds": 30.005549670000164,
+    "p50Ms": 3.8430004999554512,
+    "p95Ms": 23.974204999831272,
+    "maxMs": 153.20358800022404,
+    "observedNodeCpuSeconds": 1.11,
+    "sumNodeLifetimePeakRssBytes": 207810560,
+    "cpuPidCount": 2,
+    "diskQuota": "NOT_RUN"
+  },
+  "notRun": [
+    "20GB disk quota",
+    "sustained load under actually enforced 2GB/1core",
+    "production MLS identity/provider integration",
+    "product multi-device/offline deletion/recovery",
+    "physical OS crash/disk-full",
+    "complete accessibility audit"
+  ],
+  "initialAttempts": [
+    "Source checker read an unstaged deleted mobile PNG from Git index; staged the intended deletion and reran unchanged checker successfully.",
+    "Remixicon non-SPDX license omitted by npm SBOM exporter; checked actual declaration and v4.9.0 license, added named license and preserved full notice."
+  ],
+  "clientBundleWarning": "Vite >500kB advisory retained: main JS about1013kB, gzip304kB; not a build error or low-resource acceptance",
+  "engineering": {
+    "typecheck": {
+      "exitCode": 0
+    },
+    "lint": {
+      "exitCode": 0
+    },
+    "format:check": {
+      "exitCode": 0
+    },
+    "check:ast": {
+      "exitCode": 0
+    },
+    "check:source": {
+      "exitCode": 0
+    },
+    "build:client": {
+      "exitCode": 0
+    },
+    "build:server": {
+      "exitCode": 0
+    }
+  },
+  "readme": {
+    "status": "PASS",
+    "mermaid": "11.4.1 parser",
+    "anchors": 13,
+    "screenshots": 8
+  },
+  "cleanup": {
+    "status": "PASS",
+    "temporaryCluster": "stopped and removed",
+    "temporaryServices": "owned Fastify/Vite/Caddy stopped",
+    "testTLS": "owned temporary NSS root verified by serial then removed; other trust entries preserved",
+    "temporaryData": "Cloud scratch directory removed",
+    "wasmGenerated": "target/pkg removed after hashing and browser tests",
+    "sourceRules": "no new lint or audit exclusions"
+  }
+}

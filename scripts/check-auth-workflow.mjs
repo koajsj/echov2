@@ -183,6 +183,7 @@ try {
     "backups",
     "deletions",
     "storage",
+    "trends",
   ]) {
     await request(
       `user denied admin ${path}`,
@@ -237,6 +238,13 @@ try {
     assert.equal((await response.json()).error.code, code);
     results.push({ label, status: response.status });
   }
+  assert.match(current.account.publicId, /^[A-Z2-7]{12}$/);
+  const lookup = await request(
+    "public ID lookup",
+    `/v1/accounts/lookup?publicId=${current.account.publicId.toLowerCase()}`,
+  );
+  assert.equal(lookup.id, current.account.id);
+  assert.equal(lookup.publicId, current.account.publicId);
   const adminId = randomUUID();
   await db.query(
     "INSERT INTO echo.sessions(id,token_hash,user_id,audience,expires_at) VALUES($1,$2,$3,'admin',now()+interval '1 hour')",
@@ -281,6 +289,7 @@ try {
     version: current.account.version,
   });
   assert.equal(renamed.account.username, username + "r");
+  assert.equal(renamed.account.publicId, current.account.publicId);
   assert.equal(
     (
       await db.query("SELECT username FROM echo.users WHERE id=$1", [

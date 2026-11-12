@@ -1,5 +1,7 @@
+import { UserLookupMode } from "../../components/UserLookupMode";
+import { PublicUserId } from "../../components/PublicUserId";
 import { useState } from "react";
-import { Button } from "@heroui/react";
+import { Table, Button, Input, Form } from "@heroui/react";
 import { api } from "../../app/api";
 import { useApiQuery } from "../../app/use-api-query";
 import { CsvExport } from "../../components/CsvExport";
@@ -7,6 +9,7 @@ import { SessionPanel } from "../devices/SessionPanel";
 import { ServiceState } from "../../components/ServiceState";
 interface User {
   id: string;
+  publicId: string;
   username: string;
   status: string;
 }
@@ -32,12 +35,16 @@ function UserDetailPanel({
       <ServiceState {...query} />
       {query.data && (
         <dl className="details">
-          {Object.entries(query.data).map(([name, value]) => (
-            <div key={name}>
-              <dt>{name}</dt>
-              <dd>{value}</dd>
-            </div>
-          ))}
+          {Object.entries(query.data)
+            .filter(([name]) => name !== "id")
+            .map(([name, value]) => (
+              <div key={name}>
+                <dt>{name}</dt>
+                <dd>
+                  {name === "publicId" ? <PublicUserId value={value} /> : value}
+                </dd>
+              </div>
+            ))}
         </dl>
       )}
       <SessionPanel sessionId={sessionId} userId={id} audience="admin" />
@@ -48,6 +55,7 @@ function UserDetailPanel({
   );
 }
 export function UsersPage({ sessionId }: { sessionId: string }) {
+  const [filterKind, setFilterKind] = useState("username");
   const [filter, setFilter] = useState("");
   const [after, setAfter] = useState("");
   const [revision, setRevision] = useState(0);
@@ -58,7 +66,7 @@ export function UsersPage({ sessionId }: { sessionId: string }) {
     items: User[];
     next: string | null;
   }>(
-    `/v1/admin/users?${new URLSearchParams({ ...(after ? { after } : {}), ...(filter ? { username: filter } : {}) })}`,
+    `/v1/admin/users?${new URLSearchParams({ ...(after ? { after } : {}), ...(filter ? { [filterKind]: filter } : {}) })}`,
     revision,
     sessionId,
   );
@@ -98,10 +106,13 @@ export function UsersPage({ sessionId }: { sessionId: string }) {
         <h1>用户管理</h1>
         <p>账号与服务权限。管理员无法取得用户私钥或聊天明文。</p>
       </header>
-      <form
+      <Form
         className="form"
         onSubmit={(event) => {
           event.preventDefault();
+          setFilterKind(
+            String(new FormData(event.currentTarget).get("identityKind")),
+          );
           setFilter(
             String(new FormData(event.currentTarget).get("username")).trim(),
           );
@@ -109,66 +120,69 @@ export function UsersPage({ sessionId }: { sessionId: string }) {
           setSelected(null);
         }}
       >
+        <UserLookupMode />
         <label>
-          精确用户名（不区分大小写，留空显示全部）
-          <input name="username" pattern="[a-zA-Z0-9_]{3,32}" maxLength={32} />
+          用户名或12位公共 ID（留空显示全部）
+          <Input name="username" pattern="[a-zA-Z0-9_]{3,32}" maxLength={32} />
         </label>
         <Button type="submit" variant="secondary" isDisabled={busy}>
           查询用户
         </Button>
-      </form>
+      </Form>
       <ServiceState {...query} />
       {query.data && (
         <>
           <CsvExport
-            key={`${filter}:${after}:${revision}`}
-            columns={["id", "username", "status"]}
+            key={`${filterKind}:${filter}:${after}:${revision}`}
+            columns={["publicId", "username", "status"]}
             rows={query.data.items.map((row) => ({ ...row }))}
             name="echo-users-current-page.csv"
           />
           <div className="table-scroll">
-            <table>
-              <caption>永久 ID keyset 分页</caption>
-              <thead>
-                <tr>
-                  <th>用户名</th>
-                  <th>ID</th>
-                  <th>状态</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {query.data.items.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.username}</td>
-                    <td>{user.id}</td>
-                    <td>{user.status}</td>
-                    <td>
-                      <div className="actions">
-                        <Button
-                          variant="ghost"
-                          onPress={() => setSelected(user.id)}
-                        >
-                          详情
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          isDisabled={
-                            busy ||
-                            !["active", "suspended"].includes(user.status)
-                          }
-                          onPress={() => {
-                            void suspend(user);
-                          }}
-                        >
-                          {user.status === "active" ? "暂停服务" : "恢复服务"}
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <p className="muted">内部游标分页 · 对外显示公共 ID</p>
+            <Table>
+              <Table.Content aria-label="用户管理">
+                <Table.Header>
+                  <Table.Column isRowHeader>用户名</Table.Column>
+                  <Table.Column>ID</Table.Column>
+                  <Table.Column>状态</Table.Column>
+                  <Table.Column>操作</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {query.data.items.map((user) => (
+                    <Table.Row id={user.id} key={user.id}>
+                      <Table.Cell>{user.username}</Table.Cell>
+                      <Table.Cell>
+                        <PublicUserId value={user.publicId} />
+                      </Table.Cell>
+                      <Table.Cell>{user.status}</Table.Cell>
+                      <Table.Cell>
+                        <div className="actions">
+                          <Button
+                            variant="ghost"
+                            onPress={() => setSelected(user.id)}
+                          >
+                            详情
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            isDisabled={
+                              busy ||
+                              !["active", "suspended"].includes(user.status)
+                            }
+                            onPress={() => {
+                              void suspend(user);
+                            }}
+                          >
+                            {user.status === "active" ? "暂停服务" : "恢复服务"}
+                          </Button>
+                        </div>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table>
           </div>
           {query.data.items.length === 0 && <p>此页没有用户。</p>}
           <div className="actions">

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Button } from "@heroui/react";
+import { Button, Input, Form } from "@heroui/react";
 import type { Audience } from "../../shared/contracts";
 import { api } from "../app/api";
 
@@ -36,7 +36,7 @@ export function ReauthenticationForm({
     }
   }
   return (
-    <form
+    <Form
       className="form panel"
       onSubmit={(event) => {
         void submit(event);
@@ -45,7 +45,7 @@ export function ReauthenticationForm({
       <h2>确认敏感操作身份</h2>
       <label>
         当前密码
-        <input
+        <Input
           name="password"
           type="password"
           required
@@ -58,6 +58,6 @@ export function ReauthenticationForm({
         重新认证
       </Button>
       <p role="status">{message}</p>
-    </form>
+    </Form>
   );
 }

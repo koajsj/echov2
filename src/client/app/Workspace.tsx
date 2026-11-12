@@ -9,11 +9,6 @@ import { ContactsPage } from "../features/contacts/ContactsPage";
 import { SavedPage } from "../features/personal/SavedPage";
 import { TrashPage } from "../features/personal/TrashPage";
 import { DataPage } from "../features/data/DataPage";
-import { DashboardPage } from "../features/admin/DashboardPage";
-import { UsersPage } from "../features/admin/UsersPage";
-import { RegistrationPage } from "../features/admin/RegistrationPage";
-import { AdminRecordsPage } from "../features/admin/AdminRecordsPage";
-import { AdminSettingsPage } from "../features/admin/AdminSettingsPage";
 import { ReauthenticationForm } from "../components/ReauthenticationForm";
 export function Workspace({
   session,
@@ -25,47 +20,6 @@ export function Workspace({
   onChanged: () => void;
 }) {
   const sessionId = session.sessionId;
-  if (session.audience === "admin")
-    return (
-      <>
-        <ReauthenticationForm audience="admin" sessionId={sessionId} />
-        {page === "admin" ? (
-          <DashboardPage sessionId={sessionId} />
-        ) : page === "admin/users" ? (
-          <UsersPage sessionId={sessionId} />
-        ) : page === "admin/registration" ? (
-          <RegistrationPage sessionId={sessionId} />
-        ) : page === "admin/devices" ? (
-          <AdminRecordsPage kind="devices" sessionId={sessionId} />
-        ) : page === "admin/logins" ? (
-          <AdminRecordsPage kind="logins" sessionId={sessionId} />
-        ) : page === "admin/security" ? (
-          <AdminRecordsPage kind="security" sessionId={sessionId} />
-        ) : page === "admin/audit" ? (
-          <AdminRecordsPage kind="audit" sessionId={sessionId} />
-        ) : page === "admin/deletions" ? (
-          <AdminRecordsPage kind="deletions" sessionId={sessionId} />
-        ) : page === "admin/backups" ? (
-          <AdminRecordsPage kind="backups" sessionId={sessionId} />
-        ) : page === "admin/analytics" ? (
-          <DashboardPage analytics sessionId={sessionId} />
-        ) : page === "admin/regions" ? (
-          <section>
-            <header className="page-heading">
-              <h1>地区分布</h1>
-              <p>
-                未知 · 没有合法本地 GeoIP
-                数据和可信采集来源，不绘制假地图或零值。
-              </p>
-            </header>
-          </section>
-        ) : page === "admin/settings" ? (
-          <AdminSettingsPage sessionId={sessionId} />
-        ) : (
-          <p>页面不存在。</p>
-        )}
-      </>
-    );
   if (page === "account" || page === "settings")
     return (
       <>

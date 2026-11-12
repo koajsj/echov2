@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { Button } from "@heroui/react";
+import { Button, Form } from "@heroui/react";
 import type { MetadataExport, SessionView } from "../../../shared/contracts";
 import { api } from "../../app/api";
 import { DownloadFile } from "../../components/DownloadFile";
@@ -90,7 +90,7 @@ export function MetadataArchivePanel({ session }: { session: SessionView }) {
         <a href="#devices">前往设备页重新认证</a>
         。归档口令独立保存，忘记后无法解密。导入只供核对，旧文件不能覆盖新删除状态。
       </p>
-      <form
+      <Form
         className="form"
         onSubmit={(event) => {
           void run(event, "export");
@@ -124,7 +124,7 @@ export function MetadataArchivePanel({ session }: { session: SessionView }) {
             创建加密元数据文件
           </Button>
         </fieldset>
-      </form>
+      </Form>
       {file && (
         <DownloadFile
           blob={file}
@@ -132,7 +132,7 @@ export function MetadataArchivePanel({ session }: { session: SessionView }) {
           label="下载加密元数据归档"
         />
       )}
-      <form
+      <Form
         className="form"
         onSubmit={(event) => {
           void run(event, "preview");
@@ -159,13 +159,13 @@ export function MetadataArchivePanel({ session }: { session: SessionView }) {
             认证文件并预览
           </Button>
         </fieldset>
-      </form>
+      </Form>
       {preview && (
         <dl className="details">
           <div>
             <dt>文件账号</dt>
             <dd>
-              {preview.account.username} · {preview.account.id}
+              {preview.account.username} · {session.account.publicId}
             </dd>
           </div>
           <div>

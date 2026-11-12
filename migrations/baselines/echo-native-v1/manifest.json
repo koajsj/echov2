@@ -45,6 +45,12 @@
       "migration_name": "006-authorization-proof",
       "path": "migrations/006-authorization-proof.sql",
       "sha256": "ba2faca6bf545b5ba1002d82d178ac4ab5092e2207d9305589f9b825793ab999"
+    },
+    {
+      "version": "007",
+      "migration_name": "007-public-user-id",
+      "path": "migrations/007-public-user-id.sql",
+      "sha256": "b95faf65f901d3be46a9bd7c5ed23dea319c20e0c21471f90469d853d425f5e8"
     }
   ]
 }

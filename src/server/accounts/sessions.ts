@@ -82,12 +82,13 @@ export class SessionService {
     const result = await this.pool.query<{
       id: string;
       user_id: string;
+      public_id: string;
       username: string;
       version: string;
       device_id: string | null;
       reauthenticated_at: Date;
     }>(
-      `SELECT s.id,s.user_id,u.username,u.version::text,s.device_id,s.reauthenticated_at
+      `SELECT s.id,s.user_id,u.public_id,u.username,u.version::text,s.device_id,s.reauthenticated_at
        FROM echo.sessions s JOIN echo.users u ON u.id=s.user_id
        WHERE s.token_hash=$1 AND s.audience=$2 AND s.expires_at>now() AND u.status='active'
        AND (s.device_id IS NULL OR EXISTS(SELECT 1 FROM echo.devices d WHERE d.id=s.device_id AND d.status<>'revoked'))
@@ -115,6 +116,7 @@ export class SessionService {
       deviceId: row.device_id,
       account: {
         id: row.user_id,
+        publicId: row.public_id,
         username: row.username,
         version: row.version,
       },

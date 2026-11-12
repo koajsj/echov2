@@ -1,5 +1,11 @@
 # Cloud 数据库兼容验证
 
+## 当前增量007验证
+
+当前证据见[PC复核](evidence/pc-review.json)。在Cloud独立新库与合成旧库依次执行001–007，每份退出0，ON_ERROR_STOP与失败停止策略保留；23表、33外键、17唯一约束、56索引、3业务触发器、4函数。原001–006及独立基线SQL未改，manifest只追加007。公共ID回填保留旧UUID/设备FK；强制碰撞、耗尽回滚、API修改拒绝和并发幂等均通过。RLS启用表数0，当前授权在服务层与列ACL，不宣称RLS隔离。
+
+认证、邀请码、登录/会话/重新认证/改名/退出/注册关闭和12个管理员读取拒绝真实验证；设备/邀请过期锁等待和跨账号删除竞争回归通过。临时数据库不能证明其他持久化环境历史；其状态仍UNKNOWN，未连接或自动迁移。以下为既有兼容方案及历史001–006验证记录。
+
 2026-11-12，纯 Codex Cloud、临时 PostgreSQL 17.11、合成数据。迁移操作唯一维护于 [migrations/README.md](../migrations/README.md)；产品与工程结论分别见[第三阶段报告](phase-three-report.md)和[工程验证](static-verification-report.md)。
 
 ## 历史调查与决策

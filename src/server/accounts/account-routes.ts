@@ -257,7 +257,8 @@ export function accountRoutes(
   );
   app.get<{
     Querystring: {
-      username: string;
+      username?: string;
+      publicId?: string;
     };
   }>(
     "/v1/accounts/lookup",
@@ -267,8 +268,9 @@ export function accountRoutes(
         querystring: {
           type: "object",
           additionalProperties: false,
-          required: ["username"],
+          oneOf: [{ required: ["username"] }, { required: ["publicId"] }],
           properties: {
+            publicId: { type: "string", pattern: "^[A-Za-z2-7]{12}$" },
             username,
           },
         },
@@ -277,8 +279,8 @@ export function accountRoutes(
     async (request) => {
       await sessions.require(request);
       const result = await pool.query(
-        "SELECT id,username FROM echo.users WHERE username_normalized=lower($1 COLLATE \"C\") AND status='active'",
-        [request.query.username],
+        'SELECT id,public_id AS "publicId",username FROM echo.users WHERE (($1::text IS NOT NULL AND username_normalized=lower($1 COLLATE "C")) OR ($2::text IS NOT NULL AND public_id=upper($2 COLLATE "C"))) AND status=\'active\'',
+        [request.query.username ?? null, request.query.publicId ?? null],
       );
       if (!result.rows[0])
         throw new HttpError(404, "ACCOUNT_NOT_FOUND", "未找到可用账号。");

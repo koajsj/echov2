@@ -14,7 +14,7 @@ interface RegistrationRow extends Account {
   status: string;
 }
 const registrationLookup =
-  "SELECT id,username,password_hash,registration_hash,status,version::text FROM echo.users WHERE registration_id=$1";
+  'SELECT id,public_id AS "publicId",username,password_hash,registration_hash,status,version::text FROM echo.users WHERE registration_id=$1';
 export class AccountService {
   constructor(
     private readonly pool: Pool,
@@ -64,10 +64,41 @@ export class AccountService {
         if (!invitation.rowCount)
           throw new HttpError(403, "INVITATION_INVALID", "邀请码不可用。");
       }
-      const created = await db.query<Account>(
-        "INSERT INTO echo.users(id,registration_id,registration_hash,username,password_hash) VALUES($1,$2,$3,$4,$5) RETURNING id,username,version::text",
-        [randomUUID(), input.operationId, requestHash, input.username, encoded],
-      );
+      let created;
+      for (let attempt = 0; attempt < 8; attempt++) {
+        await db.query("SAVEPOINT public_id_candidate");
+        try {
+          created = await db.query<Account>(
+            'INSERT INTO echo.users(id,registration_id,registration_hash,username,password_hash) VALUES($1,$2,$3,$4,$5) RETURNING id,public_id AS "publicId",username,version::text',
+            [
+              randomUUID(),
+              input.operationId,
+              requestHash,
+              input.username,
+              encoded,
+            ],
+          );
+          await db.query("RELEASE SAVEPOINT public_id_candidate");
+          break;
+        } catch (error) {
+          await db.query("ROLLBACK TO SAVEPOINT public_id_candidate");
+          await db.query("RELEASE SAVEPOINT public_id_candidate");
+          if (
+            !(error instanceof Error) ||
+            !("code" in error) ||
+            error.code !== "23505" ||
+            !("constraint" in error) ||
+            error.constraint !== "users_public_id_key"
+          )
+            throw error;
+        }
+      }
+      if (!created)
+        throw new HttpError(
+          503,
+          "PUBLIC_ID_RETRY_REQUIRED",
+          "标识分配暂不可用，请使用原操作 ID 重试。",
+        );
       return {
         existing: null,
         created: created.rows[0]!,
@@ -97,6 +128,7 @@ export class AccountService {
       );
     return {
       id: row.id,
+      publicId: row.publicId,
       username: row.username,
       version: row.version,
     };
@@ -108,14 +140,15 @@ export class AccountService {
   ): Promise<Account> {
     const result = await this.pool.query<{
       id: string;
+      publicId: string;
       username: string;
       version: string;
       status: string;
       password_hash: string;
     }>(
       "userId" in identity
-        ? "SELECT id,username,version::text,status,password_hash FROM echo.users WHERE id=$1"
-        : "SELECT id,username,version::text,status,password_hash FROM echo.users WHERE username_normalized=$1",
+        ? 'SELECT id,public_id AS "publicId",username,version::text,status,password_hash FROM echo.users WHERE id=$1'
+        : 'SELECT id,public_id AS "publicId",username,version::text,status,password_hash FROM echo.users WHERE username_normalized=$1',
       [
         "userId" in identity
           ? identity.userId
@@ -150,6 +183,7 @@ export class AccountService {
       );
     return {
       id: user.id,
+      publicId: user.publicId,
       username: user.username,
       version: user.version,
     };
@@ -166,7 +200,7 @@ export class AccountService {
         recent: true,
       });
       const result = await db.query<Account>(
-        "UPDATE echo.users SET username=$2,version=version+1 WHERE id=$1 AND version=$3 AND status='active' RETURNING id,username,version::text",
+        "UPDATE echo.users SET username=$2,version=version+1 WHERE id=$1 AND version=$3 AND status='active' RETURNING id,public_id AS \"publicId\",username,version::text",
         [userId, username, version],
       );
       if (!result.rows[0])

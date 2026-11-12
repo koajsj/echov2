@@ -2,6 +2,7 @@ export type Audience = "user" | "admin";
 export type DeviceStatus = "pending" | "active" | "revoked";
 export interface Account {
   id: string;
+  publicId: string;
   username: string;
   version: string;
 }
@@ -101,7 +102,7 @@ export interface MetadataExport {
   scope: "service-metadata-only";
   origin: string;
   issuedAt: string;
-  account: Account;
+  account: Pick<Account, "id" | "username" | "version">;
   devices: DeviceView[];
   deletions: {
     id: string;

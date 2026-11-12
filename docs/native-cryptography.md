@@ -88,3 +88,7 @@ OpenMLS官方提供[Add](https://book.openmls.tech/user_manual/add_members.html)
 独立附件基础仅使用浏览器标准AES-GCM，见数据生命周期的实际边界；不是MLS集成。浏览器API存在也不证明算法、IndexedDB、跨标签单写者或故障恢复已通过。解除G1–G4至少需要：明确授权准备固定原生库/provider、审查稳定版实际源码/导出、编译WASM或评估ts-mls、运行互操作/真实浏览器与持久化故障验证。当前限制下不能安全完成，聊天/初始化/恢复保持关闭。
 
 第三阶段本地仓库仍无MLS运行依赖、Cargo/WASM构建或provider；检查的本机Cargo registry及既有工具目录也未发现可用候选，不能把此有限盘点表述为扫描全机。G1–G4保持BLOCKED。新metadata-archive只调用WebCrypto既有PBKDF2/AES-GCM处理有限服务元数据，不做MLS、HPKE、HKDF、签名或根恢复；格式与参数唯一规格见[生命周期](native-data-lifecycle.md)。相关局部strict/AST与运行NOT_RUN见[静态报告](static-verification-report.md)。
+
+## PC收敛复测
+
+2026-11-12基线32f09d8之后，Cargo格式/native release/wasm32 release/wasm-bindgen再次退出0，两个独立BrowserContext的真实OpenMLS实验及本地CAS/附件实验通过。Cargo audit再次退出1，三项公告与停止维护警告仍存在；没有改写Cargo锁闭或忽略公告。公共ID、PC界面与管理图表不改变G1–G6；crypto-gate保持关闭。实验与产品边界及最新退出码见[PC证据](evidence/pc-review.json)。

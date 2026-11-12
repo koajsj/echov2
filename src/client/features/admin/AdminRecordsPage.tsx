@@ -1,5 +1,6 @@
+import { PublicUserId } from "../../components/PublicUserId";
 import { useState } from "react";
-import { Button } from "@heroui/react";
+import { Table, Button } from "@heroui/react";
 import { api } from "../../app/api";
 import { CsvExport } from "../../components/CsvExport";
 import { useApiQuery } from "../../app/use-api-query";
@@ -11,7 +12,7 @@ const views = {
     columns: [
       "id",
       "username",
-      "user_id",
+      "user_public_id",
       "label",
       "status",
       "created_at",
@@ -21,19 +22,19 @@ const views = {
   logins: {
     title: "登录记录",
     cursor: "before",
-    columns: ["id", "user_id", "kind", "ip", "created_at"],
+    columns: ["id", "user_public_id", "kind", "ip", "created_at"],
   },
   security: {
     title: "安全中心",
     cursor: "before",
     columns: [
       "id",
-      "user_id",
+      "user_public_id",
       "kind",
       "ip",
       "created_at",
       "reviewed_at",
-      "reviewed_by",
+      "reviewer_public_id",
     ],
   },
   audit: {
@@ -41,7 +42,7 @@ const views = {
     cursor: "before",
     columns: [
       "id",
-      "actor_user_id",
+      "actor_public_id",
       "action",
       "target_id",
       "event_id",
@@ -68,12 +69,12 @@ const views = {
 } as const;
 const absent: Record<string, string> = {
   reviewed_at: "未审阅",
-  reviewed_by: "尚无审阅者",
+  reviewer_public_id: "尚无审阅者",
   revoked_at: "未撤销",
   completed_at: "未完成",
   verified_at: "未验证",
   ip: "未记录",
-  user_id: "未关联账号",
+  user_public_id: "未关联账号",
   target_id: "未指定 UUID 目标",
   event_id: "不适用",
 };
@@ -185,50 +186,62 @@ export function AdminRecordsPage({
             aria-label={`${view.title}记录表，可横向滚动`}
             tabIndex={0}
           >
-            <table>
-              <caption>{view.title} · 每页最多 50 条</caption>
-              <thead>
-                <tr>
+            <p className="muted">{view.title} · 每页最多 50 条</p>
+            <Table>
+              <Table.Content aria-label={view.title}>
+                <Table.Header>
                   {view.columns.map((column) => (
-                    <th key={column}>{column}</th>
+                    <Table.Column
+                      key={column}
+                      id={column}
+                      isRowHeader={column === "id"}
+                    >
+                      {column}
+                    </Table.Column>
                   ))}
-                  {(kind === "devices" || kind === "security") && <th>操作</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {query.data.items.map((row) => (
-                  <tr key={row.id}>
-                    {view.columns.map((column) => (
-                      <td key={column}>
-                        {row[column] === undefined
-                          ? "缺失"
-                          : row[column] === null
-                            ? (absent[column] ?? "未知")
-                            : row[column]}
-                      </td>
-                    ))}
-                    {(kind === "devices" || kind === "security") && (
-                      <td>
-                        <Button
-                          variant="secondary"
-                          isDisabled={
-                            busy ||
-                            (kind === "devices"
-                              ? row.status === "revoked"
-                              : row.reviewed_at !== null)
-                          }
-                          onPress={() => {
-                            void action(row);
-                          }}
-                        >
-                          {kind === "devices" ? "撤销服务" : "标记已审阅"}
-                        </Button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  {(kind === "devices" || kind === "security") && (
+                    <Table.Column>操作</Table.Column>
+                  )}
+                </Table.Header>
+                <Table.Body>
+                  {query.data.items.map((row) => (
+                    <Table.Row id={row.id} key={row.id}>
+                      {view.columns.map((column) => (
+                        <Table.Cell key={column}>
+                          {row[column] === undefined ? (
+                            "缺失"
+                          ) : row[column] === null ? (
+                            (absent[column] ?? "未知")
+                          ) : column.endsWith("public_id") && row[column] ? (
+                            <PublicUserId value={row[column]} />
+                          ) : (
+                            row[column]
+                          )}
+                        </Table.Cell>
+                      ))}
+                      {(kind === "devices" || kind === "security") && (
+                        <Table.Cell>
+                          <Button
+                            variant="secondary"
+                            isDisabled={
+                              busy ||
+                              (kind === "devices"
+                                ? row.status === "revoked"
+                                : row.reviewed_at !== null)
+                            }
+                            onPress={() => {
+                              void action(row);
+                            }}
+                          >
+                            {kind === "devices" ? "撤销服务" : "标记已审阅"}
+                          </Button>
+                        </Table.Cell>
+                      )}
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table>
           </div>
           {query.data.items.length === 0 && <p>此范围没有真实记录。</p>}
           <div className="actions">

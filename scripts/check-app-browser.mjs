@@ -28,7 +28,10 @@ const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH ?? "/usr/bin/chromium",
   headless: true,
 });
-const context = await browser.newContext({ acceptDownloads: true });
+const context = await browser.newContext({
+  acceptDownloads: true,
+  permissions: ["clipboard-read", "clipboard-write"],
+});
 const page = await context.newPage();
 const errors = [];
 const consoleErrors = [];
@@ -57,12 +60,35 @@ page.on("console", (message) => {
   if (message.type() === "error") consoleErrors.push(message.text());
 });
 page.on("pageerror", (e) => errors.push(e.message));
+async function instrumentUrls() {
+  await page.evaluate(() => {
+    window.urlEvents = { created: [], revoked: [] };
+    const c = URL.createObjectURL.bind(URL),
+      r = URL.revokeObjectURL.bind(URL);
+    URL.createObjectURL = (b) => {
+      const u = c(b);
+      window.urlEvents.created.push(u);
+      return u;
+    };
+    URL.revokeObjectURL = (u) => {
+      window.urlEvents.revoked.push(u);
+      r(u);
+    };
+  });
+}
 const username = "browser_" + randomBytes(5).toString("hex");
 const password = randomBytes(24).toString("base64url");
 const archivePassword = randomBytes(24).toString("base64url");
 try {
   await db.query("UPDATE echo.site_settings SET registration_mode='open'");
+  await page.goto("https://localhost:8443/admin#admin/devices");
+  await page
+    .getByRole("heading", { name: "管理员登录", exact: true })
+    .waitFor();
+  await page.waitForURL("https://localhost:8443/admin#login");
+  assert.equal(await page.getByRole("navigation").count(), 0);
   await page.goto("https://localhost:8443/");
+  assert.equal(await page.getByRole("navigation").count(), 0);
   await page.getByText("当前开放注册", { exact: true }).waitFor();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await capture("user-auth-desktop");
@@ -101,24 +127,27 @@ try {
   await page
     .getByText("已重新认证，敏感操作有效期五分钟。", { exact: true })
     .waitFor();
-  await page.setViewportSize({ width: 390, height: 844 });
-  await capture("user-devices-mobile");
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await capture("user-devices-desktop");
+  const publicId = (
+    await db.query("SELECT public_id FROM echo.users WHERE username=$1", [
+      username,
+    ])
+  ).rows[0].public_id;
+  assert.match(publicId, /^[A-Z2-7]{12}$/);
+  await page.getByRole("button", { name: `复制用户 ID ${publicId}` }).click();
+  assert.equal(
+    await page.evaluate(() => navigator.clipboard.readText()),
+    publicId,
+  );
+  assert.equal(
+    await page.getByRole("navigation", { name: "管理员导航" }).count(),
+    0,
+  );
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.getByRole("link", { name: "数据与备份", exact: true }).click();
-  await page.evaluate(() => {
-    window.urlEvents = { created: [], revoked: [] };
-    const c = URL.createObjectURL.bind(URL),
-      r = URL.revokeObjectURL.bind(URL);
-    URL.createObjectURL = (b) => {
-      const u = c(b);
-      window.urlEvents.created.push(u);
-      return u;
-    };
-    URL.revokeObjectURL = (u) => {
-      window.urlEvents.revoked.push(u);
-      r(u);
-    };
-  });
+
+  await instrumentUrls();
   const exportForm = page.locator("form").filter({
     has: page.getByRole("button", {
       name: "创建加密元数据文件",
@@ -174,7 +203,7 @@ try {
     await page.getByRole("link", { name: label, exact: true }).click();
     await page.waitForFunction(() => document.activeElement?.id === "main");
   }
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 1024, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   assert.equal(
     await page.evaluate(
@@ -209,7 +238,12 @@ try {
     [account.id],
   );
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.getByRole("link", { name: "独立管理员登录", exact: true }).click();
+  await page.getByRole("button", { name: "管理员登录", exact: true }).click();
+  assert.equal(new URL(page.url()).pathname, "/admin");
+  await page
+    .getByRole("heading", { name: "管理员登录", exact: true })
+    .waitFor();
+  await capture("admin-auth-desktop");
   await page
     .getByRole("heading", { name: "管理员登录", exact: true })
     .waitFor();
@@ -218,11 +252,37 @@ try {
   await page.getByRole("button", { name: "登录", exact: true }).click();
   await page.getByRole("button", { name: "登出", exact: true }).waitFor();
   await page.getByRole("heading", { name: "管理概览", exact: true }).waitFor();
+  await page.locator(".recharts-surface").first().waitFor();
+  assert.equal(await page.locator(".recharts-surface").count(), 3);
+  assert.equal(
+    await page.getByRole("navigation", { name: "用户导航" }).count(),
+    0,
+  );
+  const filtered = page.waitForResponse(
+    (response) =>
+      response.url().includes("/v1/admin/trends?days=7") &&
+      response.status() === 200,
+  );
+  await page.getByRole("button", { name: "统计时间范围" }).click();
+  await page.getByRole("option", { name: "7 天", exact: true }).click();
+  await filtered;
   await capture("admin-dashboard-desktop");
+  await instrumentUrls();
   await page.getByRole("link", { name: "用户管理", exact: true }).click();
   await page
     .getByRole("button", { name: "准备当前页 CSV", exact: true })
     .waitFor();
+  const lookupMode = page.getByRole("button", { name: "账号查询方式" });
+  await lookupMode.click();
+  await page.getByRole("option", { name: "公共 ID", exact: true }).click();
+  await page.locator('input[name="username"]').fill(publicId);
+  const searched = page.waitForResponse(
+    (response) =>
+      response.url().includes(`/v1/admin/users?publicId=${publicId}`) &&
+      response.status() === 200,
+  );
+  await page.getByRole("button", { name: "查询用户", exact: true }).click();
+  await searched;
   await capture("admin-users-desktop");
   page.on("dialog", (dialog) => dialog.accept());
   await page
@@ -237,28 +297,22 @@ try {
     assert.equal(file.suggestedFilename(), "echo-users-current-page.csv");
     const content = await readFile(await file.path());
     assert(content.toString().includes(username));
-    assert(content.toString().includes('"id","username","status"'));
+    assert(content.toString().includes('"publicId","username","status"'));
+    assert(content.toString().includes(publicId));
   }
   await page.waitForFunction(
     () =>
-      window.urlEvents.created.length === 4 &&
-      window.urlEvents.revoked.length === 4,
+      window.urlEvents.created.length === 3 &&
+      window.urlEvents.revoked.length === 3,
   );
   await page.getByRole("link", { name: "设备管理", exact: true }).click();
   await page.getByRole("heading", { name: "设备管理", exact: true }).waitFor();
   await capture("admin-devices-desktop");
   await page.getByRole("link", { name: "安全中心", exact: true }).click();
   await page.getByRole("heading", { name: "安全中心", exact: true }).waitFor();
-  await page.setViewportSize({ width: 390, height: 844 });
-  await capture("admin-security-mobile");
-  const tableRegion = page.getByRole("region", {
-    name: "安全中心记录表，可横向滚动",
-  });
-  await tableRegion.focus();
-  await page.keyboard.press("ArrowRight");
-  await page.waitForFunction(
-    () => document.querySelector(".table-scroll").scrollLeft > 0,
-  );
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await capture("admin-security-desktop");
+  await page.setViewportSize({ width: 1024, height: 900 });
   assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -302,11 +356,16 @@ try {
       reauth: "PASS",
       metadataArchive: "authenticated export, download, encrypted preview",
       csv: "real admin query, correct filename and contents, 3 repeated downloads",
-      urlCreated: 4,
-      urlRevoked: 4,
+      urlCreated:
+        1 + (await page.evaluate(() => window.urlEvents.created.length)),
+      urlRevoked:
+        1 + (await page.evaluate(() => window.urlEvents.revoked.length)),
       logout: "keyboard plus database row removed",
       navigation: 9,
-      mobile390: "no horizontal overflow",
+      desktop1024: "no page horizontal overflow",
+      publicIdCopyAndLookup: "PASS",
+      independentEntries: "PASS",
+      boardui: "three real official free charts; time filter verified",
       reducedMotion: "media preference applied",
       pageErrors: errors,
       consoleErrors,
@@ -315,7 +374,7 @@ try {
       unexpectedHttp,
       screenshots,
       limitations:
-        "Chromium only; no iOS hardware, comprehensive accessibility audit or messaging E2E",
+        "PC Chromium only; no comprehensive accessibility audit or product messaging E2E",
     }),
   );
 } finally {

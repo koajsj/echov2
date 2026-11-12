@@ -1,9 +1,12 @@
+import { UserLookupMode } from "../../components/UserLookupMode";
+import { PublicUserId } from "../../components/PublicUserId";
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Button } from "@heroui/react";
+import { Button, Input, Form } from "@heroui/react";
 import { api } from "../../app/api";
 interface Lookup {
   id: string;
+  publicId: string;
   username: string;
   trust: "unverified-directory";
 }
@@ -21,7 +24,7 @@ export function ContactsPage({ sessionId }: { sessionId: string }) {
     try {
       setResult(
         await api<Lookup>(
-          `/v1/accounts/lookup?username=${encodeURIComponent(username)}`,
+          `/v1/accounts/lookup?${new URLSearchParams({ [String(new FormData(event.currentTarget).get("identityKind"))]: username })}`,
           {
             sessionId,
           },
@@ -39,15 +42,16 @@ export function ContactsPage({ sessionId }: { sessionId: string }) {
         <h1>联系人</h1>
         <p>用户名可以变化，交流身份始终关联永久 ID。</p>
       </header>
-      <form
+      <Form
         className="panel form"
         onSubmit={(event) => {
           void lookup(event);
         }}
       >
+        <UserLookupMode />
         <label>
-          精确用户名
-          <input
+          用户名或公共 ID
+          <Input
             name="username"
             required
             minLength={3}
@@ -59,14 +63,16 @@ export function ContactsPage({ sessionId }: { sessionId: string }) {
         <Button type="submit" isPending={busy}>
           查找账号
         </Button>
-      </form>
+      </Form>
       <p role="status">{message}</p>
       {result && (
         <dl className="details">
           <dt>用户名</dt>
           <dd>{result.username}</dd>
-          <dt>永久 ID</dt>
-          <dd>{result.id}</dd>
+          <dt>公共 ID</dt>
+          <dd>
+            <PublicUserId value={result.publicId} />
+          </dd>
           <dt>信任来源</dt>
           <dd>服务端目录，尚未核验根身份。查找结果不会自动成为可信联系人。</dd>
         </dl>

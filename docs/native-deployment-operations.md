@@ -78,3 +78,9 @@ API池仍5、PG连接20、Node heap384MiB/MemoryMax768MiB；新增锁等待5秒�
 ## 最终资源复核
 
 2026-11-12再次请求Docker 2GB/1核/swap=2GB，实际仍为32GB/4核、swap=max，CgroupDriver=none。资源准入BLOCKED；本轮不运行或宣称受限持续压力、20GB磁盘配额及应用峰值验收。解除条件为Cloud提供实际生效的cgroup委派及磁盘配额，随后重新执行负载和恢复。详见[最新验证证据](evidence/final-review.json)。
+
+## PC收敛资源复核
+
+2026-11-12再次读取实际cgroup：memory.max=34359738368、cpu.max=400000 100000、memory.swap.max=max。Docker请求2GB/1核/受限swap后，容器内仍读到上述父级额度，限额准入BLOCKED。20GB磁盘配额与真实受限持续负载NOT_RUN；不连接生产VPS。
+
+另在未限额Cloud运行30秒、60次真实注册模式请求，p50 3.843ms、p95 23.974ms、最大153.204ms。两个Node进程CPU观测合计1.11秒、生命周期VmHWM相加207810560字节；非同时全栈峰值、不含PostgreSQL/Caddy，不可作为低配验收。详见[PC证据](evidence/pc-review.json)。

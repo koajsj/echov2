@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Button } from "@heroui/react";
+import { Button, Input, Form } from "@heroui/react";
 import type { DeviceView, SessionView } from "../../../shared/contracts";
 import { api } from "../../app/api";
 import { useApiQuery } from "../../app/use-api-query";
@@ -118,7 +118,7 @@ export function DevicesPage({
         </div>
       )}
       {!session.deviceId && (
-        <form
+        <Form
           className="form panel"
           onSubmit={(event) => {
             void register(event);
@@ -127,7 +127,7 @@ export function DevicesPage({
           <h2>登记当前设备</h2>
           <label>
             设备名称
-            <input
+            <Input
               name="label"
               required
               maxLength={80}
@@ -137,7 +137,7 @@ export function DevicesPage({
           <Button type="submit" isPending={pending}>
             登记为待授权设备
           </Button>
-        </form>
+        </Form>
       )}
       <p role="status">{message}</p>
       <ReauthenticationForm audience="user" sessionId={session.sessionId} />

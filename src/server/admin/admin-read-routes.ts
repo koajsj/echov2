@@ -38,7 +38,7 @@ export function adminReadRoutes(
     async (request) => {
       await sessions.require(request, "admin");
       const result = await pool.query(
-        `SELECT id,username,status,version::text,created_at,
+        `SELECT id,public_id AS "publicId",username,status,version::text,created_at,
       (SELECT count(*)::text FROM echo.devices d WHERE d.user_id=u.id) AS device_count,
       (SELECT count(*)::text FROM echo.sessions s WHERE s.user_id=u.id AND s.expires_at>now()) AS active_sessions
       FROM echo.users u WHERE id=$1`,
@@ -64,7 +64,7 @@ export function adminReadRoutes(
     async (request) => {
       await sessions.require(request, "admin");
       const result = await pool.query(
-        `SELECT d.id,d.user_id,u.username,d.label,d.status,d.created_at,d.revoked_at
+        `SELECT d.id,u.public_id AS user_public_id,u.username,d.label,d.status,d.created_at,d.revoked_at
       FROM echo.devices d JOIN echo.users u ON u.id=d.user_id
       WHERE ($1::uuid IS NULL OR d.id>$1) AND ($2::uuid IS NULL OR d.user_id=$2) ORDER BY d.id LIMIT 51`,
         [request.query.after ?? null, request.query.userId ?? null],
@@ -101,8 +101,8 @@ export function adminReadRoutes(
         // The table/columns/predicate are code constants, never request-controlled SQL.
         const sql =
           kind === "audit"
-            ? "SELECT id::text,actor_user_id,action,target_id,event_id::text,created_at FROM echo.admin_audit_logs WHERE ($1::bigint IS NULL OR id<$1) ORDER BY id DESC LIMIT 51"
-            : `SELECT id::text,user_id,kind,host(ip) AS ip,reviewed_at,reviewed_by,created_at FROM echo.security_events WHERE ($1::bigint IS NULL OR id<$1) ${kind === "logins" ? "AND kind IN ('login-success','login-failure','reauth-success','reauth-failure')" : ""} ORDER BY id DESC LIMIT 51`;
+            ? "SELECT a.id::text,u.public_id AS actor_public_id,a.action,coalesce(t.public_id,a.target_id::text) AS target_id,a.event_id::text,a.created_at FROM echo.admin_audit_logs a LEFT JOIN echo.users u ON u.id=a.actor_user_id LEFT JOIN echo.users t ON t.id=a.target_id WHERE ($1::bigint IS NULL OR a.id<$1) ORDER BY a.id DESC LIMIT 51"
+            : `SELECT e.id::text,u.public_id AS user_public_id,e.kind,host(e.ip) AS ip,e.reviewed_at,r.public_id AS reviewer_public_id,e.created_at FROM echo.security_events e LEFT JOIN echo.users u ON u.id=e.user_id LEFT JOIN echo.users r ON r.id=e.reviewed_by WHERE ($1::bigint IS NULL OR e.id<$1) ${kind === "logins" ? "AND e.kind IN ('login-success','login-failure','reauth-success','reauth-failure')" : ""} ORDER BY e.id DESC LIMIT 51`;
         const result = await pool.query(sql, [before]);
         return {
           items: result.rows.slice(0, 50),
@@ -213,4 +213,36 @@ export function adminReadRoutes(
       regions: null,
     };
   });
+  app.get<{ Querystring: { days?: number } }>(
+    "/v1/admin/trends",
+    {
+      schema: {
+        querystring: {
+          type: "object",
+          additionalProperties: false,
+          properties: { days: { type: "integer", enum: [7, 30, 90] } },
+        },
+      },
+    },
+    async (request) => {
+      await sessions.require(request, "admin");
+      const days = request.query.days ?? 30;
+      const result = await pool.query(
+        `WITH observed AS (
+      SELECT to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD') AS bucket,count(*)::int AS registrations,0::int AS deliveries
+      FROM echo.users WHERE created_at>=(date_trunc('day',clock_timestamp() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC')-($1::int-1)*interval '1 day' GROUP BY 1
+      UNION ALL
+      SELECT to_char(received_at AT TIME ZONE 'UTC','YYYY-MM-DD') AS bucket,0::int,count(*)::int
+      FROM echo.messages WHERE received_at>=(date_trunc('day',clock_timestamp() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC')-($1::int-1)*interval '1 day' GROUP BY 1
+    ) SELECT bucket,sum(registrations)::int AS registrations,sum(deliveries)::int AS deliveries FROM observed GROUP BY bucket ORDER BY bucket`,
+        [days],
+      );
+      return {
+        items: result.rows,
+        source: "postgresql-users-created-at-and-messages-received-at",
+        windowDays: days,
+        trafficBytes: null,
+      };
+    },
+  );
 }

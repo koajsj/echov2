@@ -1,5 +1,42 @@
 # Cloud 工程验证报告
 
+## 当前验证：PC 双入口与公共 ID
+
+基线 `32f09d8faf24a5a731f4aa86f899905030e90518`，2026-11-12。当前机器可读依据为 [pc-review.json](evidence/pc-review.json)；以下历史证据分别绑定其原提交。状态 **PARTIAL**，不代表产品或生产安全通过。
+
+### 本轮实际运行
+
+- 工程：独立执行typecheck、lint、format:check、check:ast、check:source、build:client、build:server，最终七项退出码均为0，逐项记录在PC证据；未关闭规则或增加扫描排除。
+- 数据库：临时PostgreSQL17.11，新/合成旧路径001–007逐份退出0、schema/catalog一致；23表、33外键、17唯一约束、56索引、3业务触发器、4函数。原001预期语法失败保留，修正版独立基线与002–007通过pglast。
+- 权限：owner/API均非超级用户、无BYPASSRLS；API不能DDL、访问迁移台账或修改public_id等受限列。**RLS启用表数为0**，当前依赖服务事务授权和列ACL，不宣称数据库行级租户隔离。
+- 公共ID：真实旧账户及设备FK保留、5,000个随机样本格式/唯一、强制首次碰撞成功、持续碰撞503且零行、并发operationId幂等、API UPDATE拒绝。
+- 认证/授权：34项HTTP检查覆盖邀请、注册摘要冲突、唯一、会话、重新认证、改名、退出、关闭注册，普通用户拒绝12个管理读取入口；CSRF/Origin/旧标签页拒绝。
+- 竞态：设备/邀请在观察到锁等待后过期拒绝；跨账号删除operationId仅一胜者，冲突409且不隐藏另一目标。
+- 浏览器：PC视口、两套入口、短ID复制与查询、3张官方BoardUI图表和时间筛选、真实元数据归档及3次CSV，4次Blob创建/释放；0 pageerror，控制台/HTTP预期401及门禁403已逐项分类，无意外错误。8张真实PC截图；1024 CSS px无页面溢出。
+- 密码学实验：Rust格式、native release、wasm32 release、wasm-bindgen退出0；双BrowserContext真实OpenMLS库测试通过。本地CAS、刷新恢复、重复拒绝、注入配额错误回滚及附件AEAD通过，合成opaque状态不证明完整Provider持久化。
+
+### 审计与许可证
+
+npm audit退出0，零公告；本轮仅新增精确锁定Recharts3.9.2与Remixicon React4.9.0供官方BoardUI内部使用。npm CycloneDX以package-lock-only生成，包含418组件（含其他平台可选包），npm导出器原遗漏Remixicon的非SPDX许可，已核对实际包声明与v4.9.0原文并补充具名Remix Icon License 1.0；当前无缺失许可条目；Rust SBOM191组件无缺失。许可证义务仍需发布前履行，不把清单等同法律审核。本项目没有整体LICENSE。
+
+BoardUI CLI0.5.9真实stdio MCP调用get_started/list_components/get_skill/get_component；免费KPI/revenue/orders源码附MIT版权，来源仓库固定提交及原始源码哈希在PC证据。未获取未授权Pro源码，未采用Pro模板或安装第二套基础UI。
+
+Cargo audit退出1，3项公告：RUSTSEC-2026-0387（crypto-bigint0.5.5）、RUSTSEC-2026-0331及0330（libcrux-kem0.0.9），另有proc-macro-error2停止维护警告。活动WASM树的crypto-bigint未获安全兼容升级；gate继续BLOCKED。
+
+Semgrep官方规则固定 `a5ad1714f00c9f7fde980cab0ea1d6dc6d414fd2`，213条运行规则，扫描作者源码及工具，69项发现（55 INFO、13 WARNING、1 ERROR），0扫描错误。ERROR在认证回归的loopback HTTP合成夹具，不发送真实凭据或生产流量；保留发现及解释，不禁规则。其他SQL常量拼接、部署/库代码启发式发现需结合输入边界审查，不将SAST结果称为零告警或正式安全审计。发现文件、位置和规则保存在PC证据。
+
+客户端构建退出0，但Vite报告约1,013kB压缩前主JS块（gzip约304kB）超过500kB建议值；未修改阈值隐藏提示，后续仍有拆包优化空间。源码检查首次遇到未暂存的已删除手机图片而报ENOENT，记录Git删除后复跑通过；未修改检查规则。
+
+### 资源与未覆盖项
+
+实际memory.max=34359738368、cpu.max=400000 100000；Docker请求限制未生效，memory.swap.max=max。限额检查退出1/BLOCKED。无20GB磁盘配额；受限持续负载NOT_RUN。
+
+独立30秒功能负载：60次真实注册模式GET，p50=3.843ms、p95=23.974ms、max=153.204ms；两个观测Node进程CPU共1.11秒，生命周期VmHWM之和207810560字节。后者不是并发全栈内存峰值，未包含PostgreSQL/Caddy；不推导低配容量。浏览器、Rust、SQL及扫描范围之外的完整产品多设备、恢复、物理故障和生产部署仍未通过。
+
+---
+
+## 历史验证记录（以下对应先前提交）
+
 2026-11-12。本报告替代旧的本机只读静态快照；旧快照由 Git 历史保存。所有安装、构建、数据库与浏览器操作均在 Codex Cloud；没有在用户本机下载/安装，没有生产访问。**整体 PARTIAL；检查通过不代表完整产品、安全门禁或生产容量通过。**
 
 ## 可复核证据

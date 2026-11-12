@@ -3,7 +3,6 @@
 @import "./tokens.css";
 @import "./shell.css";
 @import "./screens.css";
-@import "./charts.css";
 
 @layer base {
   * {
@@ -220,27 +219,7 @@ th {
 .dark .brand img {
   filter: invert(1);
 }
-@media (max-width: 900px) {
-  .auth-layout {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-}
-@media (max-width: 640px) {
-  .split-panels,
-  .metrics {
-    grid-template-columns: 1fr;
-  }
-  .panel {
-    padding: 20px;
-  }
-  .empty-state {
-    padding: 32px 16px;
-  }
-  .record-list li {
-    align-items: flex-start;
-  }
-}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -249,4 +228,47 @@ th {
     animation: none;
     scroll-behavior: auto;
   }
+}
+
+@theme inline {
+  --color-background-secondary-default: var(--echo-surface);
+  --color-text-primary: var(--echo-text);
+  --color-text-secondary: var(--echo-muted);
+  --color-text-tertiary: var(--echo-muted);
+  --color-foreground-icon-primary: var(--echo-muted);
+  --color-stat-card-icon-background: var(--echo-raised);
+  --color-chart-2: var(--echo-focus);
+  --color-chart-2-active: var(--echo-focus);
+  --color-chart-9-active: var(--echo-focus);
+  --color-chart-cursor: var(--echo-border);
+  --color-chart-track: var(--echo-raised);
+}
+@utility text-body-medium {
+  font: var(--echo-weight-medium) var(--echo-type-label)/var(--echo-leading-ui)
+    var(--echo-font);
+}
+@utility text-body-2-medium {
+  font: var(--echo-type-meta)/var(--echo-leading-ui) var(--echo-font);
+}
+@utility text-title-1-medium {
+  font: var(--echo-weight-medium)
+    var(--echo-type-title)/var(--echo-leading-tight) var(--echo-font);
+}
+.boardui-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-block: 20px;
+}
+.dashboard-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 16px;
+  margin-block: 24px;
+}
+.dashboard-toolbar {
+  display: flex;
+  align-items: end;
+  gap: 16px;
+  max-width: 480px;
 }

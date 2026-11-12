@@ -105,23 +105,3 @@ section > .panel,
 section > form {
   margin-block: 24px;
 }
-@media (max-width: 900px) {
-  .chat-layout {
-    grid-template-columns: 1fr;
-  }
-  .conversation-list {
-    border-inline-end: 0;
-    border-block-end: 1px solid var(--echo-border);
-  }
-}
-@media (max-width: 640px) {
-  .conversation-detail {
-    padding: 24px 16px;
-  }
-  .operation-row {
-    padding: 20px;
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
-  }
-}

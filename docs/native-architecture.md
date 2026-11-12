@@ -78,3 +78,11 @@ Worker 是职责隔离和串行化工具，同源 XSS 仍能调用它；不是�
 accounts 下的 session-management 负责现有会话的分页/撤销，data-routes 只读导出本人服务元数据；不新增认证系统。devices 复用同一撤销事务供本人/超管调用，按账号、会话、目标账号、设备顺序串行化；admin-action-routes 只做运营授权/审计。storage-routes 读取配置媒体路径所在文件系统容量，不读媒体或私钥。
 
 前端 SessionPanel、CSV/DownloadFile 共用真实服务结果；MetadataArchivePanel/metadata-archive 只处理标准 WebCrypto 的有限元数据文件。加密聊天、私人组、密钥恢复及完整备份执行器仍未接入。系统导出绝不收浏览器私钥；本轮没有旧协议代码迁入、运行依赖增加或品牌/Token 重做。
+
+## PC 双入口与界面边界
+
+当前只支持PC/笔记本桌面浏览器，最小布局宽度1024 CSS px；不再维护手机/平板布局或移动导航。`/`为用户登录与工作台，`/admin`为独立管理员登录和控制台；未认证管理路由落到`/admin#login`。UserApp与AdminApp各有布局/导航/Workspace，仅复用查询、主题和基础组件；普通用户入口不提供管理员注册或后台导航。服务端admin audience、Cookie、Session与API校验继续独立，切换URL不能获得权限。
+
+BoardUI官方MCP提供免费MIT StatCards、RevenueChartCard、OrdersChartCard，源码经Echo适配接入真实API；HeroUI v3提供按钮、输入、表单、筛选和表格。用户已允许Recharts仅作为BoardUI内部依赖；不另建Recharts图表，不复制未授权Pro源码。免费收入卡原有面积/折线结构用于用户增长，订单卡原有柱状结构用于新增用户和投递；默认演示数据、货币与虚构同比均已移除。厂商版权及MIT文本见[组件来源](../src/client/components/boardui/notice.md)。
+
+统计使用PostgreSQL实际注册/接收时间，支持7/30/90日观测范围；零值、未知、无记录、加载和错误分开处理。流量/历史活跃用户/GeoIP/浏览器/OS没有可靠来源，保持未知。独立环形图、横向排行等组件需要Pro授权，当前没有安装，不用自制SVG替代。

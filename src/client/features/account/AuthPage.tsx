@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { Button } from "@heroui/react";
+import { Button, Input, Form } from "@heroui/react";
 import type { Audience } from "../../../shared/contracts";
 import { useApiQuery } from "../../app/use-api-query";
 import { ServiceState } from "../../components/ServiceState";
@@ -75,7 +75,9 @@ export function AuthPage({
     <section className="auth-layout">
       <div className="auth-intro">
         <p className="eyebrow">ECHO NATIVE · 第三阶段</p>
-        <h1>让交流，回到彼此。</h1>
+        <h1>
+          {audience === "admin" ? "看清系统，守住边界。" : "让交流，回到彼此。"}
+        </h1>
         <p>独立通信架构。客户端密钥。清晰的信任边界。</p>
         <p className="muted">
           MLS 尚未集成。通信准入尚未通过，不提供未经验证的加密聊天。
@@ -89,14 +91,14 @@ export function AuthPage({
               ? "创建账号"
               : "欢迎回来"}
         </h2>
-        <form
+        <Form
           onSubmit={(event) => {
             void submit(event);
           }}
         >
           <label>
             用户名
-            <input
+            <Input
               name="username"
               required
               minLength={3}
@@ -107,7 +109,7 @@ export function AuthPage({
           </label>
           <label>
             密码
-            <input
+            <Input
               name="password"
               type="password"
               required
@@ -119,7 +121,7 @@ export function AuthPage({
           {register && (
             <label>
               邀请码（按注册模式）
-              <input
+              <Input
                 name="invitation"
                 autoComplete="off"
                 maxLength={128}
@@ -135,7 +137,7 @@ export function AuthPage({
           >
             {register ? "注册" : "登录"}
           </Button>
-        </form>
+        </Form>
         {audience === "user" && (
           <Button
             variant="ghost"
@@ -168,6 +170,14 @@ export function AuthPage({
               刷新注册模式
             </Button>
           </>
+        )}
+        {audience === "user" && (
+          <Button
+            variant="secondary"
+            onPress={() => location.assign("/admin#login")}
+          >
+            管理员登录
+          </Button>
         )}
         <p role="status">{message}</p>
       </div>

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { Button } from "@heroui/react";
+import { Table, Button, Input, Form } from "@heroui/react";
 import { api } from "../../app/api";
 import { useApiQuery } from "../../app/use-api-query";
 import { CsvExport } from "../../components/CsvExport";
@@ -144,7 +144,7 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
       </header>
       <ServiceState {...overview} />
       {overview.data && (
-        <form
+        <Form
           className="panel form"
           key={overview.data.registration.version}
           onSubmit={(event) => {
@@ -166,9 +166,9 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
           <Button type="submit" isPending={busy}>
             保存并审计
           </Button>
-        </form>
+        </Form>
       )}
-      <form
+      <Form
         className="panel form"
         onSubmit={(event) => {
           void issue(event);
@@ -178,7 +178,7 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
         <fieldset disabled={busy || issued !== null || retrying}>
           <label>
             可用次数
-            <input
+            <Input
               name="maxUses"
               type="number"
               min={1}
@@ -189,7 +189,7 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
           </label>
           <label>
             有效小时
-            <input
+            <Input
               name="validHours"
               type="number"
               min={1}
@@ -202,7 +202,7 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
         <Button type="submit" isPending={busy} isDisabled={issued !== null}>
           {retrying ? "核实并重试原操作" : "创建并仅显示一次"}
         </Button>
-      </form>
+      </Form>
       {issued && (
         <div className="panel">
           <h2>已确认的创建记录</h2>
@@ -210,7 +210,7 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
           {issued.token && (
             <label>
               仅本次响应可见的邀请凭据
-              <input readOnly value={issued.token} autoComplete="off" />
+              <Input readOnly value={issued.token} autoComplete="off" />
             </label>
           )}
           <Button
@@ -239,41 +239,41 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
             name="echo-invitations-current-page.csv"
           />
           <div className="table-scroll">
-            <table>
-              <caption>只查询元数据，不读取邀请码或哈希</caption>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>使用次数</th>
-                  <th>到期时间</th>
-                  <th>撤销时间</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invitations.data.items.map((row) => (
-                  <tr key={row.id}>
-                    <td>{row.id}</td>
-                    <td>
-                      {row.uses} / {row.max_uses}
-                    </td>
-                    <td>{row.expires_at}</td>
-                    <td>{row.revoked_at ?? "未撤销"}</td>
-                    <td>
-                      <Button
-                        variant="secondary"
-                        isDisabled={busy || row.revoked_at !== null}
-                        onPress={() => {
-                          void revoke(row.id);
-                        }}
-                      >
-                        撤销
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <p className="muted">只查询元数据，不读取邀请码或哈希</p>
+            <Table>
+              <Table.Content aria-label="注册邀请">
+                <Table.Header>
+                  <Table.Column isRowHeader>ID</Table.Column>
+                  <Table.Column>使用次数</Table.Column>
+                  <Table.Column>到期时间</Table.Column>
+                  <Table.Column>撤销时间</Table.Column>
+                  <Table.Column>操作</Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {invitations.data.items.map((row) => (
+                    <Table.Row id={row.id} key={row.id}>
+                      <Table.Cell>{row.id}</Table.Cell>
+                      <Table.Cell>
+                        {row.uses} / {row.max_uses}
+                      </Table.Cell>
+                      <Table.Cell>{row.expires_at}</Table.Cell>
+                      <Table.Cell>{row.revoked_at ?? "未撤销"}</Table.Cell>
+                      <Table.Cell>
+                        <Button
+                          variant="secondary"
+                          isDisabled={busy || row.revoked_at !== null}
+                          onPress={() => {
+                            void revoke(row.id);
+                          }}
+                        >
+                          撤销
+                        </Button>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table>
           </div>
           {invitations.data.items.length === 0 && <p>没有此范围内的记录。</p>}
           <div className="actions">

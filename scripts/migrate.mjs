@@ -44,9 +44,9 @@ export async function loadManifest(path = resolve(root, manifestPath)) {
   }
   if (
     manifest.migrations.map((x) => x.version).join(",") !==
-    "001,002,003,004,005,006"
+    "001,002,003,004,005,006,007"
   )
-    throw new Error("Expected explicit ordered versions 001 through 006");
+    throw new Error("Expected explicit ordered versions 001 through 007");
   return manifest;
 }
 export async function inspect(db) {

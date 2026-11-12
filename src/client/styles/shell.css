@@ -1,14 +1,47 @@
-.app-shell {
+/* Desktop-only entry points; no mobile navigation or drawers. */
+body {
+  min-width: 1024px;
+}
+.user-shell {
   display: grid;
-  grid-template-columns: 232px minmax(0, 1fr);
+  grid-template-columns: 216px minmax(0, 1fr);
   min-height: 100dvh;
 }
-.sidebar {
+.user-sidebar {
+  padding: 28px 16px;
+  border-right: 1px solid var(--echo-border);
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  padding: 32px 20px;
+  gap: 28px;
+}
+.admin-shell {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  grid-template-rows: 76px 1fr;
+  min-height: 100dvh;
+}
+.admin-topbar {
+  grid-column: 1/-1;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 28px;
+  border-bottom: 1px solid var(--echo-border);
+  background: var(--echo-surface);
+}
+.admin-topbar > span:nth-of-type(1) {
+  margin-right: auto;
+  font-size: var(--echo-type-meta);
+  letter-spacing: 0.12em;
+  color: var(--echo-muted);
+}
+.admin-sidebar {
+  padding: 20px 12px;
   border-right: 1px solid var(--echo-border);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  background: var(--echo-surface);
 }
 .brand {
   display: flex;
@@ -27,10 +60,13 @@
 }
 nav {
   display: grid;
-  gap: 8px;
+  gap: 4px;
 }
 nav a {
-  padding: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
   border-radius: var(--echo-control-radius);
   text-decoration: none;
   font-size: var(--echo-type-label);
@@ -42,9 +78,9 @@ nav a[aria-current] {
 main {
   min-width: 0;
   width: 100%;
-  max-width: 1440px;
-  padding: 32px 48px;
-  margin: auto;
+  max-width: 1680px;
+  padding: 28px clamp(24px, 3vw, 48px);
+  margin: 0 auto;
   align-self: start;
 }
 .session-bar {
@@ -52,9 +88,22 @@ main {
   justify-content: flex-end;
   align-items: center;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   font-size: var(--echo-type-label);
-  overflow-wrap: anywhere;
+}
+.auth-entry,
+.admin-auth-entry {
+  min-height: 100dvh;
+  padding: 40px 6vw;
+}
+.admin-auth-entry {
+  max-width: 1200px;
+}
+.theme-control {
+  position: fixed;
+  right: 20px;
+  bottom: 16px;
+  z-index: 20;
 }
 .skip-link {
   position: fixed;
@@ -62,73 +111,28 @@ main {
   left: 16px;
   padding: 12px;
   background: var(--echo-surface);
-  z-index: 10;
+  z-index: 30;
 }
 .skip-link:focus {
   top: 16px;
 }
-@media (max-width: 760px) {
-  .app-shell {
-    grid-template-columns: 1fr;
-  }
-  .sidebar {
-    padding: 20px;
-    border-right: 0;
-    border-bottom: 1px solid var(--echo-border);
-    gap: 16px;
-  }
-  .sidebar nav {
-    display: flex;
-    overflow-x: auto;
-  }
-  .sidebar nav a {
-    white-space: nowrap;
-  }
-  .sidebar > small {
-    display: none;
-  }
-  main {
-    padding: 24px 20px;
-  }
-  .session-bar {
-    justify-content: space-between;
-    flex-wrap: wrap;
-  }
-}
-/* Echo's original labelled navigation, folded without a second font system. */
-.navigation summary {
-  display: none;
-  min-height: 44px;
-  cursor: pointer;
-}
-.navigation nav a {
-  display: flex;
+.public-user-id {
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  min-height: 44px;
-  min-width: 0;
+  gap: 4px;
+  flex-wrap: wrap;
 }
-.navigation nav a svg {
-  flex-shrink: 0;
+.public-user-id code {
+  white-space: nowrap;
+  letter-spacing: 0.06em;
 }
-.realm-link {
-  font-size: var(--echo-type-label);
-  padding: 12px;
+.admin-shell .page-heading {
+  margin-bottom: 18px;
 }
-@media (max-width: 760px) {
-  .navigation summary {
-    display: list-item;
-    padding: 10px;
-  }
-  .sidebar .navigation nav {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    overflow: visible;
-  }
-  .sidebar .navigation nav a {
-    white-space: normal;
-  }
-  .sidebar .navigation:not([open]) nav {
-    display: none;
-  }
+.admin-shell th,
+.admin-shell td {
+  padding: 10px 12px;
+}
+.admin-shell .panel {
+  padding: 20px;
 }
