@@ -1,5 +1,11 @@
 # 身份、设备与恢复
 
+## 本地撤权收敛 — 2026-11-12
+
+服务撤权增加待审008迁移：设备状态转为revoked时，owner固定search_path触发器同事务失效该设备全部未撤公开Credential、删除未领取KeyPackage；已领取包和原凭证字节保留对账。运行API没有签发/激活/直接修改Credential或KeyPackage的新增权限。现有撤session、冻结关联组继续生效；WSS挂载改为在同一账号/session锁内复核，防撤销漏掉尚未挂载的连接。008未执行，实际权限、回填、回滚和竞争验证NOT_RUN。
+
+此修改不提供根授权、SAS/QR、新设备私钥、原生Remove Commit或恢复。已发出的Welcome、旧key、外部分发包无法通过服务撤销追回；G4/G5继续BLOCKED。无可信客户端完成全组Remove/new epoch前保持冻结，不提供服务器解冻接口。
+
 ## 当前状态 — 2026-11-12
 
 真实注册、邀请、登录、会话、改名、重新认证和退出已在合成数据上验证。普通用户只能列出/撤销 user audience 会话，不能操作同账号 admin 会话；管理员授权路径保持独立。密码登录、pending 设备登记和 SQL 凭证夹具不构成可信密码学身份。根授权、独立 Credential 绑定、SAS/QR、恢复以及服务撤销后的完整 MLS Remove 流程仍 BLOCKED。

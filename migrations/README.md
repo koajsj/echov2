@@ -1,14 +1,18 @@
 # PostgreSQL 迁移
 
-## 当前执行范围：001–007
+## 当前迁移清单：001–008（008未执行）
 
-新增 `007-public-user-id.sql`，在006之后由独立owner显式执行；不是新项目阶段。001–006、初始基线SQL原字节保持不变，现有manifest仅追加007及其SHA-256，baseline_id不变。迁移执行器仍验证旧回执和完整有序前缀，不自动认领未知数据库，应用启动不运行迁移。
+新增 `008-device-revocation.sql`，只作为待审工件；本机未执行SQL。001–007及独立基线SQL不变，manifest追加008摘要，执行器只接受明确有序前缀。008要求普通owner，固定pg_catalog search_path、全表名限定的SECURITY DEFINER触发器在设备状态转为revoked的同事务标记公开Credential撤销并删除未领取KeyPackage。API无直接Credential/KeyPackage写权限，PUBLIC/API无函数执行权；不授予签发、激活或解冻能力。已经领取的包和凭证字节保留供对账，不承诺追回外部分发副本。
+
+008会补偿此前已撤销设备的上述公开材料；申请SHARE ROW EXCLUSIVE锁，执行窗口需独立规划。数据库中原生MLS Group State/私钥不存在；本迁移不是Remove Commit，也不解除组冻结。使用前必须在隔离环境验证owner/ACL、触发器回滚、重复撤销、并发领包、历史回填和两条迁移路径；本轮均NOT_RUN。现有维护脚本使用manifest加载008，历史Cloud报告只覆盖至007。
+
+此前新增 `007-public-user-id.sql`，在006之后由独立owner显式执行；不是新项目阶段。001–006、初始基线SQL原字节保持不变，现有manifest仅追加007及其SHA-256，baseline_id不变。迁移执行器仍验证旧回执和完整有序前缀，不自动认领未知数据库，应用启动不运行迁移。
 
 007为users新增唯一、非空、12位大写RFC4648 Base32公共ID。使用PostgreSQL内置CSPRNG UUID取随机位生成60位标识；独立唯一约束裁决碰撞。旧行原位回填，内部UUID、外键、会话及身份关联保留。回填遇到此唯一约束碰撞重新生成；新注册使用SAVEPOINT重试，最多8次，耗尽整体回滚并返回503。公共ID不是凭据，API没有该列UPDATE权限。
 
 Cloud隔离验证：从006含旧账户/设备升级007、5,000个样本、强制首次碰撞/重试成功、持续碰撞/零写入、并发注册幂等和API修改拒绝。运行 `node --import tsx scripts/check-public-user-id.mjs` 必须显式设置其源码要求的临时Cloud目标。当前23表、33外键、17唯一约束、56索引、3业务触发器、4函数。旧001 authorization语法错误依然仅作为保留历史工件，不应用于新库。
 
-完整验证见[最新工程报告](../docs/static-verification-report.md)。以下为兼容路径与执行安全要求；文中001–006是既有前缀，本轮在其后追加007。
+历史007运行证据见[PC审查](../docs/evidence/pc-review.json)，本轮静态边界见[工程报告](../docs/static-verification-report.md)。以下保留兼容路径与执行安全要求；旧001–006及007结论不是008运行证据。
 
 ## 兼容路径与迁移操作
 

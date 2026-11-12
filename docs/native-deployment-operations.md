@@ -1,5 +1,13 @@
 # 低配部署、删除证据与系统恢复
 
+## 本地主环境与待执行变更 — 2026-11-12
+
+GitHub main的PR #2成果已在本地echov2接管，旧echo-v2只读；不恢复node_modules、不安装Rust/WASM依赖，不启动服务、执行SQL或访问VPS。以下Cloud资源和功能数字是历史证据，本轮没有重新运行。本轮只增加008迁移工件、WSS权限竞态修复与管理员账号版本条件，未修改生产配置/资源预算。
+
+008需未来获授权的owner维护窗口；新触发器SECURITY DEFINER、固定pg_catalog search_path，所有表名限定echo，PUBLIC/API不可直接调用。新增函数由非超级owner拥有，API仍不能签发Credential/KeyPackage或解冻群。先在隔离环境验证触发器、权限、历史回填和回滚再考虑应用；本轮NOT_RUN，不得部署应用后假定生产已经具备008。
+
+生产日志容量、附件配额/清理、停写备份执行器、独立删除日志目标、隔离恢复介质与保护key仍未具备。默认不添加假备份脚本；完整流程继续以本文为准，G6保持BLOCKED。Caddy/systemd解析、2GB/1核/20GB与实际恢复均无本轮运行证据。
+
 ## 当前状态 — 2026-11-12
 
 本轮没有生产部署。Cloud 已运行真实 Node/Fastify、PostgreSQL 和 Caddy HTTPS 合成工作流；Docker 的 `--memory=2g --memory-swap=2g --cpus=1` 在当前 rootless、CgroupDriver=none 环境未实际生效，容器观测为 memory.max=34359738368、cpu.max=400000 100000。该结果仅是功能运行，不是 2 GB/1 核模拟 PASS；主机整体 memory.peak 不能作为应用峰值。20 GB SSD、持续负载、磁盘告警、日志保留和完整灾备仍未验收。缺少独立新鲜删除证据/外部备份目标，系统恢复继续拒绝。
