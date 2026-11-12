@@ -88,6 +88,8 @@ flowchart LR
 
 > ⛔ **供应链安全准入未通过：** `crypto-bigint` 时序公告进入当前 WASM 依赖树；Cargo 锁闭另有公告。未忽略公告、未强制套用不兼容补丁，crypto-gate 持续关闭。详情见[密码学](docs/native-cryptography.md)。
 
+本轮本地源码修复了通知挂载与会话撤销的竞争、通知过期/背压处理及管理员账号状态的版本校验。新增008待审迁移，在设备撤销同事务失效公开Credential、清除未领取KeyPackage；不代表MLS密码学撤权。静态复核已进行，相关运行和迁移NOT_RUN；完整台账见[第三阶段报告](docs/phase-three-report.md)。
+
 ## 👤 PC 用户端与管理端
 
 仅支持 PC 和笔记本桌面浏览器，布局下限为 **1024 CSS px**；保留窗口缩放、深浅主题和 `prefers-reduced-motion`。已移除移动导航、折叠菜单及手机/平板专用断点。
@@ -138,22 +140,13 @@ echov2/
 
 ## 🔍 开发与验证
 
-使用 **Codex Cloud** 远程开发；Mac 本机不安装、下载或构建项目依赖。锁文件固定依赖解析，在获授权的 Cloud 中运行：
+当前主开发环境为本地 `echov2`，基线已包含合并的 [PR #2](https://github.com/koajsj/echov2/pull/2)。旧 `echo-v2` 仅作只读参考。本机禁止安装/下载新的项目依赖或 Rust/WASM 工具链，不恢复旧 node_modules；本轮不运行测试、构建、应用、数据库迁移或生产部署。历史 Cloud 成功记录不作为当前修改的运行验证。
 
-```sh
-npm ci
-npm run typecheck
-npm run lint
-npm run format:check
-npm run check:ast
-npm run check:source
-npm run build:client
-npm run build:server
-```
+已有独立 TypeScript / Prettier 工具可按[工程报告](docs/static-verification-report.md)显式指定路径进行静态检查；缺项目依赖时完整类型/Lint标记NOT_AVAILABLE，不修改规则或补假类型。不得在当前本机执行依赖安装命令。供应链可执行只读取锁文件的 `npm audit --package-lock-only --ignore-scripts`，不安装包。
 
 Rust/WASM 和库实验命令见 [MLS 实验](crypto/mls-lab/README.md)。真实数据库、认证、短 ID、删除竞争及浏览器脚本需要明确隔离环境参数，不对任意数据库直接运行。命令与实际退出码见[工程验证](docs/static-verification-report.md)。
 
-新库使用修正版独立基线001 → 002 → 003 → 004 → 005 → 006 → **007公共ID**。已有已核验前缀仅追加007；未知持久化环境不得自动迁移。应用启动不执行迁移。操作前阅读[迁移说明](migrations/README.md)。
+新库规划使用修正版独立基线001 → 002 → 003 → 004 → 005 → 006 → 007公共ID → **008设备公开材料撤销**。008尚未执行或运行验证；已有已核验前缀只追加缺失版本；未知持久化环境不得自动迁移。应用启动不执行迁移。操作前阅读[迁移说明](migrations/README.md)。
 
 ## 🚀 部署与资源
 

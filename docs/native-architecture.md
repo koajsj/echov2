@@ -2,7 +2,7 @@
 
 ## 当前状态 — 2026-11-12
 
-当前 Cloud 实现为模块化单体，应用通信门禁仍关闭。独立 `crypto/mls-lab` 不进入生产 client bundle；`operation-store.ts` 只是本地事务边界前置模块，尚未与 provider/账号设备绑定。真实密码认证和管理数据可用，页面入口不代表全部业务闭环。工程状态见[工程验证](static-verification-report.md)，产品范围见[第三阶段报告](phase-three-report.md)。
+当前本地主项目实现为模块化单体（历史Cloud运行证据保留），应用通信门禁仍关闭。独立 `crypto/mls-lab` 不进入生产 client bundle；`operation-store.ts` 只是本地事务边界前置模块，尚未与 provider/账号设备绑定。真实密码认证和管理数据可用，页面入口不代表全部业务闭环。工程状态见[工程验证](static-verification-report.md)，产品范围见[第三阶段报告](phase-three-report.md)。
 
 Cloud 启动兼容更新：新增离线 scripts/migrate.mjs（inspect/plan/status/apply），由普通 owner 在启动之外执行固定摘要迁移并持 advisory lock；应用仍仅连接 echo_native_api，绝不启动时迁移。新基线/006 与 owner-only echo_meta 不增加服务或认证系统；未知历史库禁止自动接管。见权威 [迁移说明](../migrations/README.md) 和 [运行证据](cloud-bootstrap-verification.md)。MLS 与生产准入边界不变。
 
@@ -65,13 +65,13 @@ Worker 是职责隔离和串行化工具，同源 XSS 仍能调用它；不是�
 
 源码采用 `src/client/{app,components,features,crypto,styles}`、`src/server/{accounts,identity,devices,delivery,messaging,lifecycle,admin,storage,api}`、`src/shared`，部署配置和运维脚本分放 `deploy`、`scripts`。media处理器未实现，不预建空目录。仅确有复用才进入shared；普通TS/目录kebab-case、React PascalCase、Hook use前缀，遵循工具标准配置名。
 
-当前目录和迁移清单集中在[第三阶段报告](phase-three-report.md)；包含源码、package声明、未执行增量SQL和部署基础；无node_modules/锁文件/构建产物。架构还不是可上线实现，尤其身份信任、持久化和DS无效Commit仍受[门槛 G1–G6](native-implementation-plan.md)约束。
+目录概览见[README](../README.md)，迁移清单以[迁移说明](../migrations/README.md)和manifest为准；包含源码、package声明、未执行增量SQL和部署基础；保留npm/Cargo锁文件，无node_modules或构建产物。架构还不是可上线实现，尤其身份信任、持久化和DS无效Commit仍受[门槛 G1–G6](native-implementation-plan.md)约束。
 
 ## 第二阶段已落地边界
 
 服务访问事务使用账号→session→设备→会话→head顺序，读写与会话撤销串行化；目录凭证还要求关联未退休根。它不替代原生身份签名验证。消息服务自身保留总拒写门禁；Commit声明只产生未验证候选并冻结，不推进路由或MLS状态。客户端通知仅唤醒目录刷新，不获取/展示消息或确认游标。
 
-前端保留Echo图标/tokens与原独立Icon、EmptyState、折线图原语/布局；全部主要用户/管理导航路由已建立。Native API提供精确账号查找、目录/操作收据、后台真实表分页与注册增长。聊天创建、明文业务编解码、加解密展示、私人加密同步/恢复尚未实现。本轮第三阶段增加的运营操作见下文；未知来源采集仍缺失，不能把页面存在当成完整迁移验收。
+前端保留Echo图标/tokens、独立Icon与EmptyState；当前图表使用经审查的BoardUI免费组件；全部主要用户/管理导航路由已建立。Native API提供精确账号查找、目录/操作收据、后台真实表分页与注册增长。聊天创建、明文业务编解码、加解密展示、私人加密同步/恢复尚未实现。本轮第三阶段增加的运营操作见下文；未知来源采集仍缺失，不能把页面存在当成完整迁移验收。
 
 ## 第三阶段实际新增边界
 

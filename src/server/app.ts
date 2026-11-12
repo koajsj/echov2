@@ -139,7 +139,7 @@ export async function createApp(config: ServerConfig) {
   );
   dataRoutes(app, pool, sessions, config.origin);
   sessionManagementRoutes(app, pool, sessions, hub);
-  deliveryRoutes(app, sessions, new DeliveryService(pool), hub);
+  deliveryRoutes(app, pool, sessions, new DeliveryService(pool), hub);
   adminRoutes(app, pool, sessions, hub);
   adminReadRoutes(app, pool, sessions);
   storageRoutes(app, sessions, config.mediaPath);

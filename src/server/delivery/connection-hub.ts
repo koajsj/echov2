@@ -33,10 +33,12 @@ export class ConnectionHub {
     for (const connection of this.connections) {
       if (connection.userId !== userId) continue;
       if (
+        connection.expiresAt <= Date.now() ||
         connection.socket.readyState !== 1 ||
         connection.socket.bufferedAmount > 65536
       ) {
-        connection.socket.close(1013, "Resync required");
+        this.connections.delete(connection);
+        connection.socket.terminate();
         continue;
       }
       connection.socket.send(JSON.stringify({ type: "sync-required" }));
@@ -51,14 +53,22 @@ export class ConnectionHub {
   }
   closeSession(sessionId: string): void {
     for (const c of this.connections)
-      if (c.sessionId === sessionId) c.socket.close(1008, "Session revoked");
+      if (c.sessionId === sessionId) {
+        this.connections.delete(c);
+        c.socket.close(1008, "Session revoked");
+        c.socket.terminate();
+      }
   }
   expire(): void {
     for (const c of this.connections)
-      if (Date.now() >= c.expiresAt)
+      if (Date.now() >= c.expiresAt) {
+        this.connections.delete(c);
         c.socket.close(1000, "Reauthenticate and resync");
+        c.socket.terminate();
+      }
   }
   close(): void {
-    for (const c of this.connections) c.socket.close(1001, "Service stopping");
+    for (const c of this.connections) c.socket.terminate();
+    this.connections.clear();
   }
 }

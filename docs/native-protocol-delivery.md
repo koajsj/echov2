@@ -1,5 +1,11 @@
 # 应用协议与一致性投递
 
+## 本地接口收敛 — 2026-11-12
+
+`GET /v1/admin/users`新增`version`十进制字符串；`POST /v1/admin/users/:id/status`必须提交`{suspended:boolean, version:string}`。新近认证/CSRF后按actor账号→session→目标账号锁定，比较数据库当前version，过时返回409 VERSION_CONFLICT，未知或不可修改目标404。同状态返回updated:false、不新增版本或审计，状态变化保留session撤销、组冻结和审计同事务。前端错误后刷新权威列表；网络未知结果不能凭旧版本重复切换。
+
+WSS在账号/session行锁内重验并挂载，撤销若先提交则无法挂载，若后提交则可看到已挂载连接并终止。期限/背压在通知发送前核验；关闭登记即时移除，强制断开可能在客户端表现为1006，仍只允许重新认证/HTTPS补齐，不是消息已处理或删除已同步。相关并发和浏览器运行NOT_RUN。聊天写入、Commit/Welcome产品闭环及离线墓碑继续BLOCKED。
+
 ## 当前状态 — 2026-11-12
 
 route_version、seq 与客户端 mls_epoch 仍严格分离。服务端聊天 append 门禁保持 503；WASM 实验仅证明库在两个隔离浏览器上下文中处理真实 wire bytes，未证明 Echo Delivery 的 Welcome 排序、Commit 冲突恢复、重连/离线投递或端到端群组一致性。完整协议集成仍 BLOCKED，不用 SQL CAS 代替密码学验证。

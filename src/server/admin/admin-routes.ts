@@ -6,7 +6,8 @@ import type { ConnectionHub } from "../delivery/connection-hub.js";
 import { tokenHash } from "../accounts/account-service.js";
 import { lockUserSession } from "../accounts/session-access.js";
 import { transaction } from "../storage/database.js";
-import { uuidSchema } from "../../shared/validation.js";
+import { uuidSchema, sequenceSchema } from "../../shared/validation.js";
+import { sequence } from "../delivery/delivery-service.js";
 import { HttpError } from "../api/http-error.js";
 export function adminRoutes(
   app: FastifyInstance,
@@ -38,7 +39,7 @@ export function adminRoutes(
     async (request) => {
       await sessions.require(request, "admin");
       const result = await pool.query(
-        'SELECT id,public_id AS "publicId",username,status,created_at FROM echo.users WHERE ($1::uuid IS NULL OR id>$1) AND ($2::text IS NULL OR username_normalized=lower($2 COLLATE "C")) AND ($3::text IS NULL OR public_id=upper($3 COLLATE "C")) ORDER BY id LIMIT 51',
+        'SELECT id,public_id AS "publicId",username,status,version::text,created_at FROM echo.users WHERE ($1::uuid IS NULL OR id>$1) AND ($2::text IS NULL OR username_normalized=lower($2 COLLATE "C")) AND ($3::text IS NULL OR public_id=upper($3 COLLATE "C")) ORDER BY id LIMIT 51',
         [
           request.query.after ?? null,
           request.query.username ?? null,
@@ -233,6 +234,7 @@ export function adminRoutes(
     };
     Body: {
       suspended: boolean;
+      version: string;
     };
   }>(
     "/v1/admin/users/:id/status",
@@ -249,11 +251,12 @@ export function adminRoutes(
         body: {
           type: "object",
           additionalProperties: false,
-          required: ["suspended"],
+          required: ["suspended", "version"],
           properties: {
             suspended: {
               type: "boolean",
             },
+            version: sequenceSchema,
           },
         },
       },
@@ -261,23 +264,37 @@ export function adminRoutes(
     async (request) => {
       sessions.assertCsrf(request, "admin");
       const current = await sessions.require(request, "admin", true);
+      sequence(request.body.version);
       if (request.params.id === current.account.id)
         throw new HttpError(
           409,
           "ADMIN_SELF_SUSPEND",
           "不能在此停用超级管理员。",
         );
-      const ids = await transaction(pool, async (db) => {
+      const result = await transaction(pool, async (db) => {
         await lockUserSession(db, current.account.id, current.id, {
           audience: "admin",
           recent: true,
         });
-        const result = await db.query(
-          "UPDATE echo.users SET status=$2,version=version+1 WHERE id=$1 AND status IN ('active','suspended') RETURNING id",
-          [request.params.id, request.body.suspended ? "suspended" : "active"],
+        const target = await db.query<{ status: string; version: string }>(
+          "SELECT status,version::text FROM echo.users WHERE id=$1 AND status IN ('active','suspended') FOR UPDATE",
+          [request.params.id],
         );
-        if (!result.rowCount)
+        if (!target.rows[0])
           throw new HttpError(404, "USER_NOT_FOUND", "用户不存在或不可修改。");
+        if (target.rows[0].version !== request.body.version)
+          throw new HttpError(
+            409,
+            "VERSION_CONFLICT",
+            "账号状态或资料已变化，请刷新核实后重新确认。",
+          );
+        const status = request.body.suspended ? "suspended" : "active";
+        if (target.rows[0].status === status)
+          return { ids: [], updated: false };
+        await db.query(
+          "UPDATE echo.users SET status=$2,version=version+1 WHERE id=$1",
+          [request.params.id, status],
+        );
         const removed = request.body.suspended
           ? await db.query<{
               id: string;
@@ -300,11 +317,11 @@ export function adminRoutes(
             request.params.id,
           ],
         );
-        return removed.rows.map((row) => row.id);
+        return { ids: removed.rows.map((row) => row.id), updated: true };
       });
-      for (const id of ids) hub.closeSession(id);
+      for (const id of result.ids) hub.closeSession(id);
       return {
-        updated: true,
+        updated: result.updated,
         cryptographicRemoval: "BLOCKED",
       };
     },

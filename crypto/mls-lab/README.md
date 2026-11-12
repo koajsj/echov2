@@ -1,5 +1,7 @@
 # OpenMLS browser laboratory
 
+当前主开发已切换到本机；本机没有完整固定依赖/工具链，禁止执行会下载1.99.1/wasm32或新crate的默认cargo命令。本轮仅使用已安装stable的rustfmt和显式offline依赖查询；离线树解析失败，产品门禁继续BLOCKED。下面Cloud实验命令/结果为历史可复核信息，不是本轮执行记录。现状见[密码学规格](../../docs/native-cryptography.md)。
+
 **PARTIAL. Not an application adapter or production encryption feature.** The
 application crypto gate remains closed. Credentials here are synthetic labels;
 there is no trusted account binding, encrypted provider snapshot, durable outbox,
