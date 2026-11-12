@@ -37,11 +37,11 @@ apply 单连接持锁贯穿整个计划。每个受校验 SQL 自带 BEGIN/COMMI
 
 ## 记录与恢复
 
-独立 `echo_meta.schema_migrations` 仅 owner 有访问授权（系统管理员固有权限不在此保证内），PUBLIC/API 无 Schema/table 权限。字段为唯一 version、migration_name、sha256、status、started_at、applied_at、postgres_version、error_code。执行器验证元数据对象所有权与 ACL 后才信任记录。
+独立 `echo_meta.schema_migrations` 仅 owner 有访问授权（系统管理员固有权限不在此保证内），PUBLIC/API 无 Schema/table 权限。字段为唯一 version、migration_name、sha256、baseline_id、status、started_at、applied_at、postgres_version、error_code。执行器验证元数据对象所有权与 ACL 后才信任记录。
 
-1. SQL 前独立持久化 started 收据，再执行文件事务。
+1. 新台账初始化先把 manifest 全部版本及 baseline_id 以 pending 独立提交；SQL 前要求恰好一行 pending→started，写 started_at 后再执行文件事务。pending 基线尚未执行时仍必须空库。初始化失败先回滚，再释放 advisory lock。
 2. 已确认服务端错误：ROLLBACK 后记录 failed/SQLSTATE，不执行后续版本。
-3. SQL COMMIT 后独立记录 applied/applied_at。若执行结果或这次记账无法确认，保留 started，禁止重跑。
+3. SQL COMMIT 后独立记录 applied/applied_at，必须恰好更新一行；触发器吞掉 UPDATE（零行）也不是成功。若执行结果或记账无法确认，保留 started，禁止重跑。
 4. failed/started、摘要/名称/顺序不符或 Schema 与基线记录不一致，一律阻止自动续跑。已完成版本不再执行，完全完成的 apply 为空计划。
 5. Owner 必须人工核对执行日志、文件摘要、实际 Schema/数据和依赖，明确 SQL 是否提交，审查恢复操作后才能修复收据或提交新的恢复版本。本工具不会自动把未知状态标为 applied，也不提供盲目清除收据/重试功能。不要仅因为应用能启动就改账。
 
@@ -62,3 +62,11 @@ CONFIRM_CLOUD_AUTH=echo_native node scripts/check-auth-workflow.mjs
 迁移测试显式生成临时 `synthetic legacy fixture`（仅将旧列定义/约束引用加引号），以独立名称、摘要和 started/applied 收据从空库执行，不自动接管任何现存历史库。它验证数据保留、pg_dump/目录一致性、权限拒绝、校验和/锁/失败/未知状态、003 历史保护及七类 006 异常。认证测试连接真实运行的 Fastify 和 PostgreSQL，使用随机合成账号/密码、独立 RFC 5737 测试地址隔离速率限制场景，不关闭生产限流规则；结束后恢复注册关闭。
 
 应用启动禁止自动迁移。离线管理员 provision、生产数据库、未知历史接管、真实用户数据导入及生产部署均需独立授权，不属于本次 Cloud 验证。
+
+## 2026-11-12 台账模型与验证补充
+
+历史 001–005、已发布 006、独立基线及 manifest 的字节和摘要全部保持不变。本轮只修正执行器与回归工具，不修改已发布 SQL 来补元数据。新台账包含 baseline_id、pending/started/applied/failed；同一台账的 baseline_id、名称、摘要、版本前缀和状态必须逐项匹配。
+
+旧版台账若缺 baseline_id，执行器明确拒绝自动升级。Owner 须先保存既有收据/Schema/文件摘要证据，核对实际历史、是否有 started/failed 和提交结果，再单独审查 ALTER 台账、约束变更及逐行绑定基线的恢复脚本；不得默认填 echo-native-v1，也不得删除原台账后重跑。未知持久化环境继续 UNKNOWN，无自动 adopt 路径。Cloud 既有应用测试库的旧台账不会被悄悄更新。
+
+当前新路径 echo_final5_new 与 synthetic legacy 路径 echo_final5_legacy 已完成 001–006；每份记录 exitCode 0。23 张业务表、pg_dump --schema-only、目录、Owner/ACL 一致，旧 proof 的 000102ff 字节保留。附加回归覆盖 pending 后出现未记账对象、初始化事务回滚/解锁、零行 applied 回执、失败/未知结果停止、摘要/基线不符、003 旧数据保护和 006 七类异常。具体结果见[数据库验证](../docs/cloud-bootstrap-verification.md)。这些临时数据库测试不证明任何持久化环境的迁移历史。

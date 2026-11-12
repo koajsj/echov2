@@ -1,5 +1,9 @@
 # 低配部署、删除证据与系统恢复
 
+## 当前状态 — 2026-11-12
+
+本轮没有生产部署。Cloud 已运行真实 Node/Fastify、PostgreSQL 和 Caddy HTTPS 合成工作流；Docker 的 `--memory=2g --memory-swap=2g --cpus=1` 在当前 rootless、CgroupDriver=none 环境未实际生效，容器观测为 memory.max=34359738368、cpu.max=400000 100000。该结果仅是功能运行，不是 2 GB/1 核模拟 PASS；主机整体 memory.peak 不能作为应用峰值。20 GB SSD、持续负载、磁盘告警、日志保留和完整灾备仍未验收。缺少独立新鲜删除证据/外部备份目标，系统恢复继续拒绝。
+
 2026-11-11，Debian / 2GiB RAM / 1核 / 20GB磁盘的候选预算。已编写配置和本地先决工具，但未启动、部署、访问VPS/数据库；不存在已验证备份或恢复执行器。
 
 ## 进程、权限与预算

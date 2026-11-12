@@ -1,67 +1,80 @@
-# 最终静态验证报告
+# Cloud 工程验证报告
 
-Cloud 兼容实现的最新实际 SQL、类型、Lint、构建及 HTTP 检查见 [Cloud 验证](cloud-bootstrap-verification.md)。历史 SQL 字节保留，原 001 的预期语法失败不等于新独立基线失败；synthetic legacy fixture 与真实未知持久化环境严格区分。以下内容继续作为历史快照，不取代最新证据。
+2026-11-12。本报告替代旧的本机只读静态快照；旧快照由 Git 历史保存。所有安装、构建、数据库与浏览器操作均在 Codex Cloud；没有在用户本机下载/安装，没有生产访问。**整体 PARTIAL；检查通过不代表完整产品、安全门禁或生产容量通过。**
 
-## 原静态报告（历史快照）
+## 可复核证据
 
-2026-11-11，第三阶段。基线1473395，整体PARTIAL。本报告覆盖当前源码；第二阶段记录由Git历史及阶段报告保留。本轮没有测试、构建、服务、SQL/迁移、数据库、浏览器、VPS或部署操作。
+命令、实际退出码、测试摘要、历史 SQL 指纹、工具与清理状态见 [verification.json](evidence/verification.json)。npm 与 Rust 的 CycloneDX 锁闭清单分别为 [npm SBOM](evidence/npm-sbom.json) 与 [Rust SBOM](evidence/rust-sbom.json)。功能缺口与安全结论见[第三阶段报告](phase-three-report.md)。
 
-## 实际工具
+实际工具：Node 24.22.1、npm 11.9.0、TypeScript 5.9.3、ESLint 10.14.0、Prettier 3.9.10、PostgreSQL 17.11、Chromium 156.0.8078.79、Playwright 1.65.0、Rust/Cargo 1.99.1、wasm-bindgen-cli 0.2.105、Semgrep 1.185.0、cargo-audit 0.22.0、pglast 8.7。Cloud HTTPS 实验使用已有 Caddy 2.6.2；它不是生产组件版本或安全维护验收。
 
-Node24.17.0、Git2.50.1、Python3.15.2、gh2.95.0；使用本机既有TypeScript5.9.3：`/Users/wyc/Desktop/vela/node_modules/typescript/lib/`，既有npm缓存Prettier3.9.10及ESLint10.14.0：`/Users/wyc/.npm/_npx/360157ef5dc9b5fb/node_modules/`。直接node调用工具文件，没有npx、安装、复制依赖、导入其他项目应用或启动服务。项目没有node_modules/锁文件。
-
-## 实际检查及结果
-
-| 状态                       | 范围/结果                                                                                                      | 不能证明                                                       |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| PASS                       | TS AST：66个TS/TSX、234个本地直接命名导入，0错误、退出0                                                        | 不是完整类型或第三方导出/API检查                               |
-| PASS                       | 6个无外部依赖文件局部严格tsc，退出0：共享契约/能力/校验、attachment-crypto/readiness、metadata-archive         | 不涵盖React/HeroUI/Fastify/pg/Node类型兼容性                   |
-| PARTIAL                    | check-source：110作者文件、39普通模块、30TSX由此脚本跳过、309字面量模块引用，文档链接全存在，0失败；退出2      | 此脚本本身不解析TSX，独立AST补充；实验警告保留；非运行/SQL验证 |
-| PASS                       | 5个JSON解析；3个JS/MJS逐一node --check；bash -n preflight                                                      | 未执行运维或应用代码                                           |
-| PASS                       | 全项目Prettier3.9.10格式检查退出0                                                                              | SQL没有格式插件，不表示语义正确                                |
-| PASS                       | 34个echo CSS Token无悬空；本地SVG/入口引用存在；目录/文件命名、无空目录、资源/模块/文档引用核对                | 没有浏览器/主题/手机视觉验证；未变布局不是已验收               |
-| PASS                       | 旧185文件路径/SHA-256不变；001–004、Logo、tokens、package与基线字节一致                                        | 不是用户数据备份或密码学证明                                   |
-| PARTIAL                    | 全部源码/配置与权限调用链、23表及005文本、锁序/幂等/未知结果/内外层版本复核                                    | SQL未解析/执行，事务权限/并发运行待验证                        |
-| PARTIAL                    | 定向私钥/GitHub/AWS/密码DB URL/危险DOM规则零命中，src/deploy旧Matrix运行模式零命中                             | 不等于完整SAST、秘密扫描无遗漏或供应链安全                     |
-| PASS                       | 完整文件/忽略边界、分轮Diff审阅及git diff --check                                                              | 最终暂存与远端发布结果以交付回复为准                           |
-| BLOCKED                    | 三组完整tsc实际各退出2：client缺vite/client；server/tools缺node类型入口，均TS2688                              | 不使用假声明、外部替代版本或删检查配置制造PASS                 |
-| BLOCKED                    | ESLint实际退出2 ERR_MODULE_NOT_FOUND，缺typescript-eslint；配置插件依赖不可用                                  | 引擎存在但检查未能执行，不称Lint PASS                          |
-| NOT_AVAILABLE              | Semgrep、ShellCheck、PostgreSQL语法解析器pglast/pg_query、Caddy/systemd-analyze、依赖锁闭包/完整SBOM许可证核对 | psql程序存在但依约未运行；不拿SQL文本检查代替解析或执行        |
-| NOT_RUN                    | 测试、构建、应用/服务、SQL/迁移/DB、浏览器/设备/真实MLS/归档加解密/删除/恢复/性能/VPS/部署                     | 本轮明确禁止，没有隐藏运行或临时安装                           |
-| NEEDS_RUNTIME_VERIFICATION | Cookie/CSRF/角色并发、撤销与WSS竞态、SQL/权限/迁移、AEAD文件/CSV工具行为、视觉与低配资源                       | 相应未实现MLS/群组/墓碑/系统备份仍BLOCKED，不是只缺运行验收    |
-| FALSE_POSITIVE             | main.tsx工具入口；001–005有意义迁移序号；features/data为源码；文档旧Matrix比较；已批准备用Typography Token     | 不因此删有效源码/历史，文档比较不是运行依赖                    |
-
-## 可复核命令
+## 工程命令
 
 ```sh
-node scripts/check-typescript-ast.mjs /Users/wyc/Desktop/vela/node_modules/typescript/lib/typescript.js
-node --experimental-vm-modules scripts/check-source.mjs
-node /Users/wyc/Desktop/vela/node_modules/typescript/lib/tsc.js --noEmit --strict --noUnusedLocals --noUnusedParameters --noUncheckedIndexedAccess --exactOptionalPropertyTypes --verbatimModuleSyntax --target ES2023 --module ESNext --moduleResolution Bundler --lib ES2023,DOM src/shared/contracts.ts src/shared/capabilities.ts src/shared/validation.ts src/client/crypto/attachment-crypto.ts src/client/crypto/readiness.ts src/client/features/data/metadata-archive.ts
-node /Users/wyc/Desktop/vela/node_modules/typescript/lib/tsc.js -p tsconfig.client.json
-node /Users/wyc/Desktop/vela/node_modules/typescript/lib/tsc.js -p tsconfig.server.json
-node /Users/wyc/Desktop/vela/node_modules/typescript/lib/tsc.js -p tsconfig.tools.json
-node /Users/wyc/.npm/_npx/360157ef5dc9b5fb/node_modules/prettier/bin/prettier.cjs --check .
-node /Users/wyc/.npm/_npx/360157ef5dc9b5fb/node_modules/eslint/bin/eslint.js . --max-warnings 0
-node --check scripts/check-source.mjs
-node --check scripts/check-typescript-ast.mjs
-node --check eslint.config.js
-bash -n scripts/preflight.sh
-git diff --check
+npm ci
+npm run typecheck
+npm run lint
+npm run format:check
+npm run check:ast
+npm run check:source
+npm run build:client
+npm run build:server
 ```
 
-还执行Python只读文件/JSON/命名/CSS Token/本地资源/指纹/敏感模式核对；SQL仅人工文本和API→事务→grant/constraint调用链。没有执行SQL，包括校验查询、迁移或provision。完整tsc/ESLint错误原样保存在本机临时日志，退出2未降级为警告或PASS。
+| 命令                 | 最终退出码 | 状态                                 |
+| -------------------- | ---------- | ------------------------------------ |
+| npm run typecheck    | 0          | PASS                                 |
+| npm run lint         | 0          | PASS                                 |
+| npm run format:check | 0          | PASS；先修正浏览器脚本格式告警后重跑 |
+| npm run check:ast    | 0          | PASS                                 |
+| npm run check:source | 0          | PASS                                 |
+| npm run build:client | 0          | PASS                                 |
+| npm run build:server | 0          | PASS                                 |
 
-## 复核发现与处理
+各命令独立记录退出码，不通过 shell 最后一条成功掩盖前序失败。源码检查实际解析 TS/JS 和 TSX，并核对作者文件引用/文档链接；其 PASS 仅表示该范围。完整类型、第三方 API、SQL 与运行仍由各自检查承担。TSX 不再跳过；没有用空类型声明、禁用规则或新增作者文件排除来制造 PASS。
 
-- 改名/用户名重用与重新认证身份错配：改为session UUID密码查询，再事务内重验。
-- 设备目录LIMIT100截断：改为50+1完整keyset页，调用方同步。
-- 管理员操作缺少真实执行：服务会话/设备/邀请码撤销和事件人工审阅已接API，当前角色/new-auth/CSRF/session及锁内审计；服务撤销不宣称MLS Remove。
-- 元数据导出：同一REPEATABLE READ快照、总量/集合上限、无静默截断；本地归档固定AEAD/KDF/版本/账号/origin/结构校验，只读预览。无旧state或墓碑导入。
-- 事件审阅外键/枚举/最小权限、过期会话有界清理、数据库等待和系统日志/core边界已审阅。历史迁移不改；005实际权限仍待隔离数据库验证。
-- 删除重复DataPage首屏列表，转现有TrashPage；CSV/文件下载复用、URL释放。未删不明文件或创建空模块。
+WASM 验证使用 Cargo.lock、固定工具链，分别执行 `cargo fmt --all -- --check`、native release、wasm32 release、wasm-bindgen。浏览器实际加载生成的 WASM。生成 pkg 含上游 lint 指令，测试后作为生成物清理；不编辑生成文件、不改变 ESLint 配置来吞掉告警。Cargo target/pkg、node_modules、数据库或凭据不进入 Git。
 
-本轮由主智能体分轮源码与完整Diff复核，无本轮子智能体/独立外部审计。第一/二阶段研究或Terra结论不是当前实际provider、真实通信、撤权或恢复证据。
+## 数据库与 SQL
 
-## 剩余结论
+`check-migrations.mjs` 在两个独立临时数据库上验证 001–006、最终 dump/目录一致、旧字节保留与最小权限。所有迁移 DDL 用普通 owner，应用用普通 API；test admin 只建立隔离数据库/观测负例。每份失败立即停止，不跳过。另有初始化回滚、pending 非空、零行/丢失回执、003 旧消息保护及 006 异常等负例。
 
-G1–G6全部仍BLOCKED，原因、残余风险和最小替代见[最终报告](phase-three-report.md)及各主题规格。不能宣称完整产品、安全通信或生产部署准备完成。静态PASS只指上表明确范围，所有真实安全与资源效果未验证；本阶段交付后停止，不进入新阶段。
+pglast 8.7 静态解析 002–006 与独立基线通过；原始 001 在 authorization 处预期语法失败并保留原字节。这不是修正版失败。静态语法解析不替代 PostgreSQL 中执行函数、约束或权限测试。
+
+`check-auth-workflow.mjs` 验证真实 HTTP 注册/邀请/幂等/唯一/登录/会话/重新认证/改名/受众隔离/退出/关闭注册，以及数据库实际记录。
+
+`check-deletion-race.mjs` 让两个不同合成账号在读后同时争用全局 operationId，确认一条请求记录、一个隐藏目标、另一请求冲突，原操作重试 pending-anchor。Owner 写入的结构凭证只用于 SQL 并发，不是可信 MLS 身份证据。
+
+## 浏览器与密码学范围
+
+- `check-app-browser.mjs`：真实 HTTPS 注册、登录、重新认证、元数据导出/下载/只读预览、真实管理员用户查询与 CSV 三次下载、正确文件名/内容、全部 4 个 Blob URL 释放、两种 audience 退出后 Session 行消失、导航、390px 无横向溢出、reduced-motion 偏好与键盘退出，无 pageerror。
+- `check-mls-browser.mjs`：两个独立 BrowserContext，真实 OpenMLS WASM / 套件 1 的 KeyPackage、Welcome、Commit、Application、重放/无效 Commit 拒绝、pending/staged discard、Merge、Remove、Epoch 1→2。不是两台独立物理设备，也不是产品 MLS E2E。
+- `check-local-crypto-browser.mjs`：Web Locks/IndexedDB 两标签 CAS 单胜者、刷新恢复、重复操作拒绝、注入配额错误后的原子回滚；附件 AES-GCM 往返、不同 key/IV、篡改拒绝和大小边界。opaque sealedState 是合成字节，未证明完整 provider 状态安全恢复。
+
+pageerror 通过只证明没有捕获到页面未处理异常；本轮未完整分类所有 console 消息，不宣称浏览器控制台零错误。
+
+Firefox 和 WebKit 官方 Playwright 下载域名分别实际被 Cloud 网络策略 403 拒绝；未绕过策略，状态 NOT_AVAILABLE。iOS 无实机。真实 OS 崩溃、物理磁盘满、完整可访问性/跨浏览器视觉、产品 Commit 冲突/离线墓碑/系统恢复均未通过，不用实验结果代替。
+
+## 供应链、SAST 与许可证
+
+npm audit 当前零公告。原 minimatch 10.2.6 公告通过固定 override 11.0.8 修复，并实际安装、类型/Lint/构建验证；不使用 audit ignore。package-lock.json 固定解析闭包。
+
+Cargo audit 实际退出 1，锁闭 3 项公告与 1 项停止维护警告；未忽略任何公告。实际 WASM 依赖树含 crypto-bigint 0.5.5 的 RUSTSEC-2026-0387，现有曲线依赖不能无损升级至 patched >=0.7.6。suite 1 不选择 P-256 不是完整可达性证明。libcrux-kem 0.0.9 两项公告在锁闭中，但 `cargo tree --locked --target wasm32-unknown-unknown -i libcrux-kem` 未找到活动路径。停止维护的 proc-macro-error2 也保留记录。详见[密码学](native-cryptography.md)及 evidence 中公告编号与版本。生产门禁继续 BLOCKED。
+
+Semgrep registry 网络访问遭 403，改用允许的 Git HTTPS 获取官方规则库 `semgrep/semgrep-rules` 固定提交 `a5ad1714f00c9f7fde980cab0ea1d6dc6d414fd2`，本地运行 JavaScript/TypeScript/Rust 规则，metrics/version check 关闭以避免遥测/额外访问。没有关闭扫描规则；213 条实际执行规则扫描 83 份作者源码，61 项发现（48 INFO、13 WARNING）、0 扫描错误；分类和范围见 evidence。
+
+自动告警需按实际语义复核：中文 JSX 未国际化、已显式类型化组件的 props 传播、用户确认对话框、现代 Node/浏览器支持的 replaceAll、SQL/正则字符串中的模板标记，以及对固定显式字段数组/测试诊断使用 JSON.stringify。它们不构成已确认可利用漏洞，但不把带告警的扫描伪称零发现或完整安全审计。参数化 SQL、输入验证、认证与库风险仍需人工复核；扫描覆盖有限。
+
+npm SBOM 381 组件、Rust 锁闭 SBOM 191 组件均有第三方 license 元数据；Rust 含可选与非活动平台依赖，非最终 WASM 可达性清单。主要为 MIT/Apache-2.0/BSD/ISC，另有 MPL-2.0、Unicode、BlueOak 等；分发时须保留相应声明并履行各自义务。SBOM 元数据核对不是许可证文本/法律合规审计。仓库自身没有 LICENSE，本轮未擅自选择全项目授权。
+
+## 资源与运维
+
+Cloud Docker 官方 Node 镜像 `node:24.22.1-trixie-slim` digest `sha256:89c5244bc22a9bc3287d89ebc7e49b9cb5bb84cd40e6175ac3421d5a9f68b95a`，以非 root、network=none、pids-limit=128、memory=2g、memory-swap=2g、cpus=1 请求限制；只读挂载代码/既有运行库，临时 PostgreSQL、Node/Fastify 和 Caddy HTTPS 位于同一隔离容器。
+
+但 Docker CgroupDriver=none，实际 memory.max=34359738368、memory.swap.max=max、cpu.max=400000 100000，未施加所需限制。短时 25 个真实 HTTPS 请求（含两路并发注册与登录）功能通过，P50 36 ms、P95 256 ms、最大 272 ms；这些数字不是受限 VPS 的容量结果，主机整体 memory.peak 不作为应用峰值。原始功能脚本输出 PASS 仅指请求断言；本报告与 evidence 将低配准入明确标为 BLOCKED。
+
+新增只读 `check-resource-limits.mjs` 检查真实 cgroup，当前退出 1；不得仅凭 Docker 接受参数宣布模拟 PASS。20 GB 磁盘配额、持久容量、持续压力与灾备演练 NOT_RUN。未创建收费资源、接触生产或改变全局 cgroup。
+
+## 审阅与清理
+
+完整 Diff、历史 SQL 指纹、锁文件、源代码/文档链接、敏感信息与 Git 状态分别复核。保留历史提交、必要迁移/安全证据，不改旧项目，不 force push、不自动合并部署。临时数据库、测试凭据、TLS 测试根、生成物、下载缓存和测试文件在验证后清理；最终实际状态写入 evidence，未执行项目不得预先标 PASS。

@@ -1,255 +1,70 @@
-# 第三阶段最终产品与静态安全报告
+# 第三阶段交付报告
 
-Cloud 兼容实施补充：**FIXED/PASS** 独立基线、006、迁移收据和安全执行器；两条临时库路径 Schema 收敛、数据保留、权限拒绝及真实注册/邀请/认证流程已实际验证。未知持久化历史仍 **UNKNOWN/NEEDS_RUNTIME_VERIFICATION**，不能自动接管，MLS 门禁仍 BLOCKED。本次不增加第四阶段。最新证据见 [Cloud 验证](cloud-bootstrap-verification.md)；操作细节仅见 [迁移说明](../migrations/README.md)。
+2026-11-12，Codex Cloud。**整体 PARTIAL；不具备生产上线条件。** 本轮修复确定性迁移、权限和并发问题，增加真实 MLS 与本地事务实验及工程证据；没有完成用户要求的全部通信产品。没有增加第四阶段、连接生产 VPS、使用真实数据或自动部署。
 
-## 原第三阶段报告（历史快照）
+## 已交付的代码
 
-2026-11-11。基线 `1473395355575ea44e865904e0978794fa585afb`，第一/二阶段历史保留。**整体 PARTIAL；G1–G6仍BLOCKED，不具备生产部署准入。** 本阶段结束后停止，不增加第四阶段。源码实现、静态检查、运行验收分别记录。
+| 状态    | 改动与实际效果                                                                                                             |
+| ------- | -------------------------------------------------------------------------------------------------------------------------- |
+| FIXED   | 迁移台账增加 baseline_id 与 durable pending；逐项验证版本/名称/摘要/基线。pending 基线重试仍要求空库，初始化失败回滚并解锁 |
+| FIXED   | started/applied 更新必须恰好一行，零行回执也停止；SQL 已提交但记账不明不自动重跑                                           |
+| FIXED   | 普通用户会话管理限定 user audience，不列出或撤销同账号 admin 会话                                                          |
+| FIXED   | 删除 operationId 跨账号竞争后核对真实绑定，只有胜出目标被隐藏，冲突返回 409，重试保留真实 pending-anchor                   |
+| PARTIAL | 独立 OpenMLS/RustCrypto WASM 实验与薄绑定，固定套件 1；未接入产品，未建立可信身份或持久 provider                           |
+| PARTIAL | Web Locks + strict IndexedDB 事务存储前置模块；原子写入版本、sealedState 与密文，但 sealedState 完整性和加密仍是调用方责任 |
+| FIXED   | 源码检查新增真实 TSX 解析，检查 Git 作者文件（含未跟踪变更）的语法、引用与文档链接，不把依赖/编译产物当作者源码            |
+| PASS    | 精确 npm/Cargo 依赖、锁文件、SBOM 与实际扫描证据；Rust 公告仍未解决，不能把供应链扫描整体称为通过                          |
 
-## 保护与审查范围
+原 001–005、已发布 006、独立基线及 manifest 均未修改。本分支继承 Cloud 修复分支的 React Hook / 主动下载修复与数据库兼容实现，提交历史完整保留。旧 echo-v2 未修改。
 
-核对完整工作区、Git历史/远端main、源码/资源/依赖/配置/全部文档、23表和001–005增量迁移。旧echo-v2在开始和交付前均做185文件路径/内容SHA-256核对，完全只读；Logo、字体Token、001–004历史迁移保持原字节。起始工作区干净，本轮没有覆盖用户介入修改，没有reset/clean/stash/改写历史。
+## 数据库与权限
 
-本轮主智能体统一修改，按权限/事务、前端/文件、完整Diff分轮复核；没有新派子智能体，不把第二阶段Terra结果冒充本轮独立审查或运行证据。
+新路径 echo_final5_new 和明确标注的 synthetic legacy 路径 echo_final5_legacy 均实际执行 001–006，每份 exitCode 0，业务 Schema 收敛。23 表、33 外键、23 主键、16 唯一约束、55 索引、3 业务触发器、3 函数及 4 序列；schema-only dump 和目录比较包含列、默认值、类型、Owner、ACL。旧 proof 的 `000102ff` 完整保留。
 
-## 用户端完整功能清单
+迁移用非超级用户 owner，应用用非超级用户 API；API 无迁移元数据访问、DDL、身份键写入、密文改写或删除 complete 权限。失败/未知回执、并发锁、摘要/基线不符、初始化回滚、pending 非空、003 历史保护和 006 七类异常均有真实负例。操作细节唯一见[迁移说明](../migrations/README.md)，证据见[Cloud 数据库验证](cloud-bootstrap-verification.md)。
 
-“PARTIAL/源码”表示有真实API和交互代码，但未运行；BLOCKED包含尚未实现源码，不能称作只差测试。
+其他持久化环境历史仍 UNKNOWN；临时库失败回滚、合成旧夹具或成功运行都不能证明它们未执行迁移。没有自动 adopt，旧版缺 baseline_id 台账也须独立审查升级。
 
-| 功能                     | 当前代码与操作闭环                                                                         | 状态/缺口                                                             |
-| ------------------------ | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| 登录注册                 | 密码/真实注册模式查询、开放/邀请/关闭、同库注册/邀请消费幂等、错误/加载；独立管理员登录    | PARTIAL；无数据库/浏览器验收、逐用户名分布式防爆破仍缺                |
-| 设置/改名                | 新近认证、稳定UUID、版本CAS；重认证已改为按UUID并事务重验                                  | PARTIAL；没有私密资料同步                                             |
-| 聊天列表                 | 当前授权设备目录50+1页、WSS唤醒和实际路由信息                                              | PARTIAL；没有消息读取/展示或自动ACK                                   |
-| 私聊/群组/治理           | 不透明投递SQL与失败冻结基础保留                                                            | BLOCKED：真实MLS、Credential、Add/Welcome/Commit/Remove和角色投影缺失 |
-| 编辑/撤回/转发/多选      | 未展示空操作按钮或假正文                                                                   | BLOCKED：原生验证/作者/墓碑及聊天管线缺失                             |
-| 搜索/收藏/置顶/草稿/未读 | 不上传明文，不建立第二套消息系统                                                           | BLOCKED：本地解密与私人同步缺失                                       |
-| 联系人与备注             | 真实精确账号UUID查找，显式未验证目录                                                       | PARTIAL；备注/联系人授权加密同步未实现                                |
-| 隐私                     | 如实展示无正文通知/typing/回执、无明文资料上传的当前行为                                   | PARTIAL；邀请/黑名单/头像等加密设置未实现，无假开关                   |
-| 设备管理                 | pending登记、完整分页、本人服务撤销、加载/确认/错误反馈                                    | PARTIAL；不能激活/核验设备或完成MLS撤权                               |
-| 服务端会话               | 设置页新近认证、本人分页、撤单条/其他全部；当前会话用登出                                  | PARTIAL；只覆盖事务中观察到的服务会话，不阻止未来合法登录             |
-| 密钥恢复                 | 真实根目录查询、五类恢复边界                                                               | BLOCKED：不生成假恢复key/QR，不导入旧Group State                      |
-| 回收站/删除              | 本人含expiry记录真实分页，待锚状态明确                                                     | PARTIAL；Delete for me/七天恢复/离线墓碑/物理擦除仍BLOCKED            |
-| 数据中心                 | 标准附件临时AEAD、浏览器前提、服务元数据一致快照加密导出、文件认证和只读导入预览、关闭下载 | PARTIAL；不含完整历史/媒体/联系人/设置归档、密钥备份和系统备份        |
-| 注销                     | 无仅删users行的伪注销                                                                      | BLOCKED：Owner交接/Remove、删除传播/备份证据缺失                      |
+## 功能完成情况
 
-所有现有服务操作接真实Native API，无Mock、假聊天/统计、假进度/成功。被阻断的业务没有凭页面存在算完成。布局、Logo、五档系统字体、深浅主题和reduced-motion保留；桌面/平板/手机仅静态审查，视觉运行NOT_RUN。
+| 范围                                                                 | 状态          | 实际能力、阻塞与安全替代                                                                                            |
+| -------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 用户 UUID / 用户名 / Argon2id / 邀请 / 登录 / 会话 / 重新认证 / 退出 | PASS          | 真实 HTTP 与数据库记录验证，改名支持稳定 UUID；普通用户/管理员 audience 隔离                                        |
+| MLS 实现与 WASM                                                      | PARTIAL       | OpenMLS 0.9.2 / RustCrypto 0.6.0，真实库构建和浏览器实验；生产仍受依赖公告、身份与持久化门禁限制                    |
+| 可信身份与设备                                                       | BLOCKED       | 有目录、pending 登记和服务撤销；没有根授权、SAS/QR、设备恢复与完整密码学撤权。继续拒绝假可信状态                    |
+| 私聊与群聊                                                           | BLOCKED       | 有投递基础和查询边界，但缺账号绑定后的原生 MLS 生命周期与解密展示；发送保持 503，不提供明文替代                     |
+| 成员加入/移除                                                        | PARTIAL       | 实验 Welcome、Merge、Remove 与 Epoch 1→2 通过；未证明产品服务撤销→WSS→冻结→客户端 Remove 的闭环                     |
+| 离线、回执与 Commit 冲突                                             | BLOCKED       | 缺持久 provider/outbox/游标协议与完整失效恢复；不因 wireKind 或 SQL CAS 推断密码学状态                              |
+| 文本、编辑、撤回、转发、多选、搜索、置顶、收藏、草稿、未读           | BLOCKED       | 缺安全加密消息内核；不制作假数据或明文业务替代                                                                      |
+| 附件                                                                 | PARTIAL       | WebCrypto AES-256-GCM 本地准备/解密、独立 key/IV、篡改拒绝、10 MiB 上限通过；授权上传/下载、MLS 传 key 和清理未接通 |
+| Delete for everyone / 到期                                           | PARTIAL       | SQL 删除授权、幂等、隐藏与时间调度存在；无独立锚、物理 purge、媒体清理和离线传播，不标 complete                     |
+| Delete for me / 七天回收 / 离线墓碑                                  | BLOCKED       | 缺多设备加密墓碑及新鲜性协议；不提供可能复活删除内容的恢复按钮                                                      |
+| 密钥恢复                                                             | BLOCKED       | 缺独立恢复凭据、设备授权及新鲜状态验证；不从密码登录恢复旧群密钥                                                    |
+| 用户服务元数据归档                                                   | PASS          | 真实认证导出、独立口令加密、下载与只读预览；不导入设备/删除/MLS 状态                                                |
+| 聊天历史归档 / 系统备份 / 隔离恢复                                   | BLOCKED       | 缺成熟执行器、独立外部目标和新鲜删除证据；不将元数据归档称为灾备                                                    |
+| 用户前端                                                             | PARTIAL       | 既有视觉、导航、认证、设备目录、设置、隐私、数据页有真实操作；聊天等页面明确显示缺口                                |
+| 管理后台                                                             | PARTIAL       | 真实用户/设备/登录/审计/注册和当前页 CSV；GeoIP、完整流量/地区、系统备份等缺可靠来源或执行器，保持未知              |
+| 桌面 / 手机 / reduced-motion / 键盘                                  | PARTIAL       | Chromium 页面导航、390px 无横向溢出、媒体偏好和键盘退出通过；不是全面视觉或无障碍审计                               |
+| Firefox / WebKit / iOS                                               | NOT_AVAILABLE | 前两者下载受 Cloud 策略 403 阻止，iOS 无实机；不绕过网络策略                                                        |
+| 2 GB / 1 核 / 20 GB SSD                                              | BLOCKED       | Docker 参数未实际生效，实际读到 32 GB / 4 核。短时真实全栈运行不能证明低配容量，磁盘配额和持续压力未运行            |
+| 全工程检查与扫描                                                     | PARTIAL       | 各项命令/退出码见[工程验证](static-verification-report.md)；SAST 有需区分的非漏洞告警，Cargo 有实际未解决公告       |
 
-## 管理后台
+## 安全结论
 
-| 区域           | 实际来源与能力                                                                                              | 缺口/限制                                                                          |
-| -------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Dashboard      | 用户/今日UTC新增、active目录设备、持有效服务会话账号、登记envelope/附件密文字节、待删数；真实30日观测注册桶 | 不是DAU/真实可信设备在线或密码学验证消息数；不补缺日零值                           |
-| 在线与存储     | 当前进程60秒通知窗口去重session数、媒体所在卷statfs总量/可用字节                                            | 不是可信设备在线/媒体物理inventory；缺目录为null+原因，其他失败503                 |
-| 用户           | ASCII不区分大小写精确查询、UUID分页、详情、暂停/恢复、会话查询/全撤、CSV                                    | 暂停/撤销冻结关联组，不代表MLS Remove；暂停后恢复不自动解冻                        |
-| 设备           | 真实目录分页、管理员服务撤销，与本人同事务逻辑/审计                                                         | 不签发Credential，不撤回已分发密钥                                                 |
-| 认证与IP       | 可信认证处理器存储结果/IP；新登录与重认证分类                                                               | 密码处理成功不保证session最终签发/更新时间提交；IP取决可信代理，地区/浏览器/OS未知 |
-| 安全中心       | 真实事件、人工审阅字段及结构化审计event_id                                                                  | reviewed=true不等于resolved；无完整异常检测/身份变化源                             |
-| 注册/邀请      | 模式CAS、操作幂等/凭据仅首次、分页/CSV、撤销邀请码                                                          | 不回滚已完成注册；未知创建结果仍沿原操作，不凭空恢复原token                        |
-| 删除/备份/审计 | 实际表分页、状态、CSV，不提供私钥/正文/邀请码hash                                                           | 备份表不等于执行器；没有创建/恢复假任务                                            |
-| 系统           | 真实准入/容量、配置来源与资源边界                                                                           | 保留/配额执行器、全站/媒体流量、GeoIP/UA仍BLOCKED；没有假设置按钮                  |
+- **Echo 是否真正实现端到端加密？** 产品尚未实现。独立实验使用真实 MLS，不代表 Echo Delivery 已成为端到端通信产品。
+- **服务器看到什么？** 账号、设备目录、会话、IP/登录与审计记录、成员关系、投递顺序/长度/时间、删除目标和附件引用等服务元数据。架构不允许服务端持有浏览器私钥、Epoch Secret、完整私有 Group State 或恢复密钥；当前尚无可用的完整加密聊天流程。
+- **群组撤权是否有效？** 库实验中的 Remove 有效；产品服务撤销不等于密码学撤权，完整产品结论 BLOCKED。
+- **离线删除是否可靠？** 尚未实现完整墓碑同步和新鲜删除证据，不能保证。
+- **密钥恢复是否可用？** 不可用；不能用登录密码冒充恢复凭据。
+- **备份能否隔离恢复？** 系统隔离恢复未实现；元数据只读预览不是恢复。
+- **2 GB VPS 是否适配？** 尚未验收；预算配置不是实测容量，当前 Cloud 不能证明限额生效。
+- **哪些承诺不能保证？** XSS/同源恶意代码下密钥安全、物理内存擦除、真实掉电恢复、服务端元数据真实性/可用性、离线删除/旧备份防复活、追回截图/已解密副本以及未审计集成的完整安全性。
+- **是否具备生产上线条件？** 否。crypto-gate 保持关闭，不自动部署。
 
-管理写操作复核单超管/新近认证/CSRF/会话上下文，事务内审计；只有实际变更才新增对应撤销/审阅审计。CSV仅当前可见页或观测桶，确认后生成，有公式中和和下载URL释放；不是全站一致快照导出。
+## 审查与交付边界
 
-## 本轮实际修复
+主智能体统一修改；三个 Terra 只读任务分别复核 MLS/WASM、身份/消息一致性、迁移/生命周期。其结论是内部代码复核，不是第三方安全审计。没有多个智能体同时写文件。
 
-1. **重新认证身份竞态**：旧流程通过可变用户名查密码，用户名变更/重用可能验证另一个账号。现在按session永久UUID查，更新前在事务中复核活跃账号、当前session和admin audience。登录/重新认证密码结果单独分类。
-2. **设备目录截断**：原LIMIT100无续页可能隐藏后续当前设备；现在50+1 UUID分页并接页面。
-3. **服务运营缺口**：补本人/管理员会话管理、管理员设备撤销、邀请码撤销、事件审阅及真实审计；复用现有锁/认证/设备逻辑，不引入第二套权限。
-4. **未知与数据来源**：区分空列表、null未记录、字段缺失、请求失败；在线通知session/数据库附件量/statfs卷容量分别标注，禁止冒充可信设备在线或媒体占用核查。
-5. **数据导出缺口**：实现范围有限且明确的本人服务元数据一致快照/标准AEAD归档和只读预览；超限失败，不截断、恢复删除状态或导入活跃state。
-6. **服务凭据生命周期**：既有维护循环加入数据库时间的有界过期会话清理，失败单独报告；不清设备/根/备份，也未运行。
-7. **低配配置**：锁等待/空闲事务上限、关闭duration/core日志、systemd权限边界、Node先决最低版本对齐。均为未运行配置，不是性能验收。
+清理以新项目为限；保留必要历史与主题文档，当前权威主题由 README 索引。未删除有效模块以制造检查通过，也未关闭 ESLint 或造类型声明。第三方 SBOM 含 npm 381 个组件和 Cargo 锁闭 191 个组件（含可选/非活动依赖）；项目自身未擅自新增授权许可证。
 
-## G1–G6与E2EE安全覆盖
-
-| ID         | 结果/技术原因                                                                           | 残余风险                                | 最小替代与解除条件                                                      |
-| ---------- | --------------------------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------- |
-| G1 BLOCKED | 无实际OpenMLS0.9.2或ts-mls1.6.4依赖、套件1/WASM/provider稳定API证据；安装/构建/运行禁止 | 不能编写并证明真实加密适配              | 保留Service503；获授权固定库/features/API与真实浏览器/向量/互操作审查   |
-| G2 BLOCKED | 原生Proposal/Commit/Welcome和确认投影未接入                                             | 无效/竞争候选可能卡组，路由不是epoch    | 保留冻结、不推进/解冻；需native staged/merge/discard、并发/未知结果证据 |
-| G3 BLOCKED | 无原生状态变更+outbox/游标原子事务/跨标签单写者                                         | 崩溃/回滚可能复用ratchet或丢发送状态    | 不存JSON冒充、不开消息；需provider事务/故障验证                         |
-| G4 BLOCKED | 根绑定、Credential/KeyPackage、防重放/恢复未实现                                        | 密码或目录不能证明设备可信              | pending/服务撤销；需固定授权profile/实际leaf/根pin与恢复验证            |
-| G5 BLOCKED | 无逐设备Remove/new epoch、内层作者校验、私人墓碑/删除checkpoint/媒体清理                | HTTP撤权不撤秘密，旧设备/备份可持副本   | 冻结、待锚/读取隐藏；需MLS撤权、离线删除、引用清理证据                  |
-| G6 BLOCKED | 无独立新鲜删除日志头、跨存储收据、外部介质密钥或执行器                                  | 旧备份可能使内容复活，dump/摘要不能解决 | 自动恢复/purge关闭；需停写一致捕获、独立头、隔离恢复与回滚验证          |
-
-逐通道威胁/保护范围/静态证据/未保护范围集中在[安全矩阵](native-security-threat-model.md)，本轮没有运行安全PASS：
-
-- 房间/消息/编辑/转发、私密资料/备注/收藏：BLOCKED，未接MLS；不展示/不发送。
-- 原生Welcome/密钥后台接收、私人account-data替代：BLOCKED，没有通用明文旁路。
-- 历史/离线HTTP：PARTIAL，服务授权/到期和待删门控；缺删除checkpoint，前端不消费消息。
-- WSS：PARTIAL，仅通知/Origin/session/上限，不带正文或秘密。
-- 媒体：BLOCKED，只有页内AEAD和禁止公开目录，没有授权密文上传/下载/清理。
-- 搜索/聊天缓存/历史导出：BLOCKED；新增服务元数据文件是独立范围，不填聊天缺口。
-- 日志/统计/管理/前端发布：PARTIAL，固定来源/敏感抑制/CSP候选；无锁供应链、发布真实性和运行验证。
-
-服务器可见必要账号、设备标签、路由、时间、IP、密文大小及删除元数据。恶意客户端可主动把秘密写入元数据，不能承诺服务器绝无明文。旧密钥/已经解密内容、截图、外部文件与恶意现成员转发不可远程擦除。
-
-## 删除、备份、恢复与生产准备
-
-到期由Fastify数据库时间调度，零浏览器在线也可登记删除意图；无物理purge、独立锚或完整墓碑同步，不能宣称已销毁。元数据文件AEAD认证只证明口令/文件一致，不证明来源真实、最新删除状态或聊天可恢复。预览不写数据库/IndexedDB，不重发历史。
-
-用户元数据归档、完整历史归档、系统数据库/媒体/必要配置备份、MLS身份/设备恢复分别管理。系统备份不含浏览器私钥。完整停写捕获/清单/外部密钥/隔离恢复/最新删除证据核对/回滚规格以[运维](native-deployment-operations.md)为准；无执行器时保持BLOCKED。
-
-Debian2GB/1核/20GB仅预算：Node heap384MiB/MemoryMax768MiB，PG连接20/API池5，附件10MiB但无配额/上传执行器；日志上限/保留清理/独立备份容量仍未闭环。未构建、无锁依赖/SBOM、未真实验证权限/容量/前端/密码学，**不得部署为安全通信服务**。
-
-## 文件与文档整理
-
-保留已有职责目录，不做无理由移动；本轮无文件移动或删除，不删除不明文件。新增accounts下数据/会话管理路由、admin下动作/存储观测；共用CsvExport/DownloadFile/SessionPanel；metadata-archive与页面同属data特性。新增005迁移和本报告。DataPage重复首屏删除列表移除并链接TrashPage；图表孤立secondary class改用已有muted。未新增字体/图片/运行依赖/空目录、Matrix接口或旧协议兼容层。Schema中的KeyPackage/inbox/analytics/receipts及gated投递基础为已要求但未启用的原生建设基础，明确保留而非当成可用功能；批准的Typography备用Token也不因暂未消费而删除。
-
-README只列实际范围；各技术主题原文更新为唯一权威。实施计划收敛为三阶段结果/G1–G7，不另建重复路线图；第二阶段审查报告和来源快照作为历史证据保留。没有为减少文件数合并不同职责。
-
-## 验证与Git交付
-
-实际命令/计数/退出码见[静态报告](static-verification-report.md)。AST、本地引用、局部严格类型、格式和Diff静态事实可PASS；完整类型/Lint被依赖BLOCKED，SQL/权限仅人工静态PARTIAL；测试/构建/服务/SQL/数据库/浏览器/真实加密/恢复/性能/部署均NOT_RUN。相关源码和流程运行仍NEEDS_RUNTIME_VERIFICATION；没有以源码编写算安全通过。
-
-仅向echov2 main非强制提交推送，保留此前历史，推送前重查远端和敏感/忽略/文件集合；远端非预期变化即停止。最终SHA、GitHub返回和本地远端树一致性由交付回复记录，本文不预写推送成功。
-
-## 最终目录树
-
-<!-- Current tree follows; includes author files only, no .git/dependencies/generated output. -->
-
-```text
-echov2/
-├── deploy/
-│   ├── Caddyfile
-│   ├── echo-native.service
-│   └── postgresql.conf
-├── docs/
-│   ├── decisions.md
-│   ├── native-architecture.md
-│   ├── native-cryptography.md
-│   ├── native-data-lifecycle.md
-│   ├── native-deployment-operations.md
-│   ├── native-identity-devices-recovery.md
-│   ├── native-implementation-plan.md
-│   ├── native-migration.md
-│   ├── native-protocol-delivery.md
-│   ├── native-security-threat-model.md
-│   ├── phase-three-report.md
-│   ├── phase-two-report.md
-│   ├── research-sources.md
-│   └── static-verification-report.md
-├── migrations/
-│   ├── 001-initial.sql
-│   ├── 002-runtime-permissions.sql
-│   ├── 003-route-version-and-delivery.sql
-│   ├── 004-invitation-idempotency.sql
-│   ├── 005-admin-lifecycle.sql
-│   └── README.md
-├── public/
-│   └── echo.svg
-├── scripts/
-│   ├── check-source.mjs
-│   ├── check-typescript-ast.mjs
-│   ├── preflight.sh
-│   └── provision-admin.ts
-├── src/
-│   ├── client/
-│   │   ├── app/
-│   │   │   ├── App.tsx
-│   │   │   ├── ErrorBoundary.tsx
-│   │   │   ├── Workspace.tsx
-│   │   │   ├── api.ts
-│   │   │   ├── navigation.ts
-│   │   │   ├── use-api-query.ts
-│   │   │   └── use-delivery-notifications.ts
-│   │   ├── components/
-│   │   │   ├── Brand.tsx
-│   │   │   ├── Charts.tsx
-│   │   │   ├── CsvExport.tsx
-│   │   │   ├── DownloadFile.tsx
-│   │   │   ├── EmptyState.tsx
-│   │   │   ├── Icon.tsx
-│   │   │   ├── ReauthenticationForm.tsx
-│   │   │   └── ServiceState.tsx
-│   │   ├── crypto/
-│   │   │   ├── attachment-crypto.ts
-│   │   │   └── readiness.ts
-│   │   ├── features/
-│   │   │   ├── account/
-│   │   │   │   ├── AccountPage.tsx
-│   │   │   │   ├── AuthPage.tsx
-│   │   │   │   └── PrivacyPage.tsx
-│   │   │   ├── admin/
-│   │   │   │   ├── AdminRecordsPage.tsx
-│   │   │   │   ├── AdminSettingsPage.tsx
-│   │   │   │   ├── DashboardPage.tsx
-│   │   │   │   ├── RegistrationPage.tsx
-│   │   │   │   └── UsersPage.tsx
-│   │   │   ├── contacts/
-│   │   │   │   └── ContactsPage.tsx
-│   │   │   ├── data/
-│   │   │   │   ├── AttachmentPreparationPanel.tsx
-│   │   │   │   ├── DataPage.tsx
-│   │   │   │   ├── MetadataArchivePanel.tsx
-│   │   │   │   └── metadata-archive.ts
-│   │   │   ├── devices/
-│   │   │   │   ├── DevicesPage.tsx
-│   │   │   │   ├── RecoveryPage.tsx
-│   │   │   │   └── SessionPanel.tsx
-│   │   │   ├── messaging/
-│   │   │   │   └── ConversationsPage.tsx
-│   │   │   └── personal/
-│   │   │       ├── SavedPage.tsx
-│   │   │       └── TrashPage.tsx
-│   │   ├── styles/
-│   │   │   ├── app.css
-│   │   │   ├── charts.css
-│   │   │   ├── screens.css
-│   │   │   ├── shell.css
-│   │   │   └── tokens.css
-│   │   └── main.tsx
-│   ├── server/
-│   │   ├── accounts/
-│   │   │   ├── account-routes.ts
-│   │   │   ├── account-service.ts
-│   │   │   ├── data-routes.ts
-│   │   │   ├── passwords.ts
-│   │   │   ├── session-access.ts
-│   │   │   ├── session-management.ts
-│   │   │   └── sessions.ts
-│   │   ├── admin/
-│   │   │   ├── admin-action-routes.ts
-│   │   │   ├── admin-read-routes.ts
-│   │   │   ├── admin-routes.ts
-│   │   │   └── storage-routes.ts
-│   │   ├── api/
-│   │   │   └── http-error.ts
-│   │   ├── delivery/
-│   │   │   ├── connection-hub.ts
-│   │   │   ├── delivery-routes.ts
-│   │   │   └── delivery-service.ts
-│   │   ├── devices/
-│   │   │   └── device-service.ts
-│   │   ├── identity/
-│   │   │   └── identity-service.ts
-│   │   ├── lifecycle/
-│   │   │   ├── deletion-service.ts
-│   │   │   └── lifecycle-routes.ts
-│   │   ├── messaging/
-│   │   │   └── crypto-gate.ts
-│   │   ├── storage/
-│   │   │   └── database.ts
-│   │   ├── app.ts
-│   │   ├── config.ts
-│   │   └── main.ts
-│   └── shared/
-│       ├── capabilities.ts
-│       ├── contracts.ts
-│       └── validation.ts
-├── .env.example
-├── .gitignore
-├── .prettierignore
-├── CHANGELOG.md
-├── README.md
-├── eslint.config.js
-├── index.html
-├── package.json
-├── tsconfig.client.json
-├── tsconfig.json
-├── tsconfig.server.json
-├── tsconfig.tools.json
-└── vite.config.ts
-```
-
-作者文件共110个；不含.git、依赖、构建或用户数据。
+起始修复分支 SHA：`65cfb24838dc050a2676fff7f0ab1063413a04e4`；开始与恢复后远程 main 均为 `26626711139c97cd57bb041200c3657a4c4373e6`。目标分支 `codex/echo-native-final`，目标 main，不 force push、不合并。最终提交 SHA、PR 和远端文件核对结果在交付回复/PR head 给出；验证工件见 [evidence](evidence/verification.json)。临时资源清理结果以该证据文件为准。

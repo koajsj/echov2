@@ -63,10 +63,31 @@ export class DeletionService {
           state: prior.rows[0].state,
         };
       }
-      await db.query(
-        "INSERT INTO echo.deletion_records(operation_id,conversation_id,message_id,requested_by,reason) VALUES($1,$2,$3,$4,'sender') ON CONFLICT(message_id) DO NOTHING",
+      const inserted = await db.query(
+        "INSERT INTO echo.deletion_records(operation_id,conversation_id,message_id,requested_by,reason) VALUES($1,$2,$3,$4,'sender') ON CONFLICT DO NOTHING RETURNING operation_id",
         [operationId, message.rows[0].conversation_id, messageId, userId],
       );
+      if (!inserted.rowCount) {
+        const binding = await db.query<{
+          message_id: string;
+          operation_id: string;
+          state: string;
+        }>(
+          "SELECT message_id,operation_id,state FROM echo.deletion_records WHERE operation_id=$1 OR message_id=$2",
+          [operationId, messageId],
+        );
+        const exact = binding.rows.find(
+          (row) =>
+            row.operation_id === operationId && row.message_id === messageId,
+        );
+        if (!exact)
+          throw new HttpError(
+            409,
+            "OPERATION_CONFLICT",
+            "删除操作或消息已绑定其它请求。",
+          );
+        return { state: exact.state };
+      }
       await db.query(
         "UPDATE echo.messages SET deletion_requested_at=now() WHERE id=$1 AND deletion_requested_at IS NULL",
         [messageId],

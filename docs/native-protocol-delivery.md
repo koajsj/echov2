@@ -1,5 +1,9 @@
 # 应用协议与一致性投递
 
+## 当前状态 — 2026-11-12
+
+route_version、seq 与客户端 mls_epoch 仍严格分离。服务端聊天 append 门禁保持 503；WASM 实验仅证明库在两个隔离浏览器上下文中处理真实 wire bytes，未证明 Echo Delivery 的 Welcome 排序、Commit 冲突恢复、重连/离线投递或端到端群组一致性。完整协议集成仍 BLOCKED，不用 SQL CAS 代替密码学验证。
+
 2026-11-11。实际契约以[src/shared/contracts.ts](../src/shared/contracts.ts)和路由schema为准。源码存在不等于通信可用；消息写入在参数/CSRF/会话/设备检查后进入Service，Service内恒定503门禁。原生MLS、身份绑定、持久化与删除准入未通过。
 
 ## 三种权威与版本

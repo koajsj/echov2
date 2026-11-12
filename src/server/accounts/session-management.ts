@@ -13,12 +13,17 @@ export function sessionManagementRoutes(
   sessions: SessionService,
   hub: ConnectionHub,
 ): void {
-  async function list(userId: string, after: string | null, currentId: string) {
+  async function list(
+    userId: string,
+    after: string | null,
+    currentId: string,
+    audience: "user" | "admin",
+  ) {
     const rows = await pool.query(
       `SELECT id,audience,device_id,created_at,expires_at,id=$3::uuid AS current
-      FROM echo.sessions WHERE user_id=$1 AND expires_at>clock_timestamp()
+      FROM echo.sessions WHERE user_id=$1 AND expires_at>clock_timestamp() AND ($4='admin' OR audience='user')
       AND ($2::uuid IS NULL OR id>$2) ORDER BY id LIMIT 51`,
-      [userId, after, currentId],
+      [userId, after, currentId, audience],
     );
     return {
       items: rows.rows.slice(0, 50),
@@ -51,8 +56,8 @@ export function sessionManagementRoutes(
       }
       const removed = await db.query<{ id: string }>(
         `DELETE FROM echo.sessions WHERE user_id=$1
-        AND id<>$2 AND ($3::uuid IS NULL OR id=$3) RETURNING id`,
-        [userId, actor.id, targetId],
+        AND id<>$2 AND ($3::uuid IS NULL OR id=$3) AND ($4='admin' OR audience='user') RETURNING id`,
+        [userId, actor.id, targetId, actor.audience],
       );
       if (removed.rowCount) {
         if (actor.audience === "admin")
@@ -85,7 +90,12 @@ export function sessionManagementRoutes(
     { schema: { querystring: query } },
     async (request) => {
       const current = await sessions.require(request);
-      return list(current.account.id, request.query.after ?? null, current.id);
+      return list(
+        current.account.id,
+        request.query.after ?? null,
+        current.id,
+        current.audience,
+      );
     },
   );
   app.post<{ Body: { sessionId: string | null } }>(
@@ -124,7 +134,12 @@ export function sessionManagementRoutes(
       ]);
       if (!target.rowCount)
         throw new HttpError(404, "USER_NOT_FOUND", "用户不存在。");
-      return list(request.params.id, request.query.after ?? null, current.id);
+      return list(
+        request.params.id,
+        request.query.after ?? null,
+        current.id,
+        current.audience,
+      );
     },
   );
   app.post<{ Params: { id: string } }>(

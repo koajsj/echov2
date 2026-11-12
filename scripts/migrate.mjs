@@ -90,6 +90,13 @@ async function metadataOwner(db) {
     throw new Error(
       "Unrecognized metadata ownership/ACL/objects; manual review required",
     );
+  const model = await db.query(`SELECT 1 FROM pg_attribute
+    WHERE attrelid='echo_meta.schema_migrations'::regclass AND attname='baseline_id'
+    AND attnotnull AND atttypid='text'::regtype AND NOT attisdropped`);
+  if (model.rowCount !== 1)
+    throw new Error(
+      "Legacy migration ledger requires explicitly reviewed upgrade; automatic adoption forbidden",
+    );
   const acl = await db.query(`SELECT 1 FROM pg_namespace n CROSS JOIN LATERAL
     aclexplode(coalesce(n.nspacl,acldefault('n',n.nspowner))) a
     WHERE n.nspname='echo_meta' AND a.grantee<>n.nspowner
@@ -140,24 +147,36 @@ export async function plan(db, manifest) {
     );
   if (records.length > manifest.migrations.length)
     throw new Error("Unknown migration record");
+  let awaiting = false;
+  let completed = 0;
   for (const [i, row] of records.entries()) {
     const item = manifest.migrations[i];
     if (
       row.version !== item.version ||
       row.migration_name !== item.migration_name ||
-      row.sha256 !== item.sha256
+      row.sha256 !== item.sha256 ||
+      row.baseline_id !== manifest.baseline_id
     )
       throw new Error(
         "Migration record order/name/checksum mismatch; manual review required",
       );
-    if (row.status !== "applied")
+    if (!["applied", "pending"].includes(row.status))
       throw new Error(
         "Failed/started outcome requires owner investigation; automatic retry forbidden",
       );
+    if (row.status === "pending") awaiting = true;
+    else {
+      if (awaiting) throw new Error("Applied version after pending record");
+      completed++;
+    }
   }
-  if (info.business_schema !== records.length > 0)
+  if (completed === 0 && !(await emptyDatabase(db, true)))
+    throw new Error(
+      "Pending baseline requires empty database; manual review required",
+    );
+  if (info.business_schema !== completed > 0)
     throw new Error("Schema and baseline record disagree");
-  return { info, records, pending: manifest.migrations.slice(records.length) };
+  return { info, records, pending: manifest.migrations.slice(completed) };
 }
 export async function apply(db, manifest, confirmedDatabase) {
   await owner(db);
@@ -175,23 +194,54 @@ export async function apply(db, manifest, confirmedDatabase) {
         CREATE SCHEMA echo_meta AUTHORIZATION echo_native_owner;
         REVOKE ALL ON SCHEMA echo_meta FROM PUBLIC, echo_native_api;
         CREATE TABLE echo_meta.schema_migrations (
-          version text PRIMARY KEY, migration_name text NOT NULL,
+          version text PRIMARY KEY, migration_name text NOT NULL, baseline_id text NOT NULL,
           sha256 text NOT NULL CHECK(sha256 ~ '^[0-9a-f]{64}$'),
-          status text NOT NULL CHECK(status IN ('started','applied','failed')),
-          started_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+          status text NOT NULL CHECK(status IN ('pending','started','applied','failed')),
+          started_at timestamptz,
           applied_at timestamptz, postgres_version text NOT NULL,
           error_code text, CHECK((status='applied')=(applied_at IS NOT NULL))
         );
         REVOKE ALL ON echo_meta.schema_migrations FROM PUBLIC, echo_native_api;
-        COMMIT;`);
+        `);
+      for (const item of manifest.migrations)
+        await db.query(
+          `INSERT INTO echo_meta.schema_migrations
+        (version,migration_name,sha256,baseline_id,status,postgres_version)
+        VALUES($1,$2,$3,$4,'pending',current_setting('server_version'))`,
+          [
+            item.version,
+            item.migration_name,
+            item.sha256,
+            manifest.baseline_id,
+          ],
+        );
+      await db.query("COMMIT");
+    }
+    if (work.info.metadata) {
+      for (const item of manifest.migrations.slice(work.records.length)) {
+        await db.query(
+          `INSERT INTO echo_meta.schema_migrations
+          (version,migration_name,sha256,baseline_id,status,postgres_version)
+          VALUES($1,$2,$3,$4,'pending',current_setting('server_version'))`,
+          [
+            item.version,
+            item.migration_name,
+            item.sha256,
+            manifest.baseline_id,
+          ],
+        );
+      }
     }
     for (const item of work.pending) {
-      await db.query(
-        `INSERT INTO echo_meta.schema_migrations
-        (version,migration_name,sha256,status,postgres_version)
-        VALUES($1,$2,$3,'started',current_setting('server_version'))`,
-        [item.version, item.migration_name, item.sha256],
+      const started = await db.query(
+        `UPDATE echo_meta.schema_migrations SET status='started',started_at=clock_timestamp()
+        WHERE version=$1 AND baseline_id=$2 AND status='pending' RETURNING version`,
+        [item.version, manifest.baseline_id],
       );
+      if (started.rowCount !== 1)
+        throw new Error(
+          "Could not persist exactly one started receipt; manual review required",
+        );
       try {
         // Each checked-in SQL file owns its BEGIN/COMMIT. The durable started receipt
         // intentionally precedes it so a lost acknowledgement cannot cause replay.
@@ -214,10 +264,14 @@ export async function apply(db, manifest, confirmedDatabase) {
         );
       }
       // If this write fails after SQL COMMIT, leave started and require manual review.
-      await db.query(
+      const applied = await db.query(
         "UPDATE echo_meta.schema_migrations SET status='applied',applied_at=clock_timestamp() WHERE version=$1 AND status='started'",
         [item.version],
       );
+      if (applied.rowCount !== 1)
+        throw new Error(
+          "SQL committed but applied receipt unconfirmed; manual review required",
+        );
       process.stdout.write(
         JSON.stringify({
           version: item.version,
@@ -227,6 +281,12 @@ export async function apply(db, manifest, confirmedDatabase) {
         }) + "\n",
       );
     }
+  } catch (error) {
+    // Metadata initialization can fail inside its own transaction. Release the
+    // aborted transaction before unlocking, and never leave a reusable connection
+    // in failed-transaction state. A lost connection still requires investigation.
+    await db.query("ROLLBACK").catch(() => {});
+    throw error;
   } finally {
     await db.query("SELECT pg_advisory_unlock(170011, 6006)");
   }

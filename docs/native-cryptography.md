@@ -1,6 +1,28 @@
 # MLS 与浏览器密码学研究
 
-2026-11-11。以下上游资料为第一阶段只读研究快照，第三阶段没有联网刷新或下载/编译/运行实现，不作为当前上游最新状态声明。[来源索引](research-sources.md)记录版本与提交。本章“支持”表示上游声明或接口证据，不表示 Echo 已验证。
+## 当前实验结果 — 2026-11-12
+
+**PARTIAL；生产选型仍 BLOCKED。** 本轮重新复核 OpenMLS 0.9.2、ts-mls 1.6.4、mls-rs 0.57.0 的官方实现/公告与接口。选择 OpenMLS 做可行性实验，不把库审计扩大到应用、provider 或浏览器存储。ts-mls 既有成员移除公告及缺少正式审计，mls-rs 浏览器套件/provider 成熟度，仍需独立准入。以下旧研究快照保留来源，当前实际版本与验证以本节为准。
+
+### 实际构建与运行
+
+独立 `crypto/mls-lab`：OpenMLS 0.9.2、openmls_rust_crypto / basic_credential / traits 0.6.0、tls_codec 0.5.0、wasm-bindgen 0.2.105。Rust 1.99.1、Cargo.lock 固定依赖；官方 Crypto Provider 与 MemoryStorage，固定 RFC 9420 套件 1（X25519/AES128GCM/SHA256/Ed25519）。没有自写 MLS、HPKE、HKDF、签名或 Ratchet。原生 release 和 wasm32 release 均已真实构建。
+
+两个独立 Chromium BrowserContext 使用真实 WASM，验证 KeyPackage、Welcome、Commit、Application Message、重放拒绝、无效 Commit 拒绝、发送方 pending discard、接收方 staged discard、Merge、成员移除与 Epoch 1→2。被移除实例不能继续创建消息。合成 BasicCredential 标签没有账号/设备认证意义；这不是产品群组撤权证明。
+
+### 仍未解决的依赖风险
+
+Cargo audit 实际退出 1：RUSTSEC-2026-0387（crypto-bigint 0.5.5 的时序问题）进入实际 WASM 依赖树，经 p256/p384/elliptic-curve。修复要求 >=0.7.6，当前曲线 0.13 约束不兼容。套件 1 不选择 P-256 分支，但未提供完整可达性证明，因此不忽略公告、不自制密码库补丁、不把未发布上游 main 当兼容修复。
+
+锁闭还包含可选、当前 WASM 依赖树未启用的 libcrux-kem 0.0.9 两项公告，以及 proc-macro-error2 停止维护警告。其修复/活动范围见工程验证中的审计证据；锁闭与活动依赖不能混淆。生产门禁等待上游兼容修复或经过同等验证的成熟替代 provider。
+
+### 本地状态边界
+
+`operation-store.ts` 将调用方提供的 sealedState、operationId、密文与版本放进单个 strict-durability IndexedDB 事务，并用 Web Locks 串行化多标签写入；事务完成前不返回可发送结果。输入在等待锁前复制，冲突后必须重载状态；原操作不能重新推进 ratchet。真实浏览器已验证 CAS 单胜者、刷新后状态/密文同时恢复、重复操作拒绝和注入 QuotaExceededError 后全部回滚。
+
+该模块未接入发送，没有实现完整 provider snapshot 加密/恢复、Pending Commit/Outbox/游标的全部协议、真实掉电、物理磁盘满或备份回滚检测。MemoryStorage 仍为易失；不能把 IndexedDB 实验描述为 MLS 崩溃恢复。完整集成在这些边界和可信身份通过审查前保持关闭。Firefox/WebKit 下载遭 Cloud 403；真实 iOS 未验证。
+
+2026-11-11。以下资料为早期只读研究快照；本轮新增联网复核、构建和运行见上节，不将旧快照视为当前最新声明。[来源索引](research-sources.md)记录版本与提交。本章“支持”表示上游声明或接口证据，不表示 Echo 已验证。
 
 ## 标准与结论
 

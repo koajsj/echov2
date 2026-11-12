@@ -31,6 +31,7 @@ const connect = async (database, user = "echo_native_owner") => {
 const manifest = await loadManifest();
 const directory = await mkdtemp(join(tmpdir(), "echo-synthetic-legacy-"));
 const legacy = structuredClone(manifest);
+legacy.baseline_id = "synthetic-legacy-v1";
 const original = await readFile(
   join(root, "migrations/001-initial.sql"),
   "utf8",
@@ -199,6 +200,9 @@ try {
     await newDb.query("SELECT pg_advisory_unlock(170011,6006)");
     await competing.end();
   }
+  const wrongBaseline = structuredClone(manifest);
+  wrongBaseline.baseline_id = "wrong-baseline";
+  await assert.rejects(plan(newDb, wrongBaseline), /checksum mismatch/);
   const bad = structuredClone(manifest);
   bad.migrations[0].sha256 = "0".repeat(64);
   await assert.rejects(plan(newDb, bad), /checksum mismatch/);
@@ -224,8 +228,11 @@ try {
       m.migrations[0].sql = "BEGIN; CREATE SCHEMA echo; SELECT 1/0; COMMIT;";
       await assert.rejects(apply(failed, m, failed.database), /Migration 001/);
       assert.equal(
-        (await failed.query("SELECT status FROM echo_meta.schema_migrations"))
-          .rows[0].status,
+        (
+          await failed.query(
+            "SELECT status FROM echo_meta.schema_migrations WHERE version='001'",
+          )
+        ).rows[0].status,
         "failed",
       );
       assert.equal(
@@ -348,6 +355,77 @@ try {
         await invalid.end();
       }
     }
+    // Failed metadata initialization leaves no transaction, schema or session lock.
+    const initialization = await fresh();
+    try {
+      const m = structuredClone(manifest);
+      m.migrations = [m.migrations[0], m.migrations[0]];
+      await assert.rejects(apply(initialization, m, initialization.database));
+      assert.equal(
+        (
+          await initialization.query(
+            "SELECT to_regnamespace('echo_meta') AS schema",
+          )
+        ).rows[0].schema,
+        null,
+      );
+      const other = await connect(initialization.database);
+      try {
+        assert.equal(
+          (
+            await other.query(
+              "SELECT pg_try_advisory_lock(170011,6006) AS locked",
+            )
+          ).rows[0].locked,
+          true,
+        );
+        await other.query("SELECT pg_advisory_unlock(170011,6006)");
+      } finally {
+        await other.end();
+      }
+    } finally {
+      await initialization.end();
+    }
+    // Pending receipts do not authorize adoption of newly appeared objects.
+    const pending = await fresh();
+    try {
+      const m = structuredClone(manifest);
+      m.migrations = [];
+      await apply(pending, m, pending.database);
+      const item = manifest.migrations[0];
+      await pending.query(
+        "INSERT INTO echo_meta.schema_migrations(version,migration_name,sha256,baseline_id,status,postgres_version) VALUES($1,$2,$3,$4,'pending',current_setting('server_version'))",
+        [item.version, item.migration_name, item.sha256, manifest.baseline_id],
+      );
+      await pending.query("CREATE TABLE public.unrecorded(id int)");
+      await assert.rejects(plan(pending, manifest), /manual review/);
+    } finally {
+      await pending.end();
+    }
+    // A BEFORE trigger can suppress an UPDATE without throwing. This is not a receipt.
+    const suppressed = await fresh();
+    try {
+      const m = structuredClone(manifest);
+      m.migrations = m.migrations.slice(0, 1);
+      m.migrations[0].sql = `BEGIN; CREATE SCHEMA echo;
+        CREATE FUNCTION echo_meta.suppress_receipt() RETURNS trigger LANGUAGE plpgsql AS $$BEGIN RETURN NULL; END;$$;
+        CREATE TRIGGER suppress_receipt BEFORE UPDATE ON echo_meta.schema_migrations FOR EACH ROW EXECUTE FUNCTION echo_meta.suppress_receipt(); COMMIT;`;
+      await assert.rejects(
+        apply(suppressed, m, suppressed.database),
+        /receipt unconfirmed/,
+      );
+      assert.equal(
+        (
+          await suppressed.query(
+            "SELECT status FROM echo_meta.schema_migrations WHERE version='001'",
+          )
+        ).rows[0].status,
+        "started",
+      );
+      await assert.rejects(plan(suppressed, m), /investigation/);
+    } finally {
+      await suppressed.end();
+    }
     // Simulate a lost bookkeeping write after committed DDL; retain started and stop.
     const lost = await fresh();
     try {
@@ -361,8 +439,11 @@ try {
         /synthetic receipt outage/,
       );
       assert.equal(
-        (await lost.query("SELECT status FROM echo_meta.schema_migrations"))
-          .rows[0].status,
+        (
+          await lost.query(
+            "SELECT status FROM echo_meta.schema_migrations WHERE version='001'",
+          )
+        ).rows[0].status,
         "started",
       );
       await assert.rejects(plan(lost, m), /investigation/);
@@ -388,6 +469,9 @@ try {
       failedReceipt: "PASS",
       unknownOutcome: "PASS",
       noAdoption: "PASS",
+      pendingNonemptyRefused: "PASS",
+      initializationRollback: "PASS",
+      suppressedReceiptRefused: "PASS",
       legacy003Guard: "PASS",
       invalid006States: 7,
       fixture: legacy.migrations[0].sha256,

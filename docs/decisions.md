@@ -36,3 +36,13 @@
 - D18：只实现服务元数据加密归档与只读预览，不导入账号/设备/删除状态或活跃 MLS State。标准 WebCrypto 不是 MLS/根密钥恢复替代方案。
 - D19：数据库附件登记量、文件系统容量、在线通知会话分别标来源；不伪造在线可信设备/DAU/流量/GeoIP/浏览器/OS。
 - D20：G1–G6 不因最终阶段结束而降级；完整聊天、删除和灾备仍 BLOCKED。保留审查历史，精简重复界面而不删除必要文档。
+
+## Cloud 最终修复决策 — 2026-11-12
+
+- D21：迁移历史 UNKNOWN；已发布 001–006 及基线/manifest 保持原字节，仅更新执行器。新台账持久化 baseline_id 与四态收据。旧版缺字段台账不自动改写，须 owner 先核对并审查显式升级；没有自动 adopt。
+- D22：每次 started/applied 必须恰好更新一行；SQL 已提交但回执无效时禁止重跑。pending 基线重试也必须空库；初始化失败必须先回滚再解锁。
+- D23：普通用户会话管理只作用 user audience；admin audience 不能由同账号普通会话撤销。
+- D24：跨账号删除操作 ID 竞争只允许一条记录与一个隐藏目标；插入冲突后复核已绑定目标，其他请求返回 409。当前真实状态 pending-anchor 不等于 complete。
+- D25：OpenMLS 仅作为固定套件 1 的独立实验；不自行修补曲线/HPKE 库以消除公告，不忽略 Cargo 风险，不把 BasicCredential 合成标签当根身份。
+- D26：IndexedDB 只提交不透明 sealedState 与同操作密文，事务完成才返回成功；缺 Web Locks/存储、CAS 冲突或写入失败必须拒绝。尚未对接完整 provider snapshot，不能开放发送。
+- D27：有效资源限制必须从 cgroup 读取确认；Docker 接受参数不代表限额生效。当前低配容量结论 BLOCKED。

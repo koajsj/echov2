@@ -1,0 +1,495 @@
+{
+  "date": "2026-11-12",
+  "environment": "Codex Cloud only; synthetic data",
+  "status": "PARTIAL",
+  "baseBranchSha": "65cfb24838dc050a2676fff7f0ab1063413a04e4",
+  "mainAtReview": "26626711139c97cd57bb041200c3657a4c4373e6",
+  "migrationHistory": "UNKNOWN for persistent environments; no automatic adoption",
+  "historicalSqlSha256": {
+    "migrations/001-initial.sql": "bc404f56cf0658c138c2177a1d277a74ca4292d234a4269aba6c51fde5fb96e6",
+    "migrations/002-runtime-permissions.sql": "8d94e1f7e4eca7814d7bd145978c73d098cfa8d971feeeabf0fa14f1ae076962",
+    "migrations/003-route-version-and-delivery.sql": "8c4bf81e53fa51af3c891a5530388b75334d0e5a1dc6394b024e9c0a2fef1ccf",
+    "migrations/004-invitation-idempotency.sql": "5f79462433d0d182c331767b599f3187e709cf993120945089f1632a422008bb",
+    "migrations/005-admin-lifecycle.sql": "ccb640eb1f7e5c6b1fb740b6f6c2fe1d9291899fc1f306ac90ed3cbb54c0d65e"
+  },
+  "migrations": {
+    "newPath": "PASS",
+    "legacyPath": "PASS",
+    "proof": {
+      "value": "000102ff",
+      "length": 4
+    },
+    "schemaDump": "identical",
+    "catalog": "identical",
+    "baseTables": 23,
+    "permissionDenials": 10,
+    "advisoryLock": "PASS",
+    "checksums": "PASS",
+    "failedReceipt": "PASS",
+    "unknownOutcome": "PASS",
+    "noAdoption": "PASS",
+    "pendingNonemptyRefused": "PASS",
+    "initializationRollback": "PASS",
+    "suppressedReceiptRefused": "PASS",
+    "legacy003Guard": "PASS",
+    "invalid006States": 7,
+    "fixture": "0eaf99e9235e4330984eb3261392c18638f13dc1de407039a0b4834b25d6e943"
+  },
+  "orderedCanonicalFiles": [
+    {
+      "version": "001",
+      "path": "migrations/baselines/echo-native-v1/001-initial.sql",
+      "sha256": "22afb6fd24d654824f0021b77ba6ce5ec3efbffcac35647ba8e0bf46f011a2e8"
+    },
+    {
+      "version": "002",
+      "path": "migrations/002-runtime-permissions.sql",
+      "sha256": "8d94e1f7e4eca7814d7bd145978c73d098cfa8d971feeeabf0fa14f1ae076962"
+    },
+    {
+      "version": "003",
+      "path": "migrations/003-route-version-and-delivery.sql",
+      "sha256": "8c4bf81e53fa51af3c891a5530388b75334d0e5a1dc6394b024e9c0a2fef1ccf"
+    },
+    {
+      "version": "004",
+      "path": "migrations/004-invitation-idempotency.sql",
+      "sha256": "5f79462433d0d182c331767b599f3187e709cf993120945089f1632a422008bb"
+    },
+    {
+      "version": "005",
+      "path": "migrations/005-admin-lifecycle.sql",
+      "sha256": "ccb640eb1f7e5c6b1fb740b6f6c2fe1d9291899fc1f306ac90ed3cbb54c0d65e"
+    },
+    {
+      "version": "006",
+      "path": "migrations/006-authorization-proof.sql",
+      "sha256": "ba2faca6bf545b5ba1002d82d178ac4ab5092e2207d9305589f9b825793ab999"
+    }
+  ],
+  "catalog": {
+    "tables": 23,
+    "foreignKeys": 33,
+    "uniqueConstraints": 16,
+    "primaryKeys": 23,
+    "indexes": 55,
+    "triggers": 3,
+    "functions": 3,
+    "sequences": 4
+  },
+  "auth": {
+    "status": "PASS",
+    "checks": [
+      {
+        "label": "registration mode",
+        "status": 200
+      },
+      {
+        "label": "register",
+        "status": 201
+      },
+      {
+        "label": "operation retry",
+        "status": 201
+      },
+      {
+        "label": "digest conflict",
+        "status": 409
+      },
+      {
+        "label": "username unique",
+        "status": 409
+      },
+      {
+        "label": "invite consume",
+        "status": 201
+      },
+      {
+        "label": "invite retry",
+        "status": 201
+      },
+      {
+        "label": "invite exhausted",
+        "status": 403
+      },
+      {
+        "label": "login",
+        "status": 200
+      },
+      {
+        "label": "session",
+        "status": 200
+      },
+      {
+        "label": "user audience isolation",
+        "status": 200
+      },
+      {
+        "label": "user cannot revoke admin",
+        "status": 200
+      },
+      {
+        "label": "reauthenticate",
+        "status": 200
+      },
+      {
+        "label": "rename",
+        "status": 200
+      },
+      {
+        "label": "logout",
+        "status": 204
+      },
+      {
+        "label": "revoked session",
+        "status": 401
+      },
+      {
+        "label": "closed mode",
+        "status": 200
+      },
+      {
+        "label": "closed rejection",
+        "status": 403
+      }
+    ],
+    "invitationUses": 1,
+    "registrationRows": 1,
+    "sessionAfterLogout": 0,
+    "syntheticSources": "RFC 5737 addresses isolate rate-limit scenarios; rules unchanged"
+  },
+  "browser": {
+    "status": "PASS",
+    "registration": "201 plus real row",
+    "login": "real session",
+    "reauth": "PASS",
+    "metadataArchive": "authenticated export, download, encrypted preview",
+    "csv": "real admin query, correct filename and contents, 3 repeated downloads",
+    "urlCreated": 4,
+    "urlRevoked": 4,
+    "logout": "keyboard plus database row removed",
+    "navigation": 9,
+    "mobile390": "no horizontal overflow",
+    "reducedMotion": "media preference applied",
+    "pageErrors": [],
+    "limitations": "Chromium only; no iOS hardware, comprehensive accessibility audit or messaging E2E",
+    "consoleAudit": "NOT_RUN: pageerror collected; no complete console-message classification"
+  },
+  "mls": {
+    "provider": "OpenMLS 0.9.2/RustCrypto 0.6.0",
+    "suite": 1,
+    "independentBrowserContexts": 2,
+    "KeyPackage": "PASS",
+    "Welcome": "PASS",
+    "Commit": "PASS",
+    "Application": "PASS",
+    "ReplayRejected": "PASS",
+    "InvalidCommitRejected": "PASS",
+    "DiscardPending": "PASS",
+    "DiscardReceivedStagedCommit": "PASS",
+    "Remove": "PASS",
+    "Epoch": "1->2",
+    "removedSenderRejected": true,
+    "scope": "provider laboratory only; no account binding or production persistence"
+  },
+  "localCrypto": {
+    "status": "PASS",
+    "multiTabCAS": "one winner",
+    "reload": "state and ciphertext recovered together",
+    "duplicateOperation": "rejected",
+    "injectedQuotaFailure": "atomic rollback",
+    "attachmentAEAD": "roundtrip, independent key/IV, tamper and 10MiB boundary",
+    "limitations": "no physical disk exhaustion, OS crash or provider snapshot recovery; synthetic opaque state only"
+  },
+  "deletion": {
+    "status": "PASS",
+    "concurrentRequests": 2,
+    "operationRows": 1,
+    "hiddenMessages": 1,
+    "conflict": "409 OPERATION_CONFLICT",
+    "retry": "pending-anchor",
+    "scope": "SQL transaction test only; no deletion anchor, purge or offline propagation"
+  },
+  "sqlParsing": [
+    {
+      "file": "migrations/001-initial.sql",
+      "status": "EXPECTED_FAILURE",
+      "error": "syntax error at or near \"authorization\", at index 3309"
+    },
+    {
+      "file": "migrations/002-runtime-permissions.sql",
+      "status": "PASS",
+      "statements": 24
+    },
+    {
+      "file": "migrations/003-route-version-and-delivery.sql",
+      "status": "PASS",
+      "statements": 13
+    },
+    {
+      "file": "migrations/004-invitation-idempotency.sql",
+      "status": "PASS",
+      "statements": 5
+    },
+    {
+      "file": "migrations/005-admin-lifecycle.sql",
+      "status": "PASS",
+      "statements": 15
+    },
+    {
+      "file": "migrations/006-authorization-proof.sql",
+      "status": "PASS",
+      "statements": 4
+    },
+    {
+      "file": "migrations/baselines/echo-native-v1/001-initial.sql",
+      "status": "PASS",
+      "statements": 45
+    }
+  ],
+  "wasm": {
+    "bytes": 2706375,
+    "sha256": "65ede485f5b065ba153c65b21c14d50584169787dbb24b0bbe748c2684308610",
+    "applicationIntegration": "BLOCKED"
+  },
+  "rustCommands": {
+    "rust-format": {
+      "command": ["cargo", "fmt", "--all", "--", "--check"],
+      "exitCode": 0
+    },
+    "rust-release": {
+      "command": ["cargo", "build", "--release", "--locked", "-j2"],
+      "exitCode": 0
+    },
+    "wasm-release": {
+      "command": [
+        "cargo",
+        "build",
+        "--release",
+        "--locked",
+        "--target",
+        "wasm32-unknown-unknown",
+        "-j2"
+      ],
+      "exitCode": 0
+    },
+    "wasm-bindgen": {
+      "command": [
+        "/workspace/.cloud-tools/wasm-bindgen/bin/wasm-bindgen",
+        "target/wasm32-unknown-unknown/release/echo_mls_lab.wasm",
+        "--out-dir",
+        "pkg",
+        "--target",
+        "web"
+      ],
+      "exitCode": 0
+    },
+    "mls-browser": {
+      "command": ["node", "scripts/check-mls-browser.mjs"],
+      "exitCode": 0
+    },
+    "local-crypto-browser": {
+      "command": ["node", "scripts/check-local-crypto-browser.mjs"],
+      "exitCode": 0
+    }
+  },
+  "npmAudit": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "cargoAudit": {
+    "exitCode": 1,
+    "vulnerabilities": [
+      {
+        "id": "RUSTSEC-2026-0387",
+        "package": "crypto-bigint",
+        "version": "0.5.5",
+        "patched": [">=0.7.6"]
+      },
+      {
+        "id": "RUSTSEC-2026-0331",
+        "package": "libcrux-kem",
+        "version": "0.0.9",
+        "patched": [">=0.0.10"]
+      },
+      {
+        "id": "RUSTSEC-2026-0330",
+        "package": "libcrux-kem",
+        "version": "0.0.9",
+        "patched": [">=0.0.10"]
+      }
+    ],
+    "warnings": {
+      "unmaintained": [
+        {
+          "package": "proc-macro-error2",
+          "version": "2.0.1",
+          "id": "RUSTSEC-2026-0173"
+        }
+      ]
+    },
+    "activeWasmVulnerableDependency": "crypto-bigint 0.5.5",
+    "libcruxKemInActiveWasmTree": false,
+    "databaseCommit": "fd6f39814c4d3c359fdbe223d0280dec4933f78f",
+    "databaseUpdated": "2026-11-11T13:22:32+01:00"
+  },
+  "resourceAdmission": {
+    "status": "BLOCKED",
+    "exitCode": 1,
+    "dockerCgroupDriver": "none",
+    "requested": {
+      "memory": "2g",
+      "memorySwap": "2g",
+      "cpus": 1
+    },
+    "actual": {
+      "memoryMax": "34359738368",
+      "swapMax": "max",
+      "cpuMax": "400000 100000"
+    },
+    "functionalRequestsOnly": {
+      "requests": 25,
+      "registrationConcurrency": 2,
+      "p50ms": 36,
+      "p95ms": 256,
+      "maxMs": 272
+    },
+    "diskQuota": "NOT_RUN",
+    "capacityClaim": false
+  },
+  "crossBrowser": {
+    "chromium": "PASS within reported scope",
+    "firefox": "NOT_AVAILABLE; official download domains returned policy 403",
+    "webkit": "NOT_AVAILABLE; official download domains returned policy 403",
+    "iosHardware": "NOT_AVAILABLE"
+  },
+  "engineeringChecks": {
+    "typecheck": {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "seconds": 4.77
+    },
+    "lint": {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "seconds": 3.02
+    },
+    "format:check": {
+      "command": "npm run format:check",
+      "exitCode": 0,
+      "seconds": 2.18,
+      "note": "rerun after formatting the reported browser harness",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "reason": "browser harness format warning"
+        },
+        {
+          "exitCode": 0,
+          "reason": "formatted file and reran full Prettier check"
+        }
+      ]
+    },
+    "check:ast": {
+      "command": "npm run check:ast",
+      "exitCode": 0,
+      "seconds": 0.57
+    },
+    "check:source": {
+      "command": "npm run check:source",
+      "exitCode": 0,
+      "seconds": 0.5
+    },
+    "build:client": {
+      "command": "npm run build:client",
+      "exitCode": 0,
+      "seconds": 0.82
+    },
+    "build:server": {
+      "command": "npm run build:server",
+      "exitCode": 0,
+      "seconds": 1.65
+    }
+  },
+  "cleanup": {
+    "status": "PASS within task-owned logical cleanup scope",
+    "services": "task API, Vite, Caddy and PostgreSQL stopped",
+    "databases": "all task-created temporary clusters and fixtures removed",
+    "credentials": "temporary app environments and Caddy private state removed",
+    "browserTrust": "echo-cloud-final-test NSS certificate deleted; other trust entries preserved",
+    "caches": "workspace npm cache, Vite cache, Cargo registry/git/advisory cache, Rust download cache and rule checkout removed",
+    "generatedArtifacts": "Cargo target and generated WASM pkg removed after tests",
+    "retained": "installed Cloud tools, project node_modules, reusable setup scripts and sanitized committed evidence",
+    "physicalErasure": "not guaranteed",
+    "removedPaths": 38,
+    "containerImages": "two task-pulled official Node image tags removed without force"
+  },
+  "dependencyInstallation": {
+    "command": "npm ci",
+    "exitCode": 0
+  },
+  "runtimeCommandExits": {
+    "migrationRegression": 0,
+    "authWorkflow": 0,
+    "appBrowser": 0,
+    "deletionRace": 0,
+    "sqlStaticParsing": 0,
+    "cargoAudit": 1,
+    "resourceAdmission": 1,
+    "semgrepLocalScan": 0
+  },
+  "sensitiveScan": {
+    "files": 132,
+    "findings": 0,
+    "scope": "private-key blocks, GitHub/AWS token patterns, password-bearing PostgreSQL URLs; not an exhaustive secret audit"
+  },
+  "publishedSqlArtifactsUnchanged": true,
+  "sast": {
+    "tool": "Semgrep 1.185.0",
+    "ruleRepository": "https://github.com/semgrep/semgrep-rules",
+    "ruleCommit": "a5ad1714f00c9f7fde980cab0ea1d6dc6d414fd2",
+    "rulesRun": 213,
+    "scannedFiles": 83,
+    "exitCode": 0,
+    "errors": 0,
+    "findings": 61,
+    "severityCounts": {
+      "WARNING": 13,
+      "INFO": 48
+    },
+    "triage": "PARTIAL: all findings are the listed portability/style/correctness heuristics; no confirmed exploitable finding in this scan, not an independent security audit",
+    "categories": {
+      "javascript.lang.correctness.no-stringify-keys": 3,
+      "javascript.lang.correctness.no-replaceall": 4,
+      "javascript.lang.correctness.missing-template-string-indicator": 9,
+      "typescript.react.best-practice.react-props-spreading": 18,
+      "typescript.react.portability.i18next.jsx-not-internationalized": 21,
+      "javascript.lang.best-practice.javascript-confirm": 6
+    }
+  },
+  "ast": {
+    "files": 67,
+    "localBindings": 234,
+    "errors": 0
+  },
+  "source": {
+    "files": 132,
+    "parsed": 48,
+    "jsxParsed": 30,
+    "literalModuleReferences": 343,
+    "localDocumentLinks": 79,
+    "failures": 0
+  },
+  "sbom": {
+    "npmComponents": 381,
+    "cargoLockComponents": 191,
+    "missingThirdPartyLicenseMetadata": 0,
+    "scope": "lock closure, not reachability or license compliance certification",
+    "npmCommand": "npm sbom --sbom-format cyclonedx --package-lock-only",
+    "npmScope": "all lockfile platforms, unique component identities deduplicated by npm"
+  }
+}

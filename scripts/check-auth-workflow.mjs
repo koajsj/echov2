@@ -171,6 +171,41 @@ try {
     ).rows[0].n,
     1,
   );
+  const adminId = randomUUID();
+  await db.query(
+    "INSERT INTO echo.sessions(id,token_hash,user_id,audience,expires_at) VALUES($1,$2,$3,'admin',now()+interval '1 hour')",
+    [
+      adminId,
+      createHash("sha256").update(randomBytes(32)).digest("hex"),
+      first.account.id,
+    ],
+  );
+  const userSessions = await request(
+    "user audience isolation",
+    "/v1/account/sessions",
+  );
+  assert(
+    userSessions.items.every(
+      (row) => row.audience === "user" && row.id !== adminId,
+    ),
+  );
+  const deniedRevoke = await request(
+    "user cannot revoke admin",
+    "/v1/account/sessions/revoke",
+    "POST",
+    { sessionId: adminId },
+  );
+  assert.equal(deniedRevoke.revoked, 0);
+  assert.equal(
+    (
+      await db.query(
+        "SELECT count(*)::int AS n FROM echo.sessions WHERE id=$1",
+        [adminId],
+      )
+    ).rows[0].n,
+    1,
+  );
+  await db.query("DELETE FROM echo.sessions WHERE id=$1", [adminId]);
   await request("reauthenticate", "/v1/sessions/reauthenticate", "POST", {
     password,
     audience: "user",
