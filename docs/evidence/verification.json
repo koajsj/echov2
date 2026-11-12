@@ -491,5 +491,26 @@
     "scope": "lock closure, not reachability or license compliance certification",
     "npmCommand": "npm sbom --sbom-format cyclonedx --package-lock-only",
     "npmScope": "all lockfile platforms, unique component identities deduplicated by npm"
+  },
+  "github": {
+    "pr": "https://github.com/koajsj/echov2/pull/2",
+    "draft": true,
+    "headBranch": "codex/echo-native-final",
+    "baseBranch": "main",
+    "implementationSha": "26567956cbd1c26b653dd2a25728a58b29bab6e1",
+    "fullTreeMatch": true,
+    "blobFiles": 132,
+    "sha256Verified": {
+      "migrations/001-initial.sql": "bc404f56cf0658c138c2177a1d277a74ca4292d234a4269aba6c51fde5fb96e6",
+      "migrations/002-runtime-permissions.sql": "8d94e1f7e4eca7814d7bd145978c73d098cfa8d971feeeabf0fa14f1ae076962",
+      "migrations/003-route-version-and-delivery.sql": "8c4bf81e53fa51af3c891a5530388b75334d0e5a1dc6394b024e9c0a2fef1ccf",
+      "migrations/004-invitation-idempotency.sql": "5f79462433d0d182c331767b599f3187e709cf993120945089f1632a422008bb",
+      "migrations/005-admin-lifecycle.sql": "ccb640eb1f7e5c6b1fb740b6f6c2fe1d9291899fc1f306ac90ed3cbb54c0d65e",
+      "migrations/006-authorization-proof.sql": "ba2faca6bf545b5ba1002d82d178ac4ab5092e2207d9305589f9b825793ab999",
+      "migrations/baselines/echo-native-v1/001-initial.sql": "22afb6fd24d654824f0021b77ba6ce5ec3efbffcac35647ba8e0bf46f011a2e8",
+      "migrations/baselines/echo-native-v1/manifest.json": "837734b12588f4b7af99294b3457022b4f2ce3731ca987bd4fd965c0c6494d6c",
+      "package-lock.json": "33926e234e97e868d72f122be0fdaaf41c8c02f2000c3b94346ba886c3cf923f",
+      "crypto/mls-lab/Cargo.lock": "9ca0ca55441b04fc379e5f8e3bfacd20ec03d87464ab5d2d3efdbe2ec62760e6"
+    }
   }
 }

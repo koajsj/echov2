@@ -68,3 +68,7 @@
 清理以新项目为限；保留必要历史与主题文档，当前权威主题由 README 索引。未删除有效模块以制造检查通过，也未关闭 ESLint 或造类型声明。第三方 SBOM 含 npm 381 个组件和 Cargo 锁闭 191 个组件（含可选/非活动依赖）；项目自身未擅自新增授权许可证。
 
 起始修复分支 SHA：`65cfb24838dc050a2676fff7f0ab1063413a04e4`；开始与恢复后远程 main 均为 `26626711139c97cd57bb041200c3657a4c4373e6`。目标分支 `codex/echo-native-final`，目标 main，不 force push、不合并。最终提交 SHA、PR 和远端文件核对结果在交付回复/PR head 给出；验证工件见 [evidence](evidence/verification.json)。临时资源清理结果以该证据文件为准。
+
+## GitHub 审查交付
+
+草稿 PR：[koajsj/echov2#2](https://github.com/koajsj/echov2/pull/2)，目标 main。已验证实现提交：`26567956cbd1c26b653dd2a25728a58b29bab6e1`。GitHub 远端 132 份 blob 文件与本地提交树完全相同，历史迁移、006、基线/manifest、npm/Cargo 锁文件另做远端内容 SHA-256 比较，全部一致。随后仅补充交付记录；最终文档提交 SHA 见 PR head 和交付回复。没有合并或部署，等待审查。
