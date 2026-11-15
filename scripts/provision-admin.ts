@@ -18,12 +18,13 @@ try {
   if (
     url.protocol !== "postgresql:" ||
     !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname) ||
+    Number(url.port) < 1 ||
     url.username !== "echo_native_owner" ||
     url.pathname !== "/echo_native" ||
     url.search ||
     url.hash
   )
-    throw new Error("Invalid provisioning database role");
+    throw new Error("Explicit local provisioning owner URL and port required");
   const file = await open(
     passwordFile,
     constants.O_RDONLY | constants.O_NOFOLLOW,

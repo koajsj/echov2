@@ -4,6 +4,8 @@
 
 FIXED仅指源码：迁移CLI在连接前要求显式MIGRATION_DATABASE_URL，限定postgres/postgresql、loopback、明确端口、echo_native_owner和/echo_native，无query/hash，连接超时5秒。禁止缺URL或缺目标字段时回退PG*选择实例；URL不证明真实ACL，owner/版本/台账/apply确认名仍独立核查。历史Cloud导出函数/测试入口不变，CLI不再接受socket/临时库目标，详见[迁移规范](../migrations/README.md)。本轮CLI/数据库/SQL/备份/恢复/部署均NOT_RUN。
 
+继续核对已安装pg后，将同一目标约束补到运行DATABASE_URL和管理员初始化ADMIN_DATABASE_URL：均需postgresql、loopback、显式1–65535端口、/echo_native及各自API/owner角色；迁移CLI也拒绝0端口。无端口旧配置需运维显式补入已核实实例端口，再在授权环境验证；不得依靠PGPORT自动选择。主机/端口/用户/库名字段不再回退对应PG*，密码、TLS和其他连接选项仍受受保护环境影响，不能把此修复当实际身份或最小权限证明。没有运行初始化或启动应用。
+
 当前前端代码有后续小幅修复，下面447,321字节及CSS数值仅为f54fc345历史构建，不是最终提交产物。未重新构建或测量网络。
 
 ## 本地主环境与待执行变更 — 2026-11-15

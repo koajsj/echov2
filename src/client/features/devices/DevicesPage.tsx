@@ -35,12 +35,14 @@ export function DevicesPage({
         sessionId: session.sessionId,
         body: { label: String(data.get("label")) },
       });
-      setRevision((x) => x + 1);
       onChanged();
       setMessage("设备已登记为 pending，未签发密码学凭证。");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "登记失败。");
+      setMessage(
+        `登记结果未确认，请刷新设备与会话状态后核实。${error instanceof Error ? error.message : ""}`,
+      );
     } finally {
+      setRevision((value) => value + 1);
       setPending(false);
       form.reset();
     }
@@ -60,12 +62,14 @@ export function DevicesPage({
         method: "POST",
         sessionId: session.sessionId,
       });
-      setRevision((x) => x + 1);
       setMessage("服务访问已撤销；这不代表群组密码学移除完成。");
       if (id === session.deviceId) onChanged();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "撤销未确认。");
+      setMessage(
+        `撤销结果未确认，请刷新设备与会话状态后核实。${error instanceof Error ? error.message : ""}`,
+      );
     } finally {
+      setRevision((value) => value + 1);
       setPending(false);
     }
   }
@@ -75,6 +79,9 @@ export function DevicesPage({
         <h1>设备与身份</h1>
         <p>每台设备独立登记。密码登录不代表密钥可信。</p>
       </header>
+      <Button variant="ghost" isDisabled={pending} onPress={onChanged}>
+        刷新设备与会话状态
+      </Button>
       <ServiceState {...query} />
       {query.data && (
         <ul className="record-list">

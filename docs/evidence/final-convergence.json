@@ -308,5 +308,293 @@
     "package-lock.json": "45bfa2fa9f668e62e6d301f36ec1e4813060cb55926e866591706f9a36ce8034",
     "crypto/mls-lab/Cargo.lock": "9ca0ca55441b04fc379e5f8e3bfacd20ec03d87464ab5d2d3efdbe2ec62760e6"
   },
-  "historicalLockBoundary": "Both current lock files unchanged from main/f54fc345. Old verification.json npm lock hash refers to an earlier Cloud snapshot, not current main; preserve it as history."
+  "historicalLockBoundary": "Both current lock files unchanged from main/f54fc345. Old verification.json npm lock hash refers to an earlier Cloud snapshot, not current main; preserve it as history.",
+  "coreConvergence": {
+    "date": "2026-11-15",
+    "status": "PARTIAL",
+    "initialHead": "981948b9e8d201cab33762f57273ef9da13cd840",
+    "main": "c6068557a53ca5fd6b99fef07b88e00605c18578",
+    "branch": "codex/native-hardening-review",
+    "initialWorktree": "clean",
+    "integrationPullRequest": 4,
+    "initialPullRequestState": "OPEN",
+    "draft": true,
+    "constraints": {
+      "dependenciesInstalledOrUpgraded": false,
+      "testsAddedOrRun": false,
+      "buildsRun": false,
+      "servicesStarted": false,
+      "databaseSqlOrVpsAccess": false,
+      "computerUse": false,
+      "oldProjectModified": false,
+      "cryptoGate": "BLOCKED"
+    },
+    "review": {
+      "status": "PARTIAL",
+      "method": "Primary source, call-chain and full diff review; three user-authorized Terra read-only reviews and focused post-change reviews. Not third-party certification.",
+      "areas": [
+        "Rust lock, local cache and official advisories",
+        "MLS lab versus product, provider, atomic storage, worker and recovery boundaries",
+        "Server authentication, authorization, API contracts, delivery, lifecycle and administration",
+        "SQL schema, permissions, indexes, locks and migrations; manual static only",
+        "Frontend hooks, operation outcomes, shared public ID copy and lazy routes",
+        "Configuration, scripts, dependency/license metadata, references and secret patterns"
+      ]
+    },
+    "issues": [
+      {
+        "id": "CORE-01",
+        "severity": "medium",
+        "files": {
+          "src/server/config.ts": 21,
+          "scripts/provision-admin.ts": 18,
+          "scripts/migrate.mjs": 319
+        },
+        "rootCause": "Missing port passed API/provision URL validation and let pg select PGPORT/default; migrate accepted port zero. Another matching local database instance could be selected unintentionally. No observed database incident.",
+        "change": "All three entries require an explicit nonzero URL port. Preserve loopback, role, database, query/fragment constraints. Update protected-environment contract; other PG credential/TLS/options remain environment-dependent.",
+        "status": "FIXED",
+        "verification": {
+          "sourceCallChain": "PASS",
+          "typecheck": "PASS",
+          "lint": "PASS",
+          "migrationSyntax": "PASS",
+          "databaseOrCommands": "NOT_RUN"
+        }
+      },
+      {
+        "id": "CORE-02",
+        "severity": "low",
+        "files": {
+          "src/client/crypto/operation-store.ts": 31
+        },
+        "rootCause": "Open queued behind a blocked delete may wait indefinitely and receives no blocked event itself. Normal open of existing v1 is not an upgrade blocked by other v1 connections.",
+        "change": "Reject on own blocked or a 10-second wait deadline; clear timer on blocked/error/success; abort late upgrade and close late successful connection. Deadline does not cancel underlying request or unblock deletion; background suspension can delay timer execution.",
+        "status": "FIXED",
+        "verification": {
+          "eventPathsAndReview": "PASS",
+          "typecheck": "PASS",
+          "lint": "PASS",
+          "browserConcurrency": "NEEDS_RUNTIME_VERIFICATION",
+          "specification": "W3C IndexedDB connection queues and opening/deletion algorithms; static reasoning, not runtime reproduction"
+        },
+        "limitation": "Storage prerequisite only. Lock covers commit, not provider load/generation. Caller-provided sealedState is not a validated MLS provider snapshot.",
+        "source": "https://www.w3.org/TR/IndexedDB-3/#connection-queue"
+      },
+      {
+        "id": "CORE-03",
+        "severity": "medium",
+        "files": {
+          "src/client/features/devices/DevicesPage.tsx": 40
+        },
+        "rootCause": "A committed registration with lost response left session.deviceId stale and no session refresh entry. Errors could be described as registration failure.",
+        "change": "Refresh directory after success or failure, report unconfirmed outcome, and provide explicit session-and-device refresh via parent query/remount. Apply directory refresh to revocation too.",
+        "status": "FIXED",
+        "verification": {
+          "sessionAndWorkspaceCallChain": "PASS",
+          "typecheck": "PASS",
+          "hooksLint": "PASS",
+          "browser": "NEEDS_RUNTIME_VERIFICATION"
+        },
+        "limitation": "Manual refresh unmounts the old workspace and releases its local message; no credential or MLS trust is created."
+      },
+      {
+        "id": "CORE-04",
+        "severity": "low",
+        "files": {
+          "src/client/features/admin/RegistrationPage.tsx": 130
+        },
+        "rootCause": "A committed invitation revocation with lost response left the old list unchanged and no direct refresh.",
+        "change": "Refresh authoritative queries in finally; add manual registration/invitation refresh; retain outcome message outside query contents. Existing server revocation remains idempotent.",
+        "status": "FIXED",
+        "verification": {
+          "apiContractAndReview": "PASS",
+          "typecheck": "PASS",
+          "hooksLint": "PASS",
+          "httpAndBrowser": "NOT_RUN"
+        }
+      }
+    ],
+    "checks": {
+      "typecheck": {
+        "status": "PASS",
+        "command": "npm run typecheck",
+        "exitCode": 0
+      },
+      "lint": {
+        "status": "PASS",
+        "command": "npm run lint",
+        "exitCode": 0,
+        "warningLimit": 0
+      },
+      "format": {
+        "status": "PASS",
+        "command": "npm run format:check",
+        "exitCode": 0
+      },
+      "ast": {
+        "status": "PASS",
+        "command": "npm run check:ast",
+        "exitCode": 0,
+        "files": 77,
+        "localBindings": 256
+      },
+      "source": {
+        "status": "PASS",
+        "command": "npm run check:source",
+        "exitCode": 0,
+        "files": 161,
+        "parsed": 52,
+        "tsx": 38,
+        "literalModuleReferences": 400,
+        "localDocumentLinks": 122
+      },
+      "rustfmt": {
+        "status": "PASS",
+        "command": "CARGO_NET_OFFLINE=true cargo +stable fmt --manifest-path crypto/mls-lab/Cargo.toml --all -- --check",
+        "exitCode": 0,
+        "toolchain": "installed stable 1.99.0; format only"
+      },
+      "scriptSyntax": {
+        "status": "PASS",
+        "javascriptFiles": 13,
+        "shellFiles": 1,
+        "method": "node --check and bash -n; scripts not executed"
+      },
+      "npmAudit": {
+        "status": "PASS",
+        "command": "npm audit --package-lock-only --ignore-scripts --json",
+        "exitCode": 0,
+        "dependencyPositions": 425,
+        "advisories": 0,
+        "scope": "Advisory metadata query; no packages installed or downloaded"
+      },
+      "sbomAndLicenseMetadata": {
+        "status": "PASS",
+        "npmUniqueComponents": 418,
+        "rustLockPackagesWithRoot": 192,
+        "rustSbomComponents": 191,
+        "missingOrExtraComponents": 0,
+        "missingLicenseFields": 0,
+        "rustChecksumsMatched": true,
+        "limitation": "Metadata coverage only; not full legal or supply-chain assurance"
+      },
+      "sqlChecksums": {
+        "status": "PASS",
+        "artifacts": 9,
+        "semanticReview": "PARTIAL",
+        "execution": "NOT_RUN"
+      },
+      "protectedArtifacts": {
+        "status": "PASS",
+        "count": 25,
+        "baseline": "981948b",
+        "scope": "SQL/manifest, dependency manifests/locks/toolchain, notices, eight screenshots unchanged"
+      },
+      "secretPatterns": {
+        "status": "PASS",
+        "trackedFiles": 161,
+        "hits": 0,
+        "scope": "Limited private-key, GitHub/API/AWS token and PostgreSQL password-URL patterns, values never printed; not complete secret detection"
+      },
+      "sastAndSqlSemanticReview": {
+        "status": "PARTIAL",
+        "method": "Manual source/call-chain/ACL/FK/index/lock review and existing static parsers"
+      },
+      "unavailableTools": {
+        "status": "NOT_AVAILABLE",
+        "items": [
+          "cargo-audit",
+          "Semgrep",
+          "PostgreSQL AST parser",
+          "pinned Rust 1.99.1 and complete crate cache"
+        ]
+      },
+      "runtime": {
+        "status": "NOT_RUN",
+        "scope": "Tests, builds, services, SQL, databases, provisioning, HTTP/WSS, browser, backup/restore and deployment"
+      },
+      "interaction": {
+        "status": "NEEDS_RUNTIME_VERIFICATION",
+        "scope": "IndexedDB blocked/late events, unknown device/invitation outcomes, keyboard and clipboard"
+      },
+      "gitDiff": {
+        "status": "PASS",
+        "method": "Full current diff and source/caller review, git diff --check; staged diff check before commit"
+      }
+    },
+    "rustAdvisories": [
+      {
+        "id": "RUSTSEC-2026-0387",
+        "package": "crypto-bigint",
+        "locked": "0.5.5",
+        "patched": ">=0.7.6",
+        "status": "BLOCKED",
+        "risk": "Timing variability on secret arithmetic; exploitability depends on downstream path/compiler/target.",
+        "path": "crypto-bigint <- elliptic-curve 0.13.8 <- p256/p384/k256 etc <- OpenMLS RustCrypto/basic credential and HPKE RustCrypto",
+        "source": "https://rustsec.org/advisories/RUSTSEC-2026-0387.html",
+        "releaseCondition": "Compatible upstream parents, complete locked sources and feature resolution plus authorized cryptographic/build/runtime validation; 0.7 is not a compatible 0.5 lock substitution."
+      },
+      {
+        "id": "RUSTSEC-2026-0331",
+        "package": "libcrux-kem",
+        "locked": "0.0.9",
+        "patched": ">=0.0.10",
+        "status": "BLOCKED",
+        "risk": "Short hybrid-key decode panic.",
+        "path": "libcrux-kem <- hpke-rs-libcrux 0.7.0 <- hpke-rs 0.7.0 <- OpenMLS RustCrypto",
+        "source": "https://rustsec.org/advisories/RUSTSEC-2026-0331.html",
+        "releaseCondition": "Verify optional versus active WASM features with complete cache and upstream constraints; resolve/review compatible fix, not checksum editing."
+      },
+      {
+        "id": "RUSTSEC-2026-0330",
+        "package": "libcrux-kem",
+        "locked": "0.0.9",
+        "patched": ">=0.0.10",
+        "status": "BLOCKED",
+        "risk": "Short seed hybrid encapsulation panic.",
+        "path": "Same optional libcrux-kem chain as RUSTSEC-2026-0331",
+        "source": "https://rustsec.org/advisories/RUSTSEC-2026-0330.html",
+        "releaseCondition": "Same full dependency/feature and compatible upstream verification; no audit ignore."
+      },
+      {
+        "id": "RUSTSEC-2026-0173",
+        "package": "proc-macro-error2",
+        "locked": "2.0.1",
+        "patched": null,
+        "status": "BLOCKED",
+        "risk": "Unmaintained proc macro; not by itself evidence of a cryptographic algorithm defect.",
+        "path": "proc-macro-error2 <- hax-lib-macros 0.3.7 <- hax-lib 0.3.7 <- libcrux-sha3 0.0.10 <- hpke-rs 0.7.0 <- OpenMLS RustCrypto; independent of optional KEM path",
+        "source": "https://rustsec.org/advisories/RUSTSEC-2026-0173.html",
+        "releaseCondition": "Reviewed upstream migration and full feature/dependency validation; no unreviewed fork."
+      }
+    ],
+    "wasmDependencyTree": {
+      "status": "NOT_AVAILABLE",
+      "command": "cargo +stable tree --locked --offline --target wasm32-unknown-unknown",
+      "cwd": "crypto/mls-lab",
+      "exitCode": 101,
+      "reason": "Missing getrandom index/cache; relevant advisory crates not present in local registry source/cache. Historical active bigint / inactive optional KEM is not current proof."
+    },
+    "productBoundaries": {
+      "openMlsProductIntegration": "BLOCKED",
+      "providerPersistenceAndAtomicOutbox": "BLOCKED",
+      "credentialAndTrustedDeviceAuthorization": "BLOCKED",
+      "mlsRemoveAndFutureEpochIsolation": "BLOCKED",
+      "privateAndGroupMessaging": "BLOCKED",
+      "offlineSyncAndEncryptedTombstones": "BLOCKED",
+      "identityAndKeyRecovery": "BLOCKED",
+      "databaseMediaBackupAndIsolatedRestore": "BLOCKED",
+      "frontendAndAdministration": "PARTIAL",
+      "productionAdmission": "BLOCKED",
+      "releaseConditions": "Existing G1-G6 matrix in phase-three-report.md; complete reviewed dependency/API sources, actual account/device-bound Worker/Provider and full atomic state, Commit/Welcome, removal, deletion freshness and isolated restore verification. No MemoryStorage, synthetic credential or opaque state passed as production integration."
+    },
+    "delivery": {
+      "status": "PARTIAL",
+      "targetPullRequest": 4,
+      "requestedDraft": true,
+      "mainMerge": "NOT_RUN",
+      "deployment": "NOT_RUN",
+      "remoteVerification": "Post-push actual SHA/tree/blob/SHA256 verification is recorded outside the commit to avoid self-reference."
+    }
+  }
 }

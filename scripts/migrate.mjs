@@ -319,7 +319,7 @@ export async function main() {
   if (
     !["postgres:", "postgresql:"].includes(target.protocol) ||
     !["127.0.0.1", "localhost", "[::1]"].includes(target.hostname) ||
-    !target.port ||
+    Number(target.port) < 1 ||
     target.username !== "echo_native_owner" ||
     target.pathname !== "/echo_native" ||
     target.search ||

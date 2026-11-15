@@ -21,13 +21,14 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   if (
     db.protocol !== "postgresql:" ||
     !["127.0.0.1", "localhost", "[::1]"].includes(db.hostname) ||
+    Number(db.port) < 1 ||
     db.username !== "echo_native_api" ||
     db.pathname !== "/echo_native" ||
     db.search ||
     db.hash
   )
     throw new Error(
-      "Use a local echo_native database with echo_native_api and no URL options",
+      "Use a local echo_native database with an explicit port, echo_native_api and no URL options",
     );
   const host = env.HOST ?? "127.0.0.1";
   if (host !== "127.0.0.1")

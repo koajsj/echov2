@@ -6,6 +6,8 @@ PARTIAL。WSS在进入异步认证前同步注册唯一的message拒绝监听，
 
 产品Commit/Welcome生产者、Proposal与staged状态持久化、Merge/Discard恢复、完整Outbox/去重/游标原子性、私聊群组角色与离线同步仍BLOCKED；SQL候选冻结及服务收据不构成MLS确认。crypto-gate继续无条件拒写503，以下11-12运行描述为历史证据。
 
+本次修复服务操作的未知响应处理：设备页支持同时重新读取session绑定和设备目录；管理员邀请码撤销在finally刷新权威列表，并可手动刷新注册/邀请记录。错误提示与刷新状态分开，未将网络错误解释为事务必然回滚，也未将刷新成功解释为原操作成功。此机制不处理MLS未知Commit、消息幂等或离线消费确认；这些能力仍须真实Provider与原子状态恢复，BLOCKED。
+
 ## 本地接口收敛 — 2026-11-12
 
 `GET /v1/admin/users`新增`version`十进制字符串；`POST /v1/admin/users/:id/status`必须提交`{suspended:boolean, version:string}`。新近认证/CSRF后按actor账号→session→目标账号锁定，比较数据库当前version，过时返回409 VERSION_CONFLICT，未知或不可修改目标404。同状态返回updated:false、不新增版本或审计，状态变化保留session撤销、组冻结和审计同事务。前端错误后刷新权威列表；网络未知结果不能凭旧版本重复切换。

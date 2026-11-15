@@ -43,6 +43,8 @@ Terra以当前Cargo.lock重新遍历候选图：bigint经p256→openmls_basic_cr
 
 `operation-store.ts`以Web Locks与strict IndexedDB事务提交调用方提供的sealedState、密文、operationId和CAS版本；输入在等待锁前复制，提交完成才返回。历史浏览器实验验证双标签CAS单胜者、重复操作拒绝、刷新恢复与注入配额失败的原子回滚。它没有生成或验证sealedState，不等于加密完整Provider，也没有收件游标/删除checkpoint/Commit/Outbox全生命周期。
 
+本次在981948b基础上补齐打开受阻的错误路径：收到blocked立即拒绝；打开排在受阻删除之后时不会收到自身blocked，故另设10秒等待截止。失败后才到达的升级事件会中止事务，迟到成功连接关闭，终态清理定时器；超时不保证已开始的升级回滚。计时器不取消底层请求，后台页面挂起时不保证墙钟10秒执行；不让调用方在已报告失败后取得连接。该源码修复为FIXED，真实跨标签/升级竞争NEEDS_RUNTIME_VERIFICATION。锁仍只覆盖存储提交，尚未包住真实Provider的加载、密码学状态推进和持久化；CAS不能替代完整单写者边界。Worker中断、未知提交、接收去重/游标及Outbox恢复仍BLOCKED，不能以该前置模块发消息。
+
 原生存储接口的逐项读写必须与完整Provider快照、outbox/收件去重/游标作为同一可恢复操作；MemoryStorage不能作为生产来源，普通JSON不能冒充状态事务。缺浏览器锁/持久存储时拒绝。真实掉电、磁盘满、数据库逐出、跨标签领导者死亡和旧备份回滚仍NOT_RUN。
 
 浏览器私钥、Epoch Secret和完整私有Group State不得上传服务器。WebCrypto附件AES-GCM和元数据文件PBKDF2/AES-GCM是有限前置功能，不构成MLS、根恢复或发送状态保护。non-extractable CryptoKey仍可被同源恶意代码调用，WASM/JS/OS副本和已解密内容不能保证擦除。
