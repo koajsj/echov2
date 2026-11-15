@@ -1,5 +1,11 @@
 # 安全威胁模型与证据矩阵
 
+## 本轮安全边界
+
+新增防护针对无根私钥签发、设备密钥替换、跨账号/会话重放、一次性挑战、签名篡改及授权事务失败；人工完整指纹核对依赖独立可信渠道。首次根绑定仍为本机信任起点，没有密钥透明度。Worker/不可导出CryptoKey不防同源XSS、恶意扩展或本机存储攻击；签名验证在服务端应用层，数据库owner仍可篡改公开目录。五项RustSec、完整Provider、MLS通信、删除及恢复安全准入仍BLOCKED。
+
+详见[本轮身份集成报告](product-identity-integration-report.md)和[实际证据](evidence/product-identity/results.json)。下文保留此前轮次记录；历史“未实现根身份/Worker”描述不代表本轮新增身份子系统的状态，历史 MLS 与恢复阻塞仍然适用。
+
 ## cb20341 后的准入复核
 
 PARTIAL。当前重点复核 Rust 依赖、真实身份、Provider 一致性、投递和删除恢复，未确认新的可安全实施源码修复；不等于全项目无漏洞。活动 WASM 闭包不可解析、四项 Rust 公告、可信设备及密码学撤权、完整删除传播和恢复仍 BLOCKED。未修改 crypto-gate、权限或安全参数，未把历史 Cloud 运行证据用作当前准入。准确环境限制与解除条件集中记录于[本轮台账](phase-three-report.md)。

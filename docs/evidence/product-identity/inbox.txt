@@ -1,0 +1,5 @@
+
+> echo-native@0.1.0 check:inbox
+> node scripts/check-inbox-browser.mjs
+
+{"status":"PASS","realChromium":true,"atomicInboxCursorState":"PASS","reload":"PASS","duplicate":"PASS","sequenceAndIdentityConflicts":"rejected without advancement","gapAndOverflow":"rejected","concurrentDuplicate":"one commit, one replay","sendReceiveCAS":"one winner","injectedFailure":"all three stores rolled back","workerTerminatedInsideTransaction":"all three stores rolled back","v2Migration":"pending and acknowledged state preserved","limitations":"Synthetic sealed bytes; no MLS Provider, network sync, tombstones, OS power loss or backup freshness proof."}

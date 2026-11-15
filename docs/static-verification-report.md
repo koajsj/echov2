@@ -1,5 +1,11 @@
 # 本地静态验证报告
 
+## 最新身份工程验证 — 2026-11-15
+
+本轮新增真实身份/设备签名实现及009增量迁移，不只输出研究。实际Cloud验证包含六独立context、真实产品表单、Ed25519验签、公钥/凭据替换拒绝、SQL回滚、最小权限、重新登录持有证明、原有账户/撤销/期限/应用和IndexedDB回归。Rustnative/WASM及六项原生实验重跑。cargo audit仍失败且明确保留；专用SAST/第三方审计及产品消息E2E未运行。
+
+详见[本轮身份集成报告](product-identity-integration-report.md)和[实际证据](evidence/product-identity/results.json)。下文保留此前轮次记录；历史“未实现根身份/Worker”描述不代表本轮新增身份子系统的状态，历史 MLS 与恢复阻塞仍然适用。
+
 > 最新结果见[CI/MLS 续进报告](ci-mls-continuation-report.md)；上一轮 [Cloud 报告](cloud-review-report.md)与以下记录保留为历史。本机工具缺失、旧 main/PR 状态不描述当前。
 
 ## 当前续进 — 基线 06f37b9

@@ -1,0 +1,1 @@
+{"status":"PASS","deviceExpiry":"rejected after observed account lock wait","invitationExpiry":"rejected after observed settings lock wait","createdDevices":0,"consumedInvitations":0,"registeredAccounts":0}

@@ -1,0 +1,39 @@
+[
+  {
+    "path": "crates/crypto-bigint/RUSTSEC-2026-0387.md",
+    "gitBlob": "a642322bd704a5acfd221e1a61203512b33402cc",
+    "status": "fetched"
+  },
+  {
+    "path": "crates/libcrux-kem/RUSTSEC-2026-0331.md",
+    "gitBlob": "48a4a8fcb73bf29303f3eb52a1a219ebdef8de7c",
+    "status": "fetched"
+  },
+  {
+    "path": "crates/libcrux-kem/RUSTSEC-2026-0330.md",
+    "gitBlob": "03788f6cde79959f8fa695b2c66593bb866aac61",
+    "status": "fetched"
+  },
+  {
+    "path": "crates/proc-macro-error2/RUSTSEC-2026-0173.md",
+    "gitBlob": "592ad2853d7f6b4b0e2ad0549eec1f55181cacdd",
+    "status": "fetched"
+  },
+  {
+    "path": "crates/libsqlite3-sys/RUSTSEC-2026-0459.md",
+    "gitBlob": "6eb98d98f50780211f7cb6d5b252d13566b9c0c2",
+    "status": "fetched"
+  },
+  {
+    "repository": "openmls/openmls",
+    "tree": "6100df3fb1d8c3eeab53e349fcbd621f98c44fe2",
+    "storagePaths": [
+      "memory_storage/Cargo.toml",
+      "memory_storage/README.md",
+      "sqlite_storage/Cargo.toml",
+      "sqlite_storage/README.md",
+      "sqlx_storage/Cargo.toml",
+      "sqlx_storage/README.md"
+    ]
+  }
+]

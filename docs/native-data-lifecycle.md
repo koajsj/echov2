@@ -1,5 +1,11 @@
 # 数据模型与生命周期
 
+## 本轮新增身份材料生命周期
+
+009仅新增公开根/设备公钥、挑战、授权签名和绑定挑战；客户端IndexedDB存放不可导出的根/设备CryptoKey。设备撤销同事务失效新授权，但无法远程擦除本机私钥或追回历史密钥。尚无根轮换、凭据续期、密钥恢复、加密墓碑和防旧备份复活；不得把新的身份记录当作聊天/Provider备份。
+
+详见[本轮身份集成报告](product-identity-integration-report.md)和[实际证据](evidence/product-identity/results.json)。下文保留此前轮次记录；历史“未实现根身份/Worker”描述不代表本轮新增身份子系统的状态，历史 MLS 与恢复阻塞仍然适用。
+
 ## cb20341 后的状态与生命周期复核
 
 PARTIAL。重新核对 operation-store、附件 AEAD、元数据归档及调用链，未确认新的可安全修复缺陷。operation-store 仍仅为实验脚本使用的存储前置，产品没有 Worker；Web Lock 只包提交，未覆盖原生 Provider 加载/推进。不能凭 opaque sealedState 或 strict 事务证明完整私钥、pending Commit、Outbox/Inbox、游标与去重状态一致。

@@ -1,5 +1,11 @@
 # Cloud 核心集成与运行复核报告
 
+## 最新产品身份工程 — 2026-11-15
+
+基线 ec47b6a。本轮已实际实现账户 Ed25519 根身份、设备持有证明/根签名授权、五张公开材料表的009增量迁移、真实客户端身份 Worker、设备页面和签名会话重绑定。六个独立浏览器上下文及真实HTTP/PostgreSQL验证通过。产品 MLS、完整 Provider、SAS/QR 与恢复仍 BLOCKED，五项 RustSec 未解除。
+
+详见[本轮身份集成报告](product-identity-integration-report.md)和[实际证据](evidence/product-identity/results.json)。下文保留此前轮次记录；历史“未实现根身份/Worker”描述不代表本轮新增身份子系统的状态，历史 MLS 与恢复阻塞仍然适用。
+
 2026-11-15，直接开发 `main`，起点 `cec82e57603b31f1d77030a15b827d76729f4427`；远端已 fetch 核验，起始工作区干净。仅使用 Codex Cloud，未连接 VPS、真实用户或生产密钥，未创建收费资源。生产部署未获授权、未执行。
 
 ## 环境与证据

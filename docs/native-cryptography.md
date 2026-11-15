@@ -1,5 +1,11 @@
 # MLS 与浏览器密码学
 
+## 本轮身份实现与密码学边界
+
+根/设备签名使用 WebCrypto Ed25519，私钥以不可导出 CryptoKey 存在客户端 IndexedDB，公开授权使用规范化域隔离声明，服务端验根和设备双签名。身份 Worker 已执行，OpenMLS同步Signer尚不能直接使用不可导出WebCrypto私钥；完整MLS Provider与通信仍BLOCKED。两份audit均退出1，SQLite0459及crypto-bigint活动依赖漏洞未修，不开启门禁。
+
+详见[本轮身份集成报告](product-identity-integration-report.md)和[实际证据](evidence/product-identity/results.json)。下文保留此前轮次记录；历史“未实现根身份/Worker”描述不代表本轮新增身份子系统的状态，历史 MLS 与恢复阻塞仍然适用。
+
 ## 当前结论
 
 2026-11-15，Codex Cloud，最新续进基线 `06f37b995f26fd95b2bdfae56c9ed36439d2555f`。密码学准入 **BLOCKED**，整体 **PARTIAL**。本轮修复干净 CI 构建顺序，重新执行固定 Rust native/WASM 构建、真实 Chromium MLS 实验与 cargo audit；新增浏览器 Inbox/Cursor 原子存储和官方原生 SQLite Provider 验证。准确分界见[本轮续进报告](ci-mls-continuation-report.md)、[本轮审计](evidence/ci-mls-continuation/cargo-audit-lab.json)。此前[Cloud 报告](cloud-review-report.md)保留为上一轮证据；工具链/缓存已具备，不再采用旧缺缓存理由。

@@ -1,3 +1,5 @@
+import { IdentityClient } from "../../crypto/identity-client";
+import { IdentityPanel } from "./IdentityPanel";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Button, Input, Form } from "@heroui/react";
@@ -30,6 +32,23 @@ export function DevicesPage({
     setPending(true);
     setMessage("");
     try {
+      const client = new IdentityClient();
+      try {
+        const local = await client.run({
+          kind: "locate",
+          binding: {
+            accountId: session.account.id,
+            publicId: session.account.publicId,
+            origin: location.origin,
+          },
+        });
+        if (local)
+          throw new Error(
+            "本浏览器已有此账户的本机密钥，请使用下方的恢复会话绑定操作。",
+          );
+      } finally {
+        client.close();
+      }
       await api("/v1/devices", {
         method: "POST",
         sessionId: session.sessionId,
@@ -148,10 +167,11 @@ export function DevicesPage({
       )}
       <p role="status">{message}</p>
       <ReauthenticationForm audience="user" sessionId={session.sessionId} />
-      <p className="muted">
-        首次根身份、可信设备授权、SAS/QR 与 MLS
-        入组未接入；没有可用的“已验证”假状态。
-      </p>
+      <IdentityPanel
+        key={session.sessionId + ":" + (session.deviceId ?? "none")}
+        session={session}
+        onChanged={onChanged}
+      />
     </section>
   );
 }

@@ -1,0 +1,10 @@
+{"version":"001","sha256":"22afb6fd24d654824f0021b77ba6ce5ec3efbffcac35647ba8e0bf46f011a2e8","status":"applied","exitCode":0}
+{"version":"002","sha256":"8d94e1f7e4eca7814d7bd145978c73d098cfa8d971feeeabf0fa14f1ae076962","status":"applied","exitCode":0}
+{"version":"003","sha256":"8c4bf81e53fa51af3c891a5530388b75334d0e5a1dc6394b024e9c0a2fef1ccf","status":"applied","exitCode":0}
+{"version":"004","sha256":"5f79462433d0d182c331767b599f3187e709cf993120945089f1632a422008bb","status":"applied","exitCode":0}
+{"version":"005","sha256":"ccb640eb1f7e5c6b1fb740b6f6c2fe1d9291899fc1f306ac90ed3cbb54c0d65e","status":"applied","exitCode":0}
+{"version":"006","sha256":"ba2faca6bf545b5ba1002d82d178ac4ab5092e2207d9305589f9b825793ab999","status":"applied","exitCode":0}
+{"version":"007","sha256":"b95faf65f901d3be46a9bd7c5ed23dea319c20e0c21471f90469d853d425f5e8","status":"applied","exitCode":0}
+{"version":"008","sha256":"2cfe7b9afd153ea9362ffd400785fb74e25e295c664061f492b08bab5a49201c","status":"applied","exitCode":0}
+{"version":"009","sha256":"0699037a5ba27adca1e280957ae1b90f8f895d6946abbc4f11794dce0cac9355","status":"applied","exitCode":0}
+PASS: immutable historical manifest loads; exact 008 -> 009 upgrade and no pending migrations

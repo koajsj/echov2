@@ -1,0 +1,52 @@
+
+> echo-native@0.1.0 check:identity
+> node scripts/check-identity-browser.mjs
+
+{
+  "status": "PASS",
+  "checks": [
+    "challenge operation ID cannot replace bound key",
+    "registered device key immutable across operations",
+    "worker restart preserves exact root initialization operation",
+    "tampered root self-signature refused",
+    "tampered device possession signature refused",
+    "concurrent root initialize has one root, one credential and consumed challenge",
+    "pinned root substitution refused by Worker",
+    "root and device private keys are persisted nonextractable CryptoKeys",
+    "new device rejects wrong independently supplied root key",
+    "authorizer rejects incorrect full request fingerprint",
+    "authorizer rejects substituted new-device key",
+    "pending device cannot publish its own authorization",
+    "server refuses altered root signature",
+    "server refuses changed credential key",
+    "SQL failure prevents authorization acknowledgement",
+    "authorization and challenge consumption rollback atomically",
+    "independent browser verifies authorization; root private key never shared",
+    "two tabs load same persisted device; two contexts have distinct device keys",
+    "cross-account authorization replay refused",
+    "expired challenge refused even with valid signatures",
+    "consumed device cannot replace prior credential with another challenge",
+    "identity authorization cannot activate MLS or release KeyPackages",
+    "minimum database privilege denial: UPDATE echo.identity_roots SET",
+    "minimum database privilege denial: DELETE FROM echo.identity_roots",
+    "minimum database privilege denial: UPDATE echo.identity_device_keys SET",
+    "minimum database privilege denial: UPDATE echo.identity_authorizations SET",
+    "minimum database privilege denial: SELECT private_key FROM",
+    "minimum database privilege denial: SELECT echo.revoke_identity_authorization()",
+    "revoked device session rejected",
+    "Worker rejects fresh server revoked credential",
+    "revoked credential cannot be reauthorized by retry",
+    "service revocation withdraws public authorization, does not claim MLS Remove",
+    "password alone cannot restore device session",
+    "session proof cannot be replayed into another session",
+    "relogin requires device signature over one-time current-session challenge",
+    "React device UI verifies the actual locally pinned authorization chain",
+    "product forms initialize root and authorize independent browser using bilateral full fingerprints"
+  ],
+  "contexts": 6,
+  "privateKeysSentToServer": false,
+  "communication": "BLOCKED",
+  "sasQr": "NOT_RUN",
+  "rootRotationRecovery": "NOT_AVAILABLE",
+  "productMls": "BLOCKED"
+}

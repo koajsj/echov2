@@ -1,5 +1,12 @@
 # Changelog
 
+## 产品身份与可信设备工程 — 2026-11-15（PARTIAL）
+
+- 实际新增Ed25519根自签名、设备持有证明和根签名授权、真实身份Worker与IndexedDB私钥持久化、完整公钥/指纹人工双向核对页面及签名会话重绑定。
+- 009新增五张公开材料表及最小权限，继承不可变001–008摘要；同事务授权/一次性挑战与撤销、精确请求重试及SQL故障回滚已在临时PostgreSQL验证。
+- 六个独立浏览器上下文完成API和产品表单授权；native/WASM、MLS独立实验和既有存储/账户/设备回归重跑。两份cargo audit仍退出1，五项公告未解除。
+- 产品OpenMLS/Provider/消息Worker、SAS/QR、根轮换/恢复仍阻塞；不发可用KeyPackage，不设置active，crypto-gate恒拒绝。详见[本轮报告](docs/product-identity-integration-report.md)。
+
 ## 本地核心工程依赖与准入复核 — 2026-11-15（PARTIAL）
 
 - 基线 cb20341、main c606855 与 PR #4 Draft 一致；重点重查 Rust/MLS、原子状态、可信身份、投递、删除及恢复，未确认新的可安全实施源码修复。

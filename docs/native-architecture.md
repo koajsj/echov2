@@ -1,5 +1,11 @@
 # 自主通信架构
 
+## 当前实际产品边界
+
+新增身份数据流为 IdentityPanel → IdentityClient → module Worker → WebCrypto/IndexedDB；公开签名材料经真实 API 写 PostgreSQL。身份 Web Lock 包围本地读取至提交，服务端事务覆盖授权/挑战消费及会话绑定。现有 OpenMLS/WASM 与 SQLite 项目仍独立实验，没有产品消息 Adapter 或完整 MLS Worker。
+
+详见[本轮身份集成报告](product-identity-integration-report.md)和[实际证据](evidence/product-identity/results.json)。下文保留此前轮次记录；历史“未实现根身份/Worker”描述不代表本轮新增身份子系统的状态，历史 MLS 与恢复阻塞仍然适用。
+
 ## 当前状态 — 2026-11-12
 
 当前本地主项目实现为模块化单体（历史Cloud运行证据保留），应用通信门禁仍关闭。独立 `crypto/mls-lab` 不进入生产 client bundle；`operation-store.ts` 只是本地事务边界前置模块，尚未与 provider/账号设备绑定。真实密码认证和管理数据可用，页面入口不代表全部业务闭环。工程状态见[工程验证](static-verification-report.md)，产品范围见[第三阶段报告](phase-three-report.md)。

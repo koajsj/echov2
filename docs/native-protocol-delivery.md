@@ -1,5 +1,11 @@
 # 应用协议与一致性投递
 
+## 本轮身份授权未改变通信准入
+
+新的身份协议只登记公开授权。挑战五分钟、凭据三十天、原ID重试与一次性消费已实施；不释放KeyPackage，不写active，不产生MLS Welcome/Commit/Application。服务器投递仍不能证明解密，route_version、seq与mls_epoch继续分开。产品单写者Provider→MLS→Outbox及Provider→Inbox→Cursor事务仍BLOCKED。
+
+详见[本轮身份集成报告](product-identity-integration-report.md)和[实际证据](evidence/product-identity/results.json)。下文保留此前轮次记录；历史“未实现根身份/Worker”描述不代表本轮新增身份子系统的状态，历史 MLS 与恢复阻塞仍然适用。
+
 ## cb20341 后的产品通信复核
 
 BLOCKED。重新追踪 append 的首个调用，requireReviewedCrypto 仍无条件抛出503；没有产品 Worker、Welcome 收件箱生产者或经验证的 Commit 投影/恢复接口。route_version、seq 不等于 mls_epoch。离线分页和投递骨架不构成可用私聊/群聊；本轮不扩充未经原生状态验证的发送接口。解除条件包括真实 Credential/Welcome/Commit 验证、状态冲突冻结、精确原操作幂等恢复，以及完整 Provider 与收发状态原子边界。

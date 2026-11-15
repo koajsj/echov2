@@ -1,0 +1,375 @@
+{
+  "date": "2026-11-15T13:29:02.775175+00:00",
+  "baseline": "ec47b6acc5e728c5b0f4af4dd1dc001388ddd55b",
+  "branch": "main",
+  "scope": "real product identity; product MLS BLOCKED",
+  "environment": "Codex Cloud only; disposable local PostgreSQL and synthetic accounts; no production connection/deployment",
+  "versions": {
+    "node": {
+      "exitCode": 0,
+      "output": "v24.22.1"
+    },
+    "npm": {
+      "exitCode": 0,
+      "output": "11.9.0"
+    },
+    "postgres": {
+      "exitCode": 0,
+      "output": "postgres (PostgreSQL) 17.11"
+    },
+    "chromium": {
+      "exitCode": 0,
+      "output": "Chromium 156.0.8078.79 built on Debian GNU/Linux 13 (trixie)"
+    },
+    "rust": "1.99.1",
+    "wasmBindgen": "0.2.105"
+  },
+  "identityChecks": 37,
+  "identityContexts": 6,
+  "commands": [
+    {
+      "command": "CONFIRM_CLOUD_AUTH=echo_native PGHOST=/workspace/.echo-test/socket PGPORT=55432 npm run check:identity",
+      "exitCode": 0,
+      "artifact": "identity-browser.txt",
+      "scope": "actual product identity forms and API; NOT product MLS"
+    },
+    {
+      "command": "PGHOST=/workspace/.echo-test/socket PGPORT=55432 PATH=/workspace/.echo-pg/bin:$PATH TEST_NEW_DATABASE=echo_identity_new TEST_LEGACY_DATABASE=echo_identity_legacy CONFIRM_CLOUD_TEST_DATABASES=echo_identity_new,echo_identity_legacy npm run check:migrations",
+      "exitCode": 0,
+      "artifact": "migrations.txt",
+      "scope": "28 tables; new/legacy schema parity, migration state and ACL checks"
+    },
+    {
+      "command": "Node pg + loadManifest/apply/plan, old manifest 001-008 then current manifest 009",
+      "exitCode": 0,
+      "artifact": "upgrade-008-009.txt",
+      "scope": "actual isolated echo_identity_upgrade database"
+    },
+    {
+      "command": "cargo +1.99.1 build --locked --release --manifest-path crypto/mls-lab/Cargo.toml",
+      "exitCode": 0,
+      "artifact": "native-build.txt",
+      "scope": "independent experiment"
+    },
+    {
+      "command": "cargo +1.99.1 build --locked --release --target wasm32-unknown-unknown --manifest-path crypto/mls-lab/Cargo.toml",
+      "exitCode": 0,
+      "artifact": "wasm-build.txt",
+      "scope": "independent experiment"
+    },
+    {
+      "command": "wasm-bindgen .../echo_mls_lab.wasm --out-dir crypto/mls-lab/pkg --target web; npm run check:mls:browser",
+      "exitCode": 0,
+      "artifact": "mls-browser.txt",
+      "scope": "2 independent contexts, same implementation; synthetic credentials; NOT cross-implementation interop"
+    },
+    {
+      "command": "cargo +1.99.1 test --locked --manifest-path crypto/mls-persistence/Cargo.toml",
+      "exitCode": 0,
+      "artifact": "native-persistence.txt",
+      "scope": "6 passed; crash_child ignored entry actually invoked by parent twice"
+    },
+    {
+      "command": "npm run check:local-crypto",
+      "exitCode": 0,
+      "artifact": "local-crypto.txt",
+      "scope": "synthetic sealed bytes, NOT full Provider"
+    },
+    {
+      "command": "npm run check:inbox",
+      "exitCode": 0,
+      "artifact": "inbox.txt",
+      "scope": "synthetic sealed bytes, NOT full Provider"
+    },
+    {
+      "command": "CONFIRM_CLOUD_AUTH=echo_native PGHOST=/workspace/.echo-test/socket PGPORT=55432 npm run check:auth",
+      "exitCode": 0,
+      "artifact": "auth.txt",
+      "scope": "actual API; synthetic account"
+    },
+    {
+      "command": "CONFIRM_CLOUD_AUTH=echo_native PGHOST=/workspace/.echo-test/socket PGPORT=55432 npm run check:devices",
+      "exitCode": 0,
+      "artifact": "devices.txt",
+      "scope": "actual service revoke; SQL credentials are fixtures, NOT MLS authorization"
+    },
+    {
+      "command": "CONFIRM_CLOUD_AUTH=echo_native PGHOST=/workspace/.echo-test/socket PGPORT=55432 node --import tsx scripts/check-expiry-races.mjs",
+      "exitCode": 0,
+      "artifact": "expiry.txt",
+      "scope": "real lock wait/expiry; pinned project tsx"
+    },
+    {
+      "command": "CONFIRM_CLOUD_AUTH=echo_native PGHOST=/workspace/.echo-test/socket PGPORT=55432 CHROMIUM_PATH=/workspace/.echo-test/chromium npm run check:browser",
+      "exitCode": 0,
+      "artifact": "app-browser.txt",
+      "scope": "real user/admin app; expected 401/403, no unexpected HTTP/console/page errors; local self-signed TLS bypass only"
+    },
+    {
+      "command": "npm audit --package-lock-only --ignore-scripts --json",
+      "exitCode": 0,
+      "artifact": "npm-audit.json",
+      "scope": "zero vulnerabilities"
+    },
+    {
+      "command": "cargo audit --file crypto/mls-lab/Cargo.lock --json",
+      "exitCode": 1,
+      "artifact": "audit-lab.json",
+      "scope": "BLOCKED: 3 vulnerabilities, 1 unmaintained warning; no ignores"
+    },
+    {
+      "command": "cargo audit --file crypto/mls-persistence/Cargo.lock --json",
+      "exitCode": 1,
+      "artifact": "audit-persistence.json",
+      "scope": "BLOCKED: 4 vulnerabilities, 1 unmaintained warning; no ignores"
+    },
+    {
+      "command": "cargo tree --locked --manifest-path crypto/mls-lab/Cargo.toml -e features --target x86_64-unknown-linux-gnu",
+      "exitCode": 0,
+      "artifact": "lab-native-features.txt"
+    },
+    {
+      "command": "cargo tree --locked --manifest-path crypto/mls-lab/Cargo.toml -e features --target wasm32-unknown-unknown",
+      "exitCode": 0,
+      "artifact": "lab-wasm-features.txt"
+    },
+    {
+      "command": "cargo tree --locked --manifest-path crypto/mls-persistence/Cargo.toml -e features",
+      "exitCode": 0,
+      "artifact": "persistence-features.txt"
+    },
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "artifact": "typecheck.txt",
+      "durationSeconds": 6.19
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "artifact": "lint.txt",
+      "durationSeconds": 4.203
+    },
+    {
+      "command": "npm run check:ast",
+      "exitCode": 0,
+      "artifact": "ast.txt",
+      "durationSeconds": 0.486
+    },
+    {
+      "command": "npm run build:server",
+      "exitCode": 0,
+      "artifact": "server-build.txt",
+      "durationSeconds": 1.835
+    },
+    {
+      "command": "npm run check:source",
+      "exitCode": 0,
+      "artifact": "source.txt",
+      "durationSeconds": 0.546
+    },
+    {
+      "command": "npm run build:client",
+      "exitCode": 0,
+      "artifact": "client-build.txt",
+      "durationSeconds": 1.237
+    },
+    {
+      "command": "cargo +1.99.1 fmt --manifest-path crypto/mls-lab/Cargo.toml --all -- --check",
+      "exitCode": 0,
+      "artifact": "rustfmt-lab.txt",
+      "durationSeconds": 0.048
+    },
+    {
+      "command": "cargo +1.99.1 fmt --manifest-path crypto/mls-persistence/Cargo.toml --all -- --check",
+      "exitCode": 0,
+      "artifact": "rustfmt-persistence.txt",
+      "durationSeconds": 0.042
+    },
+    {
+      "command": "npm run check:identity",
+      "exitCode": 0,
+      "artifact": "identity-browser-final.txt",
+      "durationSeconds": 13.058
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "artifact": "diff-check.txt",
+      "durationSeconds": 0.007
+    },
+    {
+      "command": "Node import built requireReviewedCrypto; assert 503 MLS_NOT_READY",
+      "exitCode": 0,
+      "artifact": "gate.txt"
+    },
+    {
+      "command": "npm run format:check",
+      "exitCode": 0,
+      "artifact": "format.txt"
+    },
+    {
+      "command": "npm run check:source (final documents and evidence)",
+      "exitCode": 0,
+      "artifact": "source-final.txt"
+    }
+  ],
+  "protectedFiles": [
+    {
+      "path": "crypto/mls-lab/Cargo.lock",
+      "sha256": "9ca0ca55441b04fc379e5f8e3bfacd20ec03d87464ab5d2d3efdbe2ec62760e6",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "crypto/mls-persistence/Cargo.lock",
+      "sha256": "cd91032417bc348b25e3528a36d7d0ebf8d49ee5b3b139649a669c35d8d932e9",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "migrations/001-initial.sql",
+      "sha256": "bc404f56cf0658c138c2177a1d277a74ca4292d234a4269aba6c51fde5fb96e6",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "migrations/002-runtime-permissions.sql",
+      "sha256": "8d94e1f7e4eca7814d7bd145978c73d098cfa8d971feeeabf0fa14f1ae076962",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "migrations/003-route-version-and-delivery.sql",
+      "sha256": "8c4bf81e53fa51af3c891a5530388b75334d0e5a1dc6394b024e9c0a2fef1ccf",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "migrations/004-invitation-idempotency.sql",
+      "sha256": "5f79462433d0d182c331767b599f3187e709cf993120945089f1632a422008bb",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "migrations/005-admin-lifecycle.sql",
+      "sha256": "ccb640eb1f7e5c6b1fb740b6f6c2fe1d9291899fc1f306ac90ed3cbb54c0d65e",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "migrations/006-authorization-proof.sql",
+      "sha256": "ba2faca6bf545b5ba1002d82d178ac4ab5092e2207d9305589f9b825793ab999",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "migrations/007-public-user-id.sql",
+      "sha256": "b95faf65f901d3be46a9bd7c5ed23dea319c20e0c21471f90469d853d425f5e8",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "migrations/008-device-revocation.sql",
+      "sha256": "2cfe7b9afd153ea9362ffd400785fb74e25e295c664061f492b08bab5a49201c",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "migrations/baselines/echo-native-v1/001-initial.sql",
+      "sha256": "22afb6fd24d654824f0021b77ba6ce5ec3efbffcac35647ba8e0bf46f011a2e8",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "migrations/baselines/echo-native-v1/manifest.json",
+      "sha256": "db2d842602e06069b3db4eb4093b292c3ab4a67d405e4c8ecc4dde1aae1118ac",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "45bfa2fa9f668e62e6d301f36ec1e4813060cb55926e866591706f9a36ce8034",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "src/server/messaging/crypto-gate.ts",
+      "sha256": "6f9571c9d107cb6bbd59aeb23320070ab3112ffc3bff1fac3a9ae84ce5cdd6aa",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "src/shared/capabilities.ts",
+      "sha256": "537a2cb84901665b69ee43f6447ab566eb4eea0683d5f023a84e280f6a10ba6a",
+      "baselineUnchanged": true
+    }
+  ],
+  "review": {
+    "manual": "signature domains, pinning, possession, scope, replay, deadlines, immutability, transactions, role privileges, revoke and current-session binding",
+    "dedicatedSast": "NOT_RUN",
+    "independentSecurityAudit": "NOT_RUN",
+    "productMls": "BLOCKED",
+    "productProvider": "BLOCKED",
+    "mlsSignerBridge": "BLOCKED: async nonextractable WebCrypto key cannot directly satisfy pinned synchronous Signer",
+    "sasQr": "BLOCKED / NOT_RUN",
+    "rootRotationRecoveryRenewal": "NOT_AVAILABLE",
+    "productMessageE2E": "NOT_RUN",
+    "networkOfflineSync": "NOT_RUN",
+    "tombstoneRecoveryDisasterRecovery": "NOT_RUN",
+    "otherPcBrowsers": "NEEDS_RUNTIME_VERIFICATION",
+    "cryptoGate": "closed, source unchanged",
+    "signedCredentialRevocationFreshness": "BLOCKED: service withdrawal only; no signed revocation/freshness protocol"
+  },
+  "failuresAndCorrections": [
+    "Initial disposable database provisioning omitted REVOKE TEMP from PUBLIC; migration regression refused. Recreated only this-round disposable databases with minimum ACL; all assertions retained.",
+    "First signed initialization rolled back on security_events enum; 009 adds exactly two event types retaining all historical values; rerun passed.",
+    "Programmatic login did not refresh React session; harness now reloads before checking logged-in UI.",
+    "Parallel WASM generation caused Vite reload during identity test; reran after artifact removal, serialized browser checks.",
+    "Parallel expiry harness changed registration mode during identity setup; reran after it completed, serialized state-mutating checks.",
+    "Direct node expiry invocation refused TypeScript parameter properties; project-pinned tsx via node --import tsx passed.",
+    "Compiler rejected unused imports and missing Worker result property during implementation; corrected wiring and types without relaxing rules.",
+    "crates.io HTTP metadata and raw.githubusercontent.com returned 403; official GitHub Contents/tree API and cargo info succeeded; no network policy changes.",
+    "Initial evidence integrity selection included intentionally edited migrations/README.md; narrowed to protected historical SQL/manifest and lock/gate files; no false hash-success report emitted."
+  ],
+  "migrationVerification": {
+    "newAndLegacySchema": "PASS",
+    "businessTables": 28,
+    "upgrade008To009": "PASS",
+    "historicalManifestCompatibility": "PASS",
+    "sqlChecksums001To008": "unchanged"
+  },
+  "environmentSecurity": {
+    "postgres": "fresh cluster, loopback 55432 and /workspace Unix socket, trust auth only inside disposable test fixture; PUBLIC database rights revoked, API non-superuser and no owner membership",
+    "tls": "self-signed local certificate, test-only ignoreHTTPSErrors/Chromium flag; not production TLS verification"
+  },
+  "officialRawEvidence": [
+    {
+      "path": "docs/evidence/product-identity/RUSTSEC-2026-0173.txt",
+      "sha256": "b5a24f00b97870cb5b5ae7717a908c5ae84ad1da80cb2d4a3ba98a07521cf237",
+      "rawBytesPreserved": true
+    },
+    {
+      "path": "docs/evidence/product-identity/RUSTSEC-2026-0330.txt",
+      "sha256": "5b81c92a63e56228ce9a1c62e344a5ab13724b42c9862ee41db9e8cd6eb62d2b",
+      "rawBytesPreserved": true
+    },
+    {
+      "path": "docs/evidence/product-identity/RUSTSEC-2026-0331.txt",
+      "sha256": "c0954a633d53516f100f91446c954f7acd9ff07ac628a07b82ad2b5fefd489e9",
+      "rawBytesPreserved": true
+    },
+    {
+      "path": "docs/evidence/product-identity/RUSTSEC-2026-0387.txt",
+      "sha256": "7c9f3f944105638e613e83e97690035198e453d701e56506ee911e1fbfcb46f3",
+      "rawBytesPreserved": true
+    },
+    {
+      "path": "docs/evidence/product-identity/RUSTSEC-2026-0459.txt",
+      "sha256": "147ecc23304a18fea1fd34767925e0483532094c2ee0f5884fba73730574f0b2",
+      "rawBytesPreserved": true
+    }
+  ],
+  "syntax": {
+    "javascript": 16,
+    "shell": 1,
+    "exitCode": 0
+  },
+  "finiteSecretScan": {
+    "exitCode": 0,
+    "patterns": [
+      "private key PEM headers",
+      "GitHub token forms",
+      "AWS access key IDs"
+    ],
+    "hits": [],
+    "scope": "all tracked and untracked deliverable text files; limited patterns, not a full secret scanner or SAST"
+  },
+  "evidenceNormalization": "Text command logs omit trailing blank lines; raw official advisory and provider source snapshots preserve original bytes."
+}

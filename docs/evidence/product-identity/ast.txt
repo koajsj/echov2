@@ -1,0 +1,12 @@
+
+> echo-native@0.1.0 check:ast
+> node scripts/check-typescript-ast.mjs
+
+{
+  "status": "PASS",
+  "typescript": "5.9.3",
+  "files": 84,
+  "localBindings": 310,
+  "errors": [],
+  "scope": "TS/TSX syntax and direct local named exports only; no types, package exports, SQL or runtime validation"
+}

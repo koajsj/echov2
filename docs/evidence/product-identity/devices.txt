@@ -1,0 +1,5 @@
+
+> echo-native@0.1.0 check:devices
+> node scripts/check-device-revocation.mjs
+
+{"status":"PASS","serviceSessions":"revoked","websocket":"authenticated socket disconnected after HTTP revoke; old session rejected","directoryCredentials":"revoked atomically","unclaimedPackages":"deleted","claimedPackages":"retained","conversation":"frozen","transactionRollback":"PASS","reactivationDenied":"PASS","cryptographicRemoval":"BLOCKED: no MLS Remove/epoch or trusted admission"}

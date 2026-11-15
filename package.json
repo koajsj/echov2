@@ -27,7 +27,8 @@
     "check:local-crypto": "node scripts/check-local-crypto-browser.mjs",
     "check:inbox": "node scripts/check-inbox-browser.mjs",
     "check:deletion": "node scripts/check-deletion-race.mjs",
-    "check:devices": "node scripts/check-device-revocation.mjs"
+    "check:devices": "node scripts/check-device-revocation.mjs",
+    "check:identity": "node scripts/check-identity-browser.mjs"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.5",

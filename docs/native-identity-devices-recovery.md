@@ -1,5 +1,11 @@
 # 身份、设备与恢复
 
+## 当前已实现身份与仍缺恢复
+
+已有真实根自签名、设备签名持有证明、根授权、独立浏览器验链和带当前会话ID的签名恢复绑定。新身份authorized与目录pending/通信active分开，撤销同步失效公开授权。完整根公钥与请求指纹必须独立人工双向核对；SAS/QR、根轮换、恢复Credential、续期与密钥恢复NOT_AVAILABLE/BLOCKED。
+
+详见[本轮身份集成报告](product-identity-integration-report.md)和[实际证据](evidence/product-identity/results.json)。下文保留此前轮次记录；历史“未实现根身份/Worker”描述不代表本轮新增身份子系统的状态，历史 MLS 与恢复阻塞仍然适用。
+
 > 当前 Cloud 验证见[本轮报告](cloud-review-report.md)：008 公开材料撤销、事务回滚、服务 Session 撤销和真实 WebSocket 断开已验证，MLS Remove/新 Epoch 仍 BLOCKED。以下本机记录保留为历史。
 
 ## cb20341 后的核心身份复核

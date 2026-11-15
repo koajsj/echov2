@@ -8,7 +8,9 @@
 
 > 🛡️ **当前整体 PARTIAL，尚不具备生产部署条件。** 账户、迁移、管理元数据和桌面界面已在 Cloud 隔离环境验证；产品级 MLS、可信设备、离线删除和恢复仍阻塞。聊天写入继续拒绝 `503 MLS_NOT_READY`。
 
-> **2026-11-15 CI 修复与 MLS 续进：PARTIAL。** main `06f37b9` 的 CI 缺失服务端构建已修复，[含新增原生测试的完整 Actions 已通过](https://github.com/koajsj/echov2/actions/runs/43716261924)。新增浏览器原子 Inbox/Cursor 存储前置及官方原生 SQLite Provider 的真实 MLS 持久化、并发和进程崩溃验证；后者是未加密、无可信账号身份且不支持 WASM 的独立实验。原有四项 RustSec 未解除，新 SQLite 候选另命中 RUSTSEC-2026-0459，均未 ignore。产品 Worker、可信设备、通信、墓碑与恢复仍阻塞；详见[本轮状态与证据](docs/ci-mls-continuation-report.md)。
+> **最新产品身份工程：PARTIAL。** 已接入真实 Ed25519 根身份、设备持有证明/根签名授权、身份 Worker、IndexedDB 密钥和签名会话恢复；独立浏览器及实际页面验证通过。当前采用完整公钥和请求指纹的人工双向核对，SAS/QR、产品 MLS、完整 Provider 和消息通信仍 BLOCKED，五项 RustSec 未解除。详见[本轮报告](docs/product-identity-integration-report.md)。
+
+> **2026-11-15 CI 修复与 MLS 续进：PARTIAL。** main `06f37b9` 的 CI 缺失服务端构建已修复，[含新增原生测试的完整 Actions 已通过](https://github.com/koajsj/echov2/actions/runs/43716261924)。新增浏览器原子 Inbox/Cursor 存储前置及官方原生 SQLite Provider 的真实 MLS 持久化、并发和进程崩溃验证；后者是未加密、无可信账号身份且不支持 WASM 的独立实验。原有四项 RustSec 未解除，新 SQLite 候选另命中 RUSTSEC-2026-0459，均未 ignore。该轮产品 Worker、可信设备、通信、墓碑与恢复仍阻塞；详见[本轮状态与证据](docs/ci-mls-continuation-report.md)。
 
 [项目](#项目简介) · [能力](#-核心能力) · [架构](#-系统架构) · [安全](#-安全与元数据) · [界面](#-pc-用户端与管理端) · [截图](#-真实界面截图) · [开发](#-开发与验证) · [文档](#-权威文档) · [限制](#-当前限制与路线图)
 
@@ -26,7 +28,7 @@ Echo Native 探索一种可自主部署的通信架构：服务端管理账户�
 | --------------- | ---- | ------------------------------------------------------------------------------------------------- |
 | 账户            | ✅   | 注册、邀请码、Argon2id 登录、改名、重新认证、退出和受众隔离                                       |
 | 公共用户 ID     | ✅   | 随机12位 Base32、数据库唯一约束、碰撞重试、旧账号回填、显示/复制/查询；内部 UUID 保留             |
-| 设备            | 🟡   | pending 登记、目录和服务访问撤销；根授权、Credential、SAS/QR 未完成                               |
+| 设备            | 🟡   | pending 目录、真根签名设备授权、身份 Worker/会话重绑定；MLS 准入和 SAS/QR 未完成                  |
 | 端到端通信      | ⛔   | 私聊、群聊和离线消息没有产品级安全闭环；不提供明文替代                                            |
 | MLS / WASM      | 🟡   | 独立实验验证 Welcome、Commit、Application、Remove 与 epoch；未接入账号和投递                      |
 | 本地存储 / 附件 | 🟡   | IndexedDB Outbox/Inbox/Cursor 原子存储前置、附件 AEAD 已验证；产品完整 Provider 与 MLS 分发未完成 |
@@ -149,12 +151,12 @@ npm run typecheck
 npm run lint
 npm run format:check
 npm run check:ast
+npm run build:server
 npm run check:source
 npm run build:client
-npm run build:server
 ```
 
-真实数据库和浏览器脚本只对明确确认的临时 Cloud 数据库运行。新库使用独立基线001→002–008；上一轮两条迁移路径与008撤销触发器已运行验证，未知持久化环境仍不得自动迁移。操作说明见[迁移文档](migrations/README.md)，Rust命令见[MLS实验](crypto/mls-lab/README.md)，原生持久化命令见[独立 SQLite 实验](crypto/mls-persistence/README.md)，浏览器存储可运行 `npm run check:local-crypto` 与 `npm run check:inbox`（需要本地 Vite 与 Chromium）。当前范围及失败记录见[本轮续进报告](docs/ci-mls-continuation-report.md)。
+真实数据库和浏览器脚本只对明确确认的临时 Cloud 数据库运行。当前新库链为独立基线001→002–009，既有008可增量升级009；历史001–008和摘要不变，未知持久化环境仍不得自动迁移。操作说明见[迁移文档](migrations/README.md)，Rust命令见[MLS实验](crypto/mls-lab/README.md)及[独立 SQLite 实验](crypto/mls-persistence/README.md)。本地 Vite/Chromium 下可运行 `npm run check:local-crypto` 与 `npm run check:inbox`；身份验收命令 `npm run check:identity` 还需要显式确认的临时 Cloud PostgreSQL 和本地 HTTPS。当前实现、证据与限制见[产品身份报告](docs/product-identity-integration-report.md)。
 
 ## 🚀 部署与资源
 

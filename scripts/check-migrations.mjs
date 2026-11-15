@@ -115,7 +115,7 @@ try {
         "SELECT count(*)::int AS n FROM pg_tables WHERE schemaname='echo'",
       )
     ).rows[0].n,
-    23,
+    28,
   );
   const roles = (
     await newDb.query(
@@ -462,7 +462,7 @@ try {
       proof: after,
       schemaDump: "identical",
       catalog: "identical",
-      baseTables: 23,
+      baseTables: 28,
       permissionDenials: 10,
       advisoryLock: "PASS",
       checksums: "PASS",

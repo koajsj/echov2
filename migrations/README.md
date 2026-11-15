@@ -1,5 +1,9 @@
 # PostgreSQL 迁移
 
+## 009 产品身份增量
+
+默认计划使用 `migrations/product-identity-v1/manifest.json`，原样继承001–008和baseline摘要并追加009；历史manifest可显式加载。新增五张公开身份材料表、两类安全事件与撤销触发器；签名验证在服务端应用层，无私钥/MLS状态入库，无设备active或KeyPackage准入授权。仅在Cloud临时PostgreSQL17.11执行过新装和旧schema升级验证，未在生产执行。详见[身份工程报告](../docs/product-identity-integration-report.md)。
+
 ## 当前迁移清单：001–008（Cloud 隔离验证通过）
 
 `008-device-revocation.sql` 本轮已在临时 Cloud 新库及合成旧库执行，原字节未改；生产未执行。001–007及独立基线SQL不变，manifest追加008摘要，执行器只接受明确有序前缀。008要求普通owner，固定pg_catalog search_path、全表名限定的SECURITY DEFINER触发器在设备状态转为revoked的同事务标记公开Credential撤销并删除未领取KeyPackage。API无直接Credential/KeyPackage写权限，PUBLIC/API无函数执行权；不授予签发、激活或解冻能力。已经领取的包和凭证字节保留供对账，不承诺追回外部分发副本。

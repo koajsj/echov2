@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 export const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const manifestPath = "migrations/baselines/echo-native-v1/manifest.json";
+const manifestPath = "migrations/product-identity-v1/manifest.json";
 export async function loadManifest(path = resolve(root, manifestPath)) {
   const manifest = JSON.parse(await readFile(path, "utf8"));
   if (
@@ -43,10 +43,14 @@ export async function loadManifest(path = resolve(root, manifestPath)) {
     }
   }
   if (
-    manifest.migrations.map((x) => x.version).join(",") !==
-    "001,002,003,004,005,006,007,008"
+    ![
+      "001,002,003,004,005,006,007,008",
+      "001,002,003,004,005,006,007,008,009",
+    ].includes(manifest.migrations.map((x) => x.version).join(","))
   )
-    throw new Error("Expected explicit ordered versions 001 through 008");
+    throw new Error(
+      "Expected the exact historical 001-008 or current 001-009 chain",
+    );
   return manifest;
 }
 export async function inspect(db) {

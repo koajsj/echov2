@@ -12,6 +12,8 @@ import { passwordHash } from "./accounts/passwords.js";
 import { AccountService } from "./accounts/account-service.js";
 import { SessionService } from "./accounts/sessions.js";
 import { DeviceService } from "./devices/device-service.js";
+import { ProductIdentityService } from "./identity/product-identity-service.js";
+import { productIdentityRoutes } from "./identity/product-identity-routes.js";
 import { IdentityService } from "./identity/identity-service.js";
 import { DeliveryService } from "./delivery/delivery-service.js";
 import { DeletionService } from "./lifecycle/deletion-service.js";
@@ -136,6 +138,11 @@ export async function createApp(config: ServerConfig) {
     devices,
     new IdentityService(pool),
     hub,
+  );
+  productIdentityRoutes(
+    app,
+    sessions,
+    new ProductIdentityService(pool, config.origin),
   );
   dataRoutes(app, pool, sessions, config.origin);
   sessionManagementRoutes(app, pool, sessions, hub);
