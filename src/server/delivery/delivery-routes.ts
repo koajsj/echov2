@@ -54,9 +54,18 @@ export function deliveryRoutes(
           // Attach while holding the same account/session locks as revocation.
           // A later revoker can then observe and close this socket after commit.
           await transaction(pool, async (db) => {
-            await lockUserSession(db, current.account.id, current.id);
+            const session = await lockUserSession(
+              db,
+              current.account.id,
+              current.id,
+            );
             if (socket.readyState === 1)
-              hub.attach(socket, current.id, current.account.id);
+              hub.attach(
+                socket,
+                current.id,
+                current.account.id,
+                session.expiresAt.getTime(),
+              );
           });
         })
         .catch(() => socket.terminate());

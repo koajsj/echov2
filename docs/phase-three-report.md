@@ -1,8 +1,23 @@
 # 第三阶段交付报告
 
-2026-11-12，本地收敛基线 `c6068557a53ca5fd6b99fef07b88e00605c18578`。本地与 GitHub main 一致，PR #2 已合并；本轮在 `codex/native-security-closure` 开发，不自动合并。**整体 PARTIAL，产品通信和生产准入 BLOCKED。** 本报告描述当前代码；历史 Cloud 运行证据保留在 Git 历史及下列 evidence，不能代替本轮验证。
+2026-11-15，本地与GitHub main核对一致：`c6068557a53ca5fd6b99fef07b88e00605c18578`。保留前序`d17b0d6`和接管时未提交的组件改动，在`codex/native-hardening-review`继续。**整体PARTIAL，产品通信和生产准入BLOCKED。** 本轮无依赖安装、测试、服务、SQL或部署；已执行现有工具的全项目静态检查与客户端构建。历史Cloud证据不能替代本轮运行验证。
 
-## 修复台账
+## 2026-11-15修复台账
+
+FIXED仅指源码修复及列出的静态核验；浏览器和竞争运行不在其中。具体行号和产物字节保存在[结构化证据](evidence/native-hardening-review.json)，命令结果见[工程报告](static-verification-report.md)。
+
+| ID        | 文件 / 位置                                                                                  | 严重程度 | 根因与修复                                                                                                                                                                                                   | 验证 / 结果                                                                                                           |
+| --------- | -------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| HARDEN-01 | `cultui/CopyButton.tsx:8`、`PublicUserId.tsx:3`                                              | 中       | 承接Cult组件缺少公共ID约束与同步防重入。统一用户/管理公共入口；仅大写Base32十二位，拒绝UUID；await真实写入后成功、不可用/拒绝显示失败；两秒effect清理、按ID重建、HeroUI键盘与status、reduced-motion、MIT保留 | FIXED；类型/Lint/AST与唯一clipboard调用链PASS；真实复制与辅助技术NEEDS_RUNTIME_VERIFICATION                           |
+| HARDEN-02 | `App.tsx:5`、`UserApp.tsx:10`、`AdminApp.tsx:11`、`AdminWorkspace.tsx:8`、`Workspace.tsx:13` | 中       | 页面静态引入使用户首屏加载全部管理图表。按工作区/图表/归档懒加载，保留共享基础、Suspense和既有ErrorBoundary；保留KPI/柱状/折线及真实API                                                                      | FIXED；实际构建PASS，初始静态JS1,014,265→447,321字节；11块无超阈警告/非空模块重复。页面切换NEEDS_RUNTIME_VERIFICATION |
+| HARDEN-03 | `UserApp.tsx:64`、`AdminApp.tsx:69`                                                          | 中       | 工作区key只含账号ID，账号相同而服务session替换时可复用旧子树。改为sessionId+revision+page重建，隔离本地临时状态                                                                                              | FIXED；完整类型、Hooks Lint、调用链PASS；跨标签真实会话更换NOT_RUN                                                    |
+| HARDEN-04 | `accounts/session-access.ts:23`、`devices/device-service.ts:29`                              | 高       | SELECT FOR UPDATE的时间谓词可在未变行的锁等待前求值。先锁账号/session/device，再独立查询clock_timestamp复核会话/近期认证/设备凭证及根退休；设备登记复用相同检查                                              | FIXED；服务端类型/Lint、参数与所有调用方、锁序静态核验PASS；PG竞争NOT_RUN                                             |
+| HARDEN-05 | `accounts/account-service.ts:60`                                                             | 中       | 邀请消费UPDATE可能等待未变邀请码行，过期谓词已预先求值。先获取邀请码行锁，再带当前时间、撤销和次数条件原子UPDATE；异常仍整事务回滚                                                                           | FIXED；SQL/事务/幂等与调用链静态复核PARTIAL；真实行锁过期竞争NOT_RUN                                                  |
+| HARDEN-06 | `delivery/connection-hub.ts:11`、`delivery/delivery-routes.ts:57`                            | 中       | 固定60秒通知寿命可能跨越服务session到期。锁内取得数据库实际期限，取与60秒较早值；已到期拒挂载，notify和online统计不包含过期连接，现有维护循环回收                                                            | FIXED；类型/Lint、唯一attach调用及期限路径PASS；WSS/时钟/清理竞争NOT_RUN。通知不含正文，非MLS撤权                     |
+| HARDEN-07 | `features/data/metadata-archive.ts:23`                                                       | 低       | Date.parse接受并自动纠正2月30日等非法日历日期。保留严格格式/有限值检查，并要求ISO回序列化逐字一致                                                                                                            | FIXED；归档契约和类型/Lint静态复核PASS；文件导入运行NOT_RUN                                                           |
+| HARDEN-08 | README、CHANGELOG、工程/密码学/运维报告                                                      | 低       | 文档仍描述本机缺Node依赖且本轮禁止构建，并把历史运行写作当前结论。更新实际工具、构建图、修复/阻塞和历史范围；保留八张真实PC截图及历史证据                                                                    | FIXED；格式/源码链接核验PASS；新截图NOT_RUN                                                                           |
+
+## 2026-11-12前序修复台账
 
 FIXED 表示源码缺陷已修正并经静态复核，不表示并发、数据库或浏览器运行验收通过。
 
@@ -20,7 +35,7 @@ FIXED 表示源码缺陷已修正并经静态复核，不表示并发、数据�
 | 范围                                        | 状态    | 实际实现与限制                                                                                                  |
 | ------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------- |
 | 账户、邀请、12位公共ID、改名、会话/重新认证 | PARTIAL | 继承 PR #2 的真实 API 和 Cloud 证据；本轮未运行。密码登录不授予可信设备                                         |
-| PC用户端与管理端                            | PARTIAL | 独立入口/权限，React19、HeroUI3、BoardUI免费卡、深浅主题；本轮只改管理员版本提交，没有重新设计                  |
+| PC用户端与管理端                            | PARTIAL | 独立入口/权限，React19、HeroUI3、BoardUI免费卡、深浅主题；本轮按需加载及复制收尾，没有重新设计                  |
 | 管理元数据                                  | PARTIAL | 账户/设备/安全/审计/邀请、分页CSV与7/30/90日真实业务趋势；未知数据不补零                                        |
 | MLS独立实验                                 | PARTIAL | OpenMLS0.9.2/RustCrypto0.6.0、suite1与真实历史WASM实验；MemoryStorage、合成Credential，未进入产品               |
 | 产品私聊/群组和消息业务                     | BLOCKED | 无安全Provider/Worker/账号绑定与完整持久化，聊天写入仍503；编辑、搜索、转发、置顶、收藏、草稿与未读不能绕开门禁 |
@@ -61,8 +76,8 @@ FIXED 表示源码缺陷已修正并经静态复核，不表示并发、数据�
 
 ## 目录、差异与交付
 
-保留原模块化单体和PC布局；未引入依赖、服务、Matrix接口、Mock、密码学适配空壳或新测试。本轮新增 `008-device-revocation.sql` 和一份机器可读[本地审查证据](evidence/local-security-review.json)。历史001–007及独立基线SQL、package/Cargo声明与锁文件保持原字节；manifest只追加008。未删除源码或截图，没有无依据文件移动。两份报告合并过时重复叙述；主题技术规格继续各自为权威来源。旧echo-v2只读保留。
+保留原模块化单体和PC布局；未引入依赖、服务、Matrix接口、Mock、密码学适配空壳或新测试。仅将新组件样式命名为`copy-button.css`，更新唯一导入，没有重排成熟模块。11-12前序新增 `008-device-revocation.sql` 和一份机器可读[本地审查证据](evidence/local-security-review.json)。历史001–007及独立基线SQL、package/Cargo声明与锁文件保持原字节；manifest只追加008。未删除源码或截图，没有无依据文件移动。两份报告合并过时重复叙述；主题技术规格继续各自为权威来源。旧echo-v2只读保留。
 
-静态检查实际结果见[工程报告](static-verification-report.md)。本轮没有子智能体或独立第三方审计；主智能体在实施后另做完整Diff及调用链复核，不能称为独立审计。运行、迁移、构建、测试、真实数据及生产VPS均NOT_RUN。需要运行解除的结论保持BLOCKED，未把“代码已编写”当产品安全通过。
+静态检查实际结果见[工程报告](static-verification-report.md)。本轮没有子智能体或独立第三方审计；主智能体在实施后另做完整Diff及调用链复核，不能称为独立审计。本轮客户端构建PASS；运行、迁移、测试、真实数据及生产VPS均NOT_RUN。需要运行解除的结论保持BLOCKED，未把“代码已编写”当产品安全通过。
 
 提交到独立分支、推送后以GitHub真实head/PR记录为准；不自动合并main或部署。历史证据：[PC审查](evidence/pc-review.json)、[前次复核](evidence/final-review.json)、[Cloud验证](evidence/verification.json)。本阶段结束等待审查，不增加第四阶段。

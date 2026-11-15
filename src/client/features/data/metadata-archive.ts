@@ -23,7 +23,8 @@ const sequence = (v: unknown): v is string =>
 const date = (v: unknown): v is string =>
   typeof v === "string" &&
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(v) &&
-  Number.isFinite(Date.parse(v));
+  Number.isFinite(Date.parse(v)) &&
+  new Date(v).toISOString() === v;
 export function validateMetadata(
   value: unknown,
   accountId: string,

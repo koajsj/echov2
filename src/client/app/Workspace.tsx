@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import type { SessionView } from "../../shared/contracts";
 import { SessionPanel } from "../features/devices/SessionPanel";
 import { AccountPage } from "../features/account/AccountPage";
@@ -8,8 +9,12 @@ import { ConversationsPage } from "../features/messaging/ConversationsPage";
 import { ContactsPage } from "../features/contacts/ContactsPage";
 import { SavedPage } from "../features/personal/SavedPage";
 import { TrashPage } from "../features/personal/TrashPage";
-import { DataPage } from "../features/data/DataPage";
 import { ReauthenticationForm } from "../components/ReauthenticationForm";
+const DataPage = lazy(() =>
+  import("../features/data/DataPage").then((module) => ({
+    default: module.DataPage,
+  })),
+);
 export function Workspace({
   session,
   page,
@@ -43,7 +48,12 @@ export function Workspace({
   if (page === "contacts") return <ContactsPage sessionId={sessionId} />;
   if (page === "saved") return <SavedPage />;
   if (page === "trash") return <TrashPage sessionId={sessionId} />;
-  if (page === "data") return <DataPage session={session} />;
+  if (page === "data")
+    return (
+      <Suspense fallback={<p role="status">正在加载数据工具…</p>}>
+        <DataPage session={session} />
+      </Suspense>
+    );
   if (page === "conversations") return <ConversationsPage session={session} />;
   return (
     <section>

@@ -40,10 +40,12 @@ and Web Locks with opaque synthetic bytes. It cannot make MemoryStorage persiste
 or establish that a caller supplied a complete, correctly sealed provider snapshot.
 Sending remains forbidden until those boundaries and identity binding are reviewed.
 
-`cargo audit` currently fails: active WASM tree includes `crypto-bigint 0.5.5`
+The historical Cloud `cargo audit` failed: its active WASM tree included `crypto-bigint 0.5.5`
 (RUSTSEC-2026-0387); the compatible P-256/P-384 dependencies require 0.13 and
 cannot simply use patched bigint >=0.7.6. Suite 1 does not select P-256, but no
 complete reachability proof or upstream fix has been accepted here. The lock also
 contains optional inactive `libcrux-kem 0.0.9` advisories and unmaintained
-`proc-macro-error2`. No advisories are ignored. See the authoritative
+`proc-macro-error2`. The current offline tree is NOT_AVAILABLE because the local
+crate index/cache is incomplete; cargo-audit is not installed. Historical
+reachability is not a fresh feature-resolution result. No advisories are ignored. See the authoritative
 [cryptography review](../../docs/native-cryptography.md).

@@ -1,6 +1,6 @@
 # MLS 与浏览器密码学
 
-2026-11-12本地收敛。**产品集成 BLOCKED；独立实验 PARTIAL。** 固定候选 OpenMLS 0.9.2 / RustCrypto 0.6.0，RFC 9420套件1。当前只审查既有源码、锁文件、历史运行工件和官方公告；未下载依赖、修改密码学算法、构建或运行实验。
+2026-11-15本地收敛。**产品集成 BLOCKED；独立实验 PARTIAL。** 固定候选 OpenMLS 0.9.2 / RustCrypto 0.6.0，RFC 9420套件1。当前只审查既有源码、锁文件、历史运行工件和官方公告；未下载依赖、修改密码学算法、构建或运行实验。
 
 ## 实际实现与候选
 
@@ -12,16 +12,16 @@ OpenMLS仍为可行性优先候选；ts-mls1.6.4为条件备选，不能因Rust�
 
 ## Rust公告与依赖路径
 
-2026-11-12读取RustSec官方公告确认修复版本；没有下载crate或使用audit ignore。当前本机无cargo-audit；`cargo +stable tree --locked --offline --target wasm32-unknown-unknown -i crypto-bigint`退出101，缺getrandom索引/缓存。下列锁闭路径由Cargo.lock静态反向解析；活动features的依据是未改锁文件对应的历史Cloud树，不能把本轮离线失败当重新验证成功。
+2026-11-15重新读取RustSec官方公告确认修复版本；没有下载crate或使用audit ignore。当前本机无cargo-audit；`cargo +stable tree --locked --offline --target wasm32-unknown-unknown -i crypto-bigint`退出101，缺getrandom索引/缓存。下列锁闭路径由Cargo.lock静态反向解析；活动features的依据是未改锁文件对应的历史Cloud树，不能把本轮离线失败当重新验证成功。
 
-| 公告                                                                       | 实际版本及锁闭路径                                                                                                                            | 处理 / 解除条件                                                                                                                                  |
-| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [RUSTSEC-2026-0387](https://rustsec.org/advisories/RUSTSEC-2026-0387.html) | crypto-bigint0.5.5 ← elliptic-curve0.13.8 ← p256/p384/k256或ecdsa/primeorder ← OpenMLS RustCrypto、basic_credential与hpke-rs-rust-crypto0.7.0 | BLOCKED。官方修复>=0.7.6，非0.5兼容替换；历史WASM树活动。不选P-256不足以证明无秘密运算可达，不能强制改lock或自修算法                             |
-| [RUSTSEC-2026-0331](https://rustsec.org/advisories/RUSTSEC-2026-0331.html) | libcrux-kem0.0.9 ← hpke-rs-libcrux0.7.0 ← hpke-rs0.7.0                                                                                        | BLOCKED。短混合key解码panic，官方修复>=0.0.10；历史WASM树未激活此可选路径，但锁闭仍含风险。需上游版本约束/特性及完整解析验证，不能直接替换校验和 |
-| [RUSTSEC-2026-0330](https://rustsec.org/advisories/RUSTSEC-2026-0330.html) | 同上                                                                                                                                          | BLOCKED。短seed混合封装panic，官方修复>=0.0.10；不能以“不是套件1”忽略公告或关闭扫描                                                              |
-| RUSTSEC-2026-0173（历史维护警告）                                          | proc-macro-error2 2.0.1 ← hax-lib-macros0.3.7 ← hax-lib/libcrux相关链                                                                         | BLOCKED待上游迁移/替代复核；本轮没有当前完整cargo审计，不自行fork宏/密码库                                                                       |
+| 公告                                                                                   | 实际版本及锁闭路径                                                                                                                            | 处理 / 解除条件                                                                                                                                  |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [RUSTSEC-2026-0387](https://rustsec.org/advisories/RUSTSEC-2026-0387.html)             | crypto-bigint0.5.5 ← elliptic-curve0.13.8 ← p256/p384/k256或ecdsa/primeorder ← OpenMLS RustCrypto、basic_credential与hpke-rs-rust-crypto0.7.0 | BLOCKED。官方修复>=0.7.6，非0.5兼容替换；历史WASM树活动。不选P-256不足以证明无秘密运算可达，不能强制改lock或自修算法                             |
+| [RUSTSEC-2026-0331](https://rustsec.org/advisories/RUSTSEC-2026-0331.html)             | libcrux-kem0.0.9 ← hpke-rs-libcrux0.7.0 ← hpke-rs0.7.0                                                                                        | BLOCKED。短混合key解码panic，官方修复>=0.0.10；历史WASM树未激活此可选路径，但锁闭仍含风险。需上游版本约束/特性及完整解析验证，不能直接替换校验和 |
+| [RUSTSEC-2026-0330](https://rustsec.org/advisories/RUSTSEC-2026-0330.html)             | 同上                                                                                                                                          | BLOCKED。短seed混合封装panic，官方修复>=0.0.10；不能以“不是套件1”忽略公告或关闭扫描                                                              |
+| [RUSTSEC-2026-0173](https://rustsec.org/advisories/RUSTSEC-2026-0173.html)（维护警告） | proc-macro-error2 2.0.1 ← hax-lib-macros0.3.7 ← hax-lib0.3.7 ← libcrux-sha3 0.0.10 ← hpke-rs0.7.0 ← RustCrypto Provider；另有KEM链            | BLOCKED。公告未给修复版本，需上游迁移/替代复核；不是密码算法漏洞证明，不能因KEM可选便认定宏也非活动。本轮没有完整cargo审计，不自行fork宏/密码库  |
 
-本机没有固定1.99.1工具链或wasm-bindgen CLI依赖闭包；使用已安装stable1.99.0仅执行rustfmt检查，不声称符合固定版本构建验证。npm/Rust锁文件未更改。最小安全替代是保留独立实验和关闭产品写入；兼容修复必须在获授权准备依赖的环境中重新锁闭、审查、编译、审计和互操作验证。
+本机没有固定1.99.1工具链或wasm-bindgen CLI依赖闭包；使用已安装stable1.99.0仅执行rustfmt检查，不声称符合固定版本构建验证。npm/Rust锁文件未更改。本轮对上游兼容性的可核验范围为官方修复版本、锁闭父依赖版本和历史活动树；没有固定依赖源码，无法验证新Provider对补丁版本的API/feature兼容，不能把“有补丁版本”当作安全升级方案。最小安全替代是保留独立实验和关闭产品写入；兼容修复必须在获授权准备依赖的环境中重新锁闭、审查、编译、审计和互操作验证。
 
 ## 产品Crypto边界与状态转换
 

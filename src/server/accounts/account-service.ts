@@ -57,9 +57,15 @@ export class AccountService {
       if (mode === "invite") {
         if (!input.invitation)
           throw new HttpError(403, "INVITATION_REQUIRED", "需要有效邀请码。");
+        const invitationHash = tokenHash(input.invitation);
+        // Acquire the row first; expiry must be evaluated after the lock wait.
+        await db.query(
+          "SELECT id FROM echo.invitations WHERE token_hash=$1 FOR UPDATE",
+          [invitationHash],
+        );
         const invitation = await db.query(
           "UPDATE echo.invitations SET uses=uses+1 WHERE token_hash=$1 AND revoked_at IS NULL AND expires_at>clock_timestamp() AND uses<max_uses RETURNING id",
-          [tokenHash(input.invitation)],
+          [invitationHash],
         );
         if (!invitation.rowCount)
           throw new HttpError(403, "INVITATION_INVALID", "邀请码不可用。");

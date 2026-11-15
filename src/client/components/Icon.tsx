@@ -1,5 +1,7 @@
 // Original outline glyphs: no external icon assets or downloads.
 const paths = {
+  copy: "M9 9h12v12H9V9Z M5 15H3V3h12v2",
+  check: "M5 12l4 4L19 6",
   chat: "M5 5h14v11H9l-4 4V5Z M9 9h6 M9 12h4",
   people:
     "M16 20v-2a4 4 0 0 0-8 0v2 M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6 M18 6a3 3 0 0 1 0 6 M19 15a4 4 0 0 1 2 4",

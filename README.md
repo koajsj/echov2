@@ -73,7 +73,7 @@ flowchart LR
 | Rust / wasm-bindgen        | 1.99.1 / 0.2.105                       | native/WASM 构建                                |
 | Caddy / systemd            | Cloud 实验 Caddy 2.6.2；systemd 未锁版 | 目标 HTTPS 入口与进程管理                       |
 
-依赖以 [package.json](package.json)、[npm 锁文件](package-lock.json)、[Cargo.toml](crypto/mls-lab/Cargo.toml) 和 [Cargo.lock](crypto/mls-lab/Cargo.lock) 为准。BoardUI 以源码分发，不虚构运行时包版本；版权、修改范围和 MIT 文本见[来源说明](src/client/components/boardui/notice.md)。未复制未授权 Pro 源码。
+依赖以 [package.json](package.json)、[npm 锁文件](package-lock.json)、[Cargo.toml](crypto/mls-lab/Cargo.toml) 和 [Cargo.lock](crypto/mls-lab/Cargo.lock) 为准。BoardUI 以源码分发，不虚构运行时包版本；版权、修改范围和 MIT 文本见[来源说明](src/client/components/boardui/notice.md)。未复制未授权 Pro 源码。Cult UI 按需复用 Copy Button，用于公共用户 ID 的复制反馈，无新增运行时依赖；上游版本、修改范围和 MIT 文本见[Cult UI 来源说明](src/client/components/cultui/notice.md)。
 
 ## 🔐 安全与元数据
 
@@ -86,9 +86,9 @@ flowchart LR
 
 服务器可见账户和设备目录、会话、IP/登录事件、审计、成员/路由关系、投递时间/长度/顺序、删除目标及附件引用。管理员无法通过现有 API 获取聊天明文、附件明文或用户私钥；服务器仍可拒绝服务，元数据真实性和可用性也有局限。
 
-> ⛔ **供应链安全准入未通过：** `crypto-bigint` 时序公告进入当前 WASM 依赖树；Cargo 锁闭另有公告。未忽略公告、未强制套用不兼容补丁，crypto-gate 持续关闭。详情见[密码学](docs/native-cryptography.md)。
+> ⛔ **供应链安全准入未通过：** 历史 WASM 活动树包含 `crypto-bigint` 时序公告路径；本轮离线树因缺缓存不可重验，Cargo 锁闭另有公告。未忽略公告、未强制套用不兼容补丁，crypto-gate 持续关闭。详情见[密码学](docs/native-cryptography.md)。
 
-本轮本地源码修复了通知挂载与会话撤销的竞争、通知过期/背压处理及管理员账号状态的版本校验。新增008待审迁移，在设备撤销同事务失效公开Credential、清除未领取KeyPackage；不代表MLS密码学撤权。静态复核已进行，相关运行和迁移NOT_RUN；完整台账见[第三阶段报告](docs/phase-three-report.md)。
+2026-11-15本地收尾统一公共ID复制入口，补齐锁等待后的会话、设备凭证和邀请码期限检查，通知期限不超过服务会话。用户工作区、管理端、图表和归档页按需加载，真实构建的用户入口静态JS闭包由1,014,265降至447,321字节；未删图表或调高警告阈值。继承的008待审迁移用于服务公开材料撤销，不代表MLS Remove。浏览器剪贴板、并发和迁移均未运行；完整台账见[第三阶段报告](docs/phase-three-report.md)。
 
 ## 👤 PC 用户端与管理端
 
@@ -127,7 +127,7 @@ Cloud Chromium 实际运行，临时 PostgreSQL 与合成账户；桌面视口14
 echov2/
 ├── src/client/app/         PC 双入口、独立工作区与共享 Hooks
 ├── src/client/features/    账户、设备、数据与管理页面
-├── src/client/components/  HeroUI 组合及 BoardUI 免费源码
+├── src/client/components/  HeroUI 组合、BoardUI 与 Cult UI 按需源码
 ├── src/server/             认证、身份、投递、生命周期与管理 API
 ├── src/shared/             类型契约与输入校验
 ├── crypto/mls-lab/         独立 OpenMLS / WASM 实验
@@ -140,9 +140,9 @@ echov2/
 
 ## 🔍 开发与验证
 
-当前主开发环境为本地 `echov2`，基线已包含合并的 [PR #2](https://github.com/koajsj/echov2/pull/2)。旧 `echo-v2` 仅作只读参考。本机禁止安装/下载新的项目依赖或 Rust/WASM 工具链，不恢复旧 node_modules；本轮不运行测试、构建、应用、数据库迁移或生产部署。历史 Cloud 成功记录不作为当前修改的运行验证。
+当前主开发环境为本地 `echov2`，main基线为`c6068557a53ca5fd6b99fef07b88e00605c18578`；独立分支保留先前安全提交`d17b0d6`及接管时未提交改动。旧 `echo-v2` 未修改。本轮不安装/下载/升级依赖或 Rust/WASM 工具链，不运行测试、服务、数据库迁移或生产部署；仅使用已有node_modules执行工程静态检查和Vite客户端构建。历史Cloud成功记录不作为当前修改的运行验证。
 
-已有独立 TypeScript / Prettier 工具可按[工程报告](docs/static-verification-report.md)显式指定路径进行静态检查；缺项目依赖时完整类型/Lint标记NOT_AVAILABLE，不修改规则或补假类型。不得在当前本机执行依赖安装命令。供应链可执行只读取锁文件的 `npm audit --package-lock-only --ignore-scripts`，不安装包。
+已有项目依赖支持`npm run typecheck`、`npm run lint`、`npm run format:check`、`npm run check:ast`和`npm run check:source`，本轮均实际执行。构建诊断仅写入忽略的`dist/bundle-review-*`，没有启动预览服务。Rust活动树离线解析、cargo-audit和完整SAST工具不可用；不修改规则或补假类型。供应链保留历史公告记录，本轮没有重新执行联网npm audit；详情见[工程报告](docs/static-verification-report.md)。
 
 Rust/WASM 和库实验命令见 [MLS 实验](crypto/mls-lab/README.md)。真实数据库、认证、短 ID、删除竞争及浏览器脚本需要明确隔离环境参数，不对任意数据库直接运行。命令与实际退出码见[工程验证](docs/static-verification-report.md)。
 
@@ -167,14 +167,14 @@ Cloud 实际 cgroup 仍为32 GB / 4核，swap 无限制；Docker 请求2 GB / 1�
 
 ## 🧭 当前限制与路线图
 
-- ✅ **已验证范围：** 账户、公共ID迁移、权限和幂等；PC双入口；真实元数据图表、查询、复制及下载；工程检查与独立MLS实验。
+- ✅ **本轮PASS：** 全项目类型、Lint、格式、AST、源码/引用检查及客户端构建；账户、迁移、PC截图和MLS运行结果属于历史Cloud证据。
 - 🟡 **部分完成：** 设备目录、消息投递基础、删除意图、本地附件、元数据归档、管理后台与有限静态扫描。
 - ⛔ **BLOCKED：** 活动密码学依赖公告、可信设备、产品MLS、私聊/群聊、离线同步与墓碑、密钥恢复、灾备和低配资源验收。
-- 🔍 **NEEDS_RUNTIME_VERIFICATION：** 安全内核接通后的产品级多设备、Commit冲突、真实崩溃/磁盘满、删除新鲜性、隔离恢复与完整可访问性验证。
+- 🔍 **NEEDS_RUNTIME_VERIFICATION：** 本轮剪贴板真实成功/拒绝、键盘/读屏、懒加载切换与锁等待期限；安全内核接通后还需产品多设备、Commit冲突、崩溃/磁盘满、删除新鲜性及隔离恢复验证。
 - ◆ **交付边界：** 第三阶段继续收敛，不增加第四阶段，不自动合并或生产部署。
 
 ## 🤝 许可证与贡献
 
-项目根目录没有确认的整体 LICENSE，不擅自声明开源授权。BoardUI 免费源码单独保留上游 MIT 许可，其他依赖义务见 SBOM；这不授予本项目整体许可证。
+项目根目录没有确认的整体 LICENSE，不擅自声明开源授权。BoardUI 免费源码和 Cult UI 改编组件分别保留上游 MIT 许可，其他依赖义务见 SBOM；这不授予本项目整体许可证。
 
 欢迎提交可复现 Issue 或 PR。涉及迁移、密码学、设备信任、删除或恢复的变更，应附兼容路径、实际验证和未覆盖风险。重要功能变更须同步更新本页与对应权威文档。

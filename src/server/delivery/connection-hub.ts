@@ -8,7 +8,17 @@ interface Connection {
 }
 export class ConnectionHub {
   private readonly connections = new Set<Connection>();
-  attach(socket: WebSocket, sessionId: string, userId: string): void {
+  attach(
+    socket: WebSocket,
+    sessionId: string,
+    userId: string,
+    sessionExpiresAt: number,
+  ): void {
+    const expiresAt = Math.min(Date.now() + 60000, sessionExpiresAt);
+    if (expiresAt <= Date.now()) {
+      socket.close(1008, "Session expired");
+      return;
+    }
     if (
       this.connections.size >= 500 ||
       [...this.connections].filter((c) => c.userId === userId).length >= 10
@@ -20,7 +30,7 @@ export class ConnectionHub {
       socket,
       sessionId,
       userId,
-      expiresAt: Date.now() + 60000,
+      expiresAt,
     };
     this.connections.add(connection);
     socket.on("close", () => this.connections.delete(connection));

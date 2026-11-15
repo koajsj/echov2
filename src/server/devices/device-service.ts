@@ -26,22 +26,10 @@ export class DeviceService {
     label: string,
   ): Promise<string> {
     return transaction(this.pool, async (db) => {
-      // All device/lifecycle/delivery mutations lock the active account first.
-      const user = await db.query(
-        "SELECT id FROM echo.users WHERE id=$1 AND status='active' FOR UPDATE",
-        [userId],
-      );
-      if (!user.rowCount)
-        throw new HttpError(401, "ACCOUNT_UNAVAILABLE", "账号不可用。");
-      const session = await db.query<{
-        device_id: string | null;
-      }>(
-        "SELECT device_id FROM echo.sessions WHERE id=$1 AND user_id=$2 AND audience='user' AND expires_at>clock_timestamp() AND reauthenticated_at>clock_timestamp()-interval '5 minutes' FOR UPDATE",
-        [sessionId, userId],
-      );
-      if (!session.rows[0])
-        throw new HttpError(401, "SESSION_EXPIRED", "会话已失效。");
-      if (session.rows[0].device_id)
+      const session = await lockUserSession(db, userId, sessionId, {
+        recent: true,
+      });
+      if (session.deviceId)
         throw new HttpError(409, "DEVICE_ALREADY_BOUND", "本会话已绑定设备。");
       const count = await db.query<{
         count: number;
