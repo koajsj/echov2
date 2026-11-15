@@ -1,3 +1,5 @@
+> **本地 MLS 核心续进：PARTIAL。** 新增根授权 MLS 公钥验签契约；修复 Outbox 同群组顺序及 v4 升级，现有 Chrome 存储检查与真实 Ed25519 定向检查通过。产品 Signer/Provider/双设备通信尚未接通；用户禁止下载后已清除本轮隔离工具下载，五项 RustSec 和生产准入仍 BLOCKED。详见[本地验收报告](docs/local-mls-integration-report.md)。
+
 <div align="center">
   <img src="public/echo.svg" alt="Echo Logo" width="84" />
   <h1>Echo Native</h1>

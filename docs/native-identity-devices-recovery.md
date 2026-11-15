@@ -1,5 +1,7 @@
 # 身份、设备与恢复
 
+本地续进：新增根授权独立 MLS 公钥的严格声明与验证前置；未生成产品 Rust Signer、未签发产品 MLS 凭据，撤销新鲜性、根轮换、恢复仍 BLOCKED。见[本地验收](local-mls-integration-report.md)。
+
 ## 当前已实现身份与仍缺恢复
 
 已有真实根自签名、设备签名持有证明、根授权、独立浏览器验链和带当前会话ID的签名恢复绑定。新身份authorized与目录pending/通信active分开，撤销同步失效公开授权。完整根公钥与请求指纹必须独立人工双向核对；SAS/QR、根轮换、恢复Credential、续期与密钥恢复NOT_AVAILABLE/BLOCKED。

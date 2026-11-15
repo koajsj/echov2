@@ -1,5 +1,7 @@
 # 应用协议与一致性投递
 
+本地续进：Outbox v4 按 group/version 顺序读取，ACK 后旧分页位置拒绝；v1/v2/v3 迁移保留已确认状态。发送者仍须同群组串行并对账未知结果；产品 MLS 收发尚未接通，见[本地验收](local-mls-integration-report.md)。
+
 ## 本轮身份授权未改变通信准入
 
 新的身份协议只登记公开授权。挑战五分钟、凭据三十天、原ID重试与一次性消费已实施；不释放KeyPackage，不写active，不产生MLS Welcome/Commit/Application。服务器投递仍不能证明解密，route_version、seq与mls_epoch继续分开。产品单写者Provider→MLS→Outbox及Provider→Inbox→Cursor事务仍BLOCKED。

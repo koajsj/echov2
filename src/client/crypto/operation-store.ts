@@ -36,7 +36,7 @@ export async function openOperationStore(
     throw new Error("存储命名空间无效");
   if (!navigator.locks || typeof indexedDB === "undefined")
     throw new Error("浏览器缺少可靠的本地存储或单写者锁");
-  const opening = indexedDB.open(`echo-crypto-${namespace}`, 3);
+  const opening = indexedDB.open(`echo-crypto-${namespace}`, 4);
   return new Promise((resolve, reject) => {
     let refused = false;
     // An open queued behind a blocked delete receives no blocked event itself.
@@ -49,32 +49,77 @@ export async function openOperationStore(
       clearTimeout(timer);
       reject(new Error("本地存储被其他标签阻塞；请关闭旧连接后重试，禁止发送"));
     };
-    opening.onupgradeneeded = () => {
+    opening.onupgradeneeded = (event) => {
       if (refused) {
         opening.transaction?.abort();
         return;
       }
       const db = opening.result;
+      const tx = opening.transaction!;
+      const oldVersion = (event as IDBVersionChangeEvent).oldVersion;
       if (!db.objectStoreNames.contains("groups"))
         db.createObjectStore("groups");
       if (!db.objectStoreNames.contains("operations"))
         db.createObjectStore("operations");
-      const needsOutbox = !db.objectStoreNames.contains("outbox");
-      const outbox = needsOutbox ? db.createObjectStore("outbox") : null;
-      const inbox = db.createObjectStore("inbox");
-      inbox.createIndex("message", ["group", "messageId"], { unique: true });
-      db.createObjectStore("cursors");
-      // Upgrading never assumes an older operation was delivered. Retrying must
-      // use its original ID and bytes, after reconciling the server's result.
-      if (!outbox) return;
-      const cursor = opening
-        .transaction!.objectStore("operations")
-        .openCursor();
+      const operations = tx.objectStore("operations");
+      const outbox = db.objectStoreNames.contains("outbox")
+        ? tx.objectStore("outbox")
+        : db.createObjectStore("outbox");
+      if (oldVersion < 3) {
+        const inbox = db.createObjectStore("inbox");
+        inbox.createIndex("message", ["group", "messageId"], { unique: true });
+        db.createObjectStore("cursors");
+      }
+      outbox.createIndex("groupVersion", ["group", "version"], {
+        unique: true,
+      });
+      // v1 had no outbox. v3 has explicit pending IDs; never requeue receipts.
+      const cursor = (oldVersion < 2 ? operations : outbox).openCursor();
       cursor.onsuccess = () => {
         const row = cursor.result;
         if (!row) return;
-        outbox.add(row.key, row.key);
-        row.continue();
+        const id = row.key;
+        const migrate = (operation: OperationRecord | undefined) => {
+          if (
+            typeof id !== "string" ||
+            !id ||
+            id.length > 128 ||
+            !operation ||
+            operation.id !== id ||
+            typeof operation.group !== "string" ||
+            !operation.group ||
+            operation.group.length > 512 ||
+            !Number.isSafeInteger(operation.version) ||
+            operation.version < 1 ||
+            operation.expectedVersion !== operation.version - 1 ||
+            !(operation.ciphertext instanceof ArrayBuffer) ||
+            operation.ciphertext.byteLength < 1 ||
+            operation.ciphertext.byteLength > 360448 ||
+            !(operation.sealedState instanceof ArrayBuffer) ||
+            operation.sealedState.byteLength < 29 ||
+            operation.sealedState.byteLength > 8 * 1024 * 1024 ||
+            (oldVersion >= 2 && (row.value !== id || operation.receipt))
+          ) {
+            tx.abort();
+            return;
+          }
+          if (!operation.receipt) {
+            const pending = {
+              id,
+              group: operation.group,
+              version: operation.version,
+            };
+            if (oldVersion < 2) outbox.add(pending, id);
+            else row.update(pending);
+          }
+          row.continue();
+        };
+        if (oldVersion < 2) migrate(row.value as OperationRecord);
+        else {
+          const lookup = operations.get(id);
+          lookup.onsuccess = () =>
+            migrate(lookup.result as OperationRecord | undefined);
+        }
       };
     };
     opening.onerror = () => {
@@ -161,7 +206,12 @@ export async function commitCryptoOperation(
         ),
       );
       await request(
-        transaction.objectStore("outbox").add(operation.id, operation.id),
+        transaction
+          .objectStore("outbox")
+          .add(
+            { id: operation.id, group: operation.group, version },
+            operation.id,
+          ),
       );
       await finished;
       return version;
@@ -184,21 +234,42 @@ export async function pendingCryptoOperations(
 ): Promise<{ ids: string[]; next: string | null }> {
   if (!Number.isInteger(limit) || limit < 1 || limit > 100)
     throw new Error("Outbox 分页大小无效");
-  const ids = await request<IDBValidKey[]>(
-    db
-      .transaction("outbox", "readonly")
-      .objectStore("outbox")
-      .getAllKeys(
-        after === null ? undefined : IDBKeyRange.lowerBound(after, true),
-        limit + 1,
-      ),
+  // Order within each group by the committed state version. A sender must
+  // process each group serially and reconcile unknown results before advancing.
+  const tx = db.transaction("outbox", "readonly");
+  const outbox = tx.objectStore("outbox");
+  let range: IDBKeyRange | undefined;
+  if (after !== null) {
+    const cursor = await request<
+      { id: string; group: string; version: number } | undefined
+    >(outbox.get(after));
+    if (
+      !cursor ||
+      cursor.id !== after ||
+      !cursor.group ||
+      !Number.isSafeInteger(cursor.version) ||
+      cursor.version < 1
+    )
+      throw new Error("Outbox 分页位置已失效；请从头重新读取");
+    range = IDBKeyRange.lowerBound([cursor.group, cursor.version], true);
+  }
+  const rows = await request<{ id: string; group: string; version: number }[]>(
+    outbox.index("groupVersion").getAll(range, limit + 1),
   );
-  if (!ids.every((id) => typeof id === "string"))
+  if (
+    !rows.every(
+      (row) =>
+        typeof row.id === "string" &&
+        !!row.id &&
+        typeof row.group === "string" &&
+        !!row.group &&
+        Number.isSafeInteger(row.version) &&
+        row.version > 0,
+    )
+  )
     throw new Error("Outbox 损坏，禁止发送");
-  return {
-    ids: ids.slice(0, limit) as string[],
-    next: ids.length > limit ? (ids[limit - 1] as string) : null,
-  };
+  const ids = rows.slice(0, limit).map((row) => row.id);
+  return { ids, next: rows.length > limit ? ids[ids.length - 1]! : null };
 }
 
 export async function acknowledgeCryptoOperation(

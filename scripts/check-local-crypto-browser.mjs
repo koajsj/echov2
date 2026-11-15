@@ -149,9 +149,16 @@ try {
     } catch {
       conflict = true;
     }
+    let staleCursorRejected = false;
+    try {
+      await store.pendingCryptoOperations(window.db, before.next, 1);
+    } catch {
+      staleCursorRejected = true;
+    }
     const remaining = await store.pendingCryptoOperations(window.db);
     return {
-      paginated: before.ids.length === 1 && before.next !== null,
+      paginated: before.ids.length === 1 && before.next === winner,
+      staleCursorRejected,
       mismatch,
       conflict,
       rollback,
@@ -163,6 +170,7 @@ try {
   }, "race-" + winner);
   assert.deepEqual(outbox, {
     paginated: true,
+    staleCursorRejected: true,
     mismatch: true,
     conflict: true,
     rollback: true,
@@ -280,10 +288,144 @@ try {
   });
   assert.deepEqual(upgrade, {
     blocked: true,
-    version: 3,
+    version: 4,
     pending: ["old-operation"],
     bytes: [9],
   });
+  const orderAndV3 = await pages[0].evaluate(async () => {
+    const store = window.storeModule;
+    const namespace = "v3-" + crypto.randomUUID();
+    const name = "echo-crypto-" + namespace;
+    const db = await new Promise((resolve, reject) => {
+      const r = indexedDB.open(name, 3);
+      r.onupgradeneeded = () => {
+        r.result.createObjectStore("groups");
+        r.result.createObjectStore("operations");
+        r.result.createObjectStore("outbox");
+        const inbox = r.result.createObjectStore("inbox");
+        inbox.createIndex("message", ["group", "messageId"], { unique: true });
+        r.result.createObjectStore("cursors");
+      };
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    });
+    const ids = [
+      "ffffffff-ffff-4fff-8fff-ffffffffffff",
+      "00000000-0000-4000-8000-000000000000",
+      "11111111-1111-4111-8111-111111111111",
+    ];
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(
+        ["groups", "operations", "outbox"],
+        "readwrite",
+      );
+      tx.objectStore("groups").put(
+        { version: 3, sealedState: new Uint8Array(64).buffer },
+        "g",
+      );
+      ids.forEach((id, i) => {
+        tx.objectStore("operations").add(
+          {
+            id,
+            group: "g",
+            expectedVersion: i,
+            version: i + 1,
+            sealedState: new Uint8Array(64).buffer,
+            ciphertext: new Uint8Array([i + 1]).buffer,
+            ...(i === 2 ? { receipt: { messageId: "preserved" } } : {}),
+          },
+          id,
+        );
+        if (i < 2) tx.objectStore("outbox").add(id, id);
+      });
+      tx.oncomplete = resolve;
+      tx.onabort = () => reject(tx.error);
+    });
+    db.close();
+    const upgraded = await store.openOperationStore(namespace);
+    const pending = await store.pendingCryptoOperations(upgraded);
+    const first = await store.pendingCryptoOperations(upgraded, null, 1);
+    const second = await store.pendingCryptoOperations(upgraded, first.next, 1);
+    const receiptPreserved = !!(
+      await store.readCryptoOperation(upgraded, ids[2])
+    ).receipt;
+    await store.commitCryptoOperation(upgraded, {
+      id: "00000000-0000-4000-8000-000000000001",
+      group: "g",
+      expectedVersion: 3,
+      sealedState: new Uint8Array(64).buffer,
+      ciphertext: new Uint8Array([4]).buffer,
+    });
+    const appended = await store.pendingCryptoOperations(upgraded);
+    upgraded.close();
+    await new Promise((resolve, reject) => {
+      const r = indexedDB.deleteDatabase(name);
+      r.onsuccess = resolve;
+      r.onerror = () => reject(r.error);
+    });
+    return {
+      pending: pending.ids,
+      first: first.ids,
+      second: second.ids,
+      receiptPreserved,
+      appended: appended.ids,
+      ids,
+    };
+  });
+  assert.deepEqual(orderAndV3.pending, orderAndV3.ids.slice(0, 2));
+  assert.deepEqual(orderAndV3.first, orderAndV3.ids.slice(0, 1));
+  assert.deepEqual(orderAndV3.second, orderAndV3.ids.slice(1, 2));
+  assert.equal(orderAndV3.receiptPreserved, true);
+  assert.deepEqual(orderAndV3.appended, [
+    ...orderAndV3.ids.slice(0, 2),
+    "00000000-0000-4000-8000-000000000001",
+  ]);
+  const corruptMigration = await pages[0].evaluate(async () => {
+    const namespace = "corrupt-v3-" + crypto.randomUUID();
+    const name = "echo-crypto-" + namespace;
+    const old = await new Promise((resolve, reject) => {
+      const r = indexedDB.open(name, 3);
+      r.onupgradeneeded = () => {
+        for (const name of [
+          "groups",
+          "operations",
+          "outbox",
+          "inbox",
+          "cursors",
+        ])
+          r.result.createObjectStore(name);
+      };
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    });
+    await new Promise((resolve, reject) => {
+      const tx = old.transaction("outbox", "readwrite");
+      tx.objectStore("outbox").add("missing", "missing");
+      tx.oncomplete = resolve;
+      tx.onabort = () => reject(tx.error);
+    });
+    old.close();
+    let rejected = false;
+    try {
+      await window.storeModule.openOperationStore(namespace);
+    } catch {
+      rejected = true;
+    }
+    const original = await new Promise((resolve, reject) => {
+      const r = indexedDB.open(name, 3);
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    });
+    const version = original.version;
+    original.close();
+    await new Promise((resolve, reject) => {
+      const r = indexedDB.deleteDatabase(name);
+      r.onsuccess = resolve;
+      r.onerror = () => reject(r.error);
+    });
+    return { rejected, version };
+  });
+  assert.deepEqual(corruptMigration, { rejected: true, version: 3 });
   const queuedDelete = await pages[0].evaluate(async () => {
     const namespace = "delete-wait-" + crypto.randomUUID();
     const name = "echo-crypto-" + namespace;
@@ -374,10 +516,10 @@ try {
       duplicateOperation: "rejected",
       injectedQuotaFailure: "atomic rollback",
       outbox:
-        "pagination, hash binding, idempotent receipt, conflicting receipt rejection, atomic acknowledgment rollback",
+        "group-version ordering, pagination and stale cursor rejection, hash binding, idempotent receipt, conflicting receipt rejection, atomic acknowledgment rollback",
       queuedDelete: "open timeout rejects and late connection is closed",
       upgrade:
-        "blocked upgrade rejects; v1 operation backfilled without regenerating ciphertext",
+        "blocked upgrade rejects; v1 and v3 pending operations migrated without regenerating ciphertext or requeueing receipts",
       workerRecovery:
         "committed bytes recovered after Worker termination with unknown caller result",
       attachmentAEAD:

@@ -1,5 +1,7 @@
 # MLS 与浏览器密码学
 
+本地最新续进见[本地 MLS 验收](local-mls-integration-report.md)：根授权 MLS 公钥验签前置已实现；Signer、Provider 与真实产品通信仍 BLOCKED。此轮禁止下载后清除隔离安装内容，本机仍缺固定 Rust/WASM 与 Cargo 闭包。历史 Cloud 缓存证据不代表本机环境。
+
 ## 本轮身份实现与密码学边界
 
 根/设备签名使用 WebCrypto Ed25519，私钥以不可导出 CryptoKey 存在客户端 IndexedDB，公开授权使用规范化域隔离声明，服务端验根和设备双签名。身份 Worker 已执行，OpenMLS同步Signer尚不能直接使用不可导出WebCrypto私钥；完整MLS Provider与通信仍BLOCKED。两份audit均退出1，SQLite0459及crypto-bigint活动依赖漏洞未修，不开启门禁。

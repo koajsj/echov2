@@ -295,7 +295,17 @@ try {
         { id: "acked", receipt: { seq: "1" } },
         "acked",
       );
-      tx.objectStore("operations").add({ id: "pending" }, "pending");
+      tx.objectStore("operations").add(
+        {
+          id: "pending",
+          group: "legacy-group",
+          expectedVersion: 0,
+          version: 1,
+          sealedState: new Uint8Array(64).buffer,
+          ciphertext: new Uint8Array([1]).buffer,
+        },
+        "pending",
+      );
       tx.objectStore("outbox").add("pending", "pending");
       tx.oncomplete = resolve;
       tx.onabort = () => reject(tx.error);
@@ -318,7 +328,7 @@ try {
     return result;
   });
   assert.deepEqual(upgrade, {
-    version: 3,
+    version: 4,
     pending: ["pending"],
     cursor: "0",
     ack: "1",

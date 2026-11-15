@@ -1,5 +1,7 @@
 # 第三阶段交付报告
 
+本地最新交付见[本地 MLS 验收](local-mls-integration-report.md)：Outbox 顺序/迁移 FIXED，根授权 MLS 验签契约 PARTIAL，完整产品通信和生产准入 BLOCKED。
+
 > 最新结果见[CI/MLS 续进报告](ci-mls-continuation-report.md)；上一轮 [Cloud 报告](cloud-review-report.md)与以下记录保留为历史。本机工具缺失、旧 main/PR 状态不描述当前。
 
 ## 当前续进 — 基线 06f37b9

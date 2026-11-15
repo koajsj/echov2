@@ -1,5 +1,11 @@
 # Changelog
 
+## 本地 MLS 凭据与存储续进 — 2026-11-15（PARTIAL）
+
+- 修复 Outbox 按随机 ID 排序的问题，v4 使用 group/version 索引，校验旧数据并保留已确认集合；分页位置失效后拒绝继续。
+- 新增域隔离的根授权 MLS 公钥声明与严格验签前置，检查账号/设备/叶签名公钥/套件/算法/期限；未接入产品 Signer 或 KeyPackage。
+- 真实 Chrome 的 Outbox/Inbox/Worker 故障回滚检查及真实 Ed25519 链与 18 项拒绝检查通过；禁止下载后已清除隔离安装内容。Rust/WASM 构建和产品通信未运行，crypto-gate 继续关闭。详见[验收报告](docs/local-mls-integration-report.md)。
+
 ## 产品身份与可信设备工程 — 2026-11-15（PARTIAL）
 
 - 实际新增Ed25519根自签名、设备持有证明和根签名授权、真实身份Worker与IndexedDB私钥持久化、完整公钥/指纹人工双向核对页面及签名会话重绑定。
