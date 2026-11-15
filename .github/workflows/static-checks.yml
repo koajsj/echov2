@@ -41,6 +41,8 @@ jobs:
         run: npm run format:check
       - name: AST
         run: npm run check:ast
+      - name: Build server
+        run: npm run build:server
       - name: Source references
         run: npm run check:source
       - name: JavaScript syntax
