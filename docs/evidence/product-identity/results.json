@@ -212,6 +212,11 @@
       "command": "npm run check:source (final documents and evidence)",
       "exitCode": 0,
       "artifact": "source-final.txt"
+    },
+    {
+      "command": "gh run view 43719566354 --json headSha,status,conclusion,jobs,url; assert exact SHA and every step success",
+      "exitCode": 0,
+      "artifact": "implementation-actions.json"
     }
   ],
   "protectedFiles": [
@@ -354,6 +359,21 @@
       "path": "docs/evidence/product-identity/RUSTSEC-2026-0459.txt",
       "sha256": "147ecc23304a18fea1fd34767925e0483532094c2ee0f5884fba73730574f0b2",
       "rawBytesPreserved": true
+    },
+    {
+      "path": "docs/evidence/product-identity/official-sqlite_storage-Cargo.toml.txt",
+      "sha256": "0f53afc5681c3a8e9c99884c9236cbac9a1f66b0f3d77a942762d574fa63ed92",
+      "rawBytesPreserved": true
+    },
+    {
+      "path": "docs/evidence/product-identity/official-sqlx_storage-Cargo.toml.txt",
+      "sha256": "9e3548841af2f8b85e926d4aacf8e4f294eba9ef55a3b779939c66949de4b97c",
+      "rawBytesPreserved": true
+    },
+    {
+      "path": "docs/evidence/product-identity/official-traits-src-storage.rs.txt",
+      "sha256": "300d4c62fb40ce02964ea28cc4aa10d81090df1b563e5bc3f5f16bef51e2b1a6",
+      "rawBytesPreserved": true
     }
   ],
   "syntax": {
@@ -371,5 +391,23 @@
     "hits": [],
     "scope": "all tracked and untracked deliverable text files; limited patterns, not a full secret scanner or SAST"
   },
-  "evidenceNormalization": "Text command logs omit trailing blank lines; raw official advisory and provider source snapshots preserve original bytes."
+  "evidenceNormalization": "Text command logs omit trailing blank lines; raw official advisory and provider source snapshots preserve original bytes.",
+  "cleanup": {
+    "localServices": "stopped",
+    "thisRoundPostgresData": "removed after pg_ctl fast stop",
+    "ephemeralBrowserContexts": "closed by all harness finally blocks",
+    "thisRoundTlsKeyCertificate": "removed",
+    "generatedMlsWasmPkg": "removed after validation",
+    "productionConnectionDeployment": "not performed"
+  },
+  "verifiedImplementationWorkflow": {
+    "status": "PASS",
+    "headSha": "5d9b88e4a6497538619fd86e656cc3a41ddee881",
+    "url": "https://github.com/koajsj/echov2/actions/runs/43719566354",
+    "jobs": 1,
+    "steps": 19,
+    "allStepsActuallySucceeded": true,
+    "artifact": "implementation-actions.json",
+    "finalEvidenceCommitWorkflow": "Final delivery reply contains final HEAD workflow after verification; this evidence describes the unchanged implementation revision."
+  }
 }

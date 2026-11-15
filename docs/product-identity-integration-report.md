@@ -80,7 +80,9 @@ Credential 撤销目前是服务端公开授权撤回，没有根签名撤销声
 
 ## 验证与验收
 
-全部运行在 Cloud，使用临时本地 PostgreSQL、合成账号、独立浏览器存储和本轮自签名 HTTPS。TLS 忽略证书错误只用于隔离验证，不是生产 TLS 验证。工具版本、命令、退出码、失败后修正记录和输出见[证据索引](evidence/product-identity/results.json)。
+工程提交 `5d9b88e4a6497538619fd86e656cc3a41ddee881` 的[完整 Actions 43719566354](https://github.com/koajsj/echov2/actions/runs/43719566354)已逐项核对：全部19步骤实际成功，无 skipped。该工作流运行静态检查与原生 MLS 持久化实验；身份浏览器/数据库验证在 Cloud 独立执行，不把 CI 当作产品安全审计。后续仅记录证据的最终提交运行在交付回复核对，避免文档自引用哈希。
+
+本轮身份脚本完成37个具名验收点，包含六个独立浏览器context和真实产品表单。全部运行在 Cloud，使用临时本地 PostgreSQL、合成账号、独立浏览器存储和本轮自签名 HTTPS。TLS 忽略证书错误只用于隔离验证，不是生产 TLS 验证。工具版本、命令、退出码、失败后修正记录和输出见[证据索引](evidence/product-identity/results.json)。
 
 | 用户验收项                                                           | 状态                              | 实际边界                                                                        |
 | -------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------- |
@@ -107,3 +109,5 @@ Credential 撤销目前是服务端公开授权撤回，没有根签名撤销声
 原生测试输出的 `crash_child ... ignored` 是父测试以 `--ignored --exact` 启动并实际杀死的子进程入口；六项验收均执行。身份 Worker 验证终止后重开、原签名初始化恢复和双标签读取；没有把它扩称为 MLS Worker 崩溃恢复。签发 I/O 故障为真实 SQL 触发器注入，未测试物理掉电。
 
 项目保持 React 19、HeroUI v3、BoardUI、Fastify/PostgreSQL/WebSocket 的原架构和用户/管理双入口。聊天仍返回 MLS_NOT_READY，`route_version/seq/mls_epoch` 不混用。下一步必须先解决兼容依赖安全、MLS Signer 与完整浏览器 Provider 方案，经审查完成身份映射与真实双向密文验证，再谈通信准入；缺失 Commit/未知 epoch、删除新鲜性和恢复都不能靠解除 gate 处理。
+
+本轮临时 API/Vite/TLS 服务已停止，合成 PostgreSQL 集群停机后删除，临时 TLS 私钥/证书删除；浏览器 contexts 均由脚本 finally 关闭，生成的实验 WASM pkg 已移除，固定工具链缓存保留。未修改 Cloud 发布配置，未访问生产或部署。
