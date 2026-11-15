@@ -1,0 +1,21 @@
+
+> echo-native@0.1.0 check:source
+> node --experimental-vm-modules scripts/check-source.mjs
+
+{
+  "status": "PASS",
+  "files": 212,
+  "parsed": 54,
+  "jsxParsed": 38,
+  "literalModuleReferences": 411,
+  "localDocumentLinks": 153,
+  "failures": [],
+  "limitations": [
+    "This script checks author-file syntax, literal references and local documentation links; not TypeScript types, ESLint, Prettier or SQL semantics.",
+    "Literal references do not prove exports, runtime routes or cryptographic correctness.",
+    "No application module was imported, linked or evaluated."
+  ]
+}
+(node:35990) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:35990) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time

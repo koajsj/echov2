@@ -1,0 +1,5 @@
+
+> echo-native@0.1.0 check:local-crypto
+> node scripts/check-local-crypto-browser.mjs
+
+{"status":"PASS","multiTabCAS":"one winner","reload":"state and ciphertext recovered together","duplicateOperation":"rejected","injectedQuotaFailure":"atomic rollback","outbox":"pagination, hash binding, idempotent receipt, conflicting receipt rejection, atomic acknowledgment rollback","queuedDelete":"open timeout rejects and late connection is closed","upgrade":"blocked upgrade rejects; v1 operation backfilled without regenerating ciphertext","workerRecovery":"committed bytes recovered after Worker termination with unknown caller result","attachmentAEAD":"roundtrip, independent key/IV, tamper and 10MiB boundary","limitations":"no physical disk exhaustion, OS crash or provider snapshot recovery; synthetic opaque state only"}

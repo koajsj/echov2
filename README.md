@@ -8,7 +8,7 @@
 
 > 🛡️ **当前整体 PARTIAL，尚不具备生产部署条件。** 账户、迁移、管理元数据和桌面界面已在 Cloud 隔离环境验证；产品级 MLS、可信设备、离线删除和恢复仍阻塞。聊天写入继续拒绝 `503 MLS_NOT_READY`。
 
-> **2026-11-15 核心工程复核：BLOCKED。** 从 `cb20341` 核对本地与 PR #4。默认 Cargo registry 无索引、crate 包或源码，固定 Rust 1.99.1 与 WASM target 未安装；不能离线解析当前依赖闭包。按授权暂停依赖修复和真实 MLS 集成，未新增产品密码学能力。准确版本与解除条件见[核心复核台账](docs/phase-three-report.md)。
+> **2026-11-15 CI 修复与 MLS 续进：PARTIAL。** main `06f37b9` 的 CI 缺失服务端构建已修复，[完整 Actions 已通过](https://github.com/koajsj/echov2/actions/runs/43714563417)。新增浏览器原子 Inbox/Cursor 存储前置及官方原生 SQLite Provider 的真实 MLS 持久化、并发和进程崩溃验证；后者是未加密、无可信账号身份且不支持 WASM 的独立实验。原有四项 RustSec 未解除，新 SQLite 候选另命中 RUSTSEC-2026-0459，均未 ignore。产品 Worker、可信设备、通信、墓碑与恢复仍阻塞；详见[本轮状态与证据](docs/ci-mls-continuation-report.md)。
 
 [项目](#项目简介) · [能力](#-核心能力) · [架构](#-系统架构) · [安全](#-安全与元数据) · [界面](#-pc-用户端与管理端) · [截图](#-真实界面截图) · [开发](#-开发与验证) · [文档](#-权威文档) · [限制](#-当前限制与路线图)
 
@@ -22,17 +22,17 @@ Echo Native 探索一种可自主部署的通信架构：服务端管理账户�
 
 ✅ 表示指定范围已实现并验证；🟡 表示部分实现；⛔ 表示阻塞或尚未实现。
 
-| 范围            | 状态 | 当前真实能力                                                                                  |
-| --------------- | ---- | --------------------------------------------------------------------------------------------- |
-| 账户            | ✅   | 注册、邀请码、Argon2id 登录、改名、重新认证、退出和受众隔离                                   |
-| 公共用户 ID     | ✅   | 随机12位 Base32、数据库唯一约束、碰撞重试、旧账号回填、显示/复制/查询；内部 UUID 保留         |
-| 设备            | 🟡   | pending 登记、目录和服务访问撤销；根授权、Credential、SAS/QR 未完成                           |
-| 端到端通信      | ⛔   | 私聊、群聊和离线消息没有产品级安全闭环；不提供明文替代                                        |
-| MLS / WASM      | 🟡   | 独立实验验证 Welcome、Commit、Application、Remove 与 epoch；未接入账号和投递                  |
-| 本地存储 / 附件 | 🟡   | IndexedDB 原子操作前置、附件 AEAD 已验证；完整 Group State、Outbox 和 MLS 分发未完成          |
-| 删除与恢复      | 🟡   | 删除意图、隐藏、到期调度和幂等基础；独立锚、物理 purge、离线墓碑及可信恢复阻塞                |
-| 用户归档        | ✅   | 服务元数据加密下载与只读预览；保留旧格式 UUID 绑定，不包含聊天、私钥或恢复能力                |
-| 管理后台        | 🟡   | 实际账户、设备、登录、安全事件、审计、邀请、CSV 和业务趋势；流量/GeoIP/灾备仍缺数据源或执行器 |
+| 范围            | 状态 | 当前真实能力                                                                                      |
+| --------------- | ---- | ------------------------------------------------------------------------------------------------- |
+| 账户            | ✅   | 注册、邀请码、Argon2id 登录、改名、重新认证、退出和受众隔离                                       |
+| 公共用户 ID     | ✅   | 随机12位 Base32、数据库唯一约束、碰撞重试、旧账号回填、显示/复制/查询；内部 UUID 保留             |
+| 设备            | 🟡   | pending 登记、目录和服务访问撤销；根授权、Credential、SAS/QR 未完成                               |
+| 端到端通信      | ⛔   | 私聊、群聊和离线消息没有产品级安全闭环；不提供明文替代                                            |
+| MLS / WASM      | 🟡   | 独立实验验证 Welcome、Commit、Application、Remove 与 epoch；未接入账号和投递                      |
+| 本地存储 / 附件 | 🟡   | IndexedDB Outbox/Inbox/Cursor 原子存储前置、附件 AEAD 已验证；产品完整 Provider 与 MLS 分发未完成 |
+| 删除与恢复      | 🟡   | 删除意图、隐藏、到期调度和幂等基础；独立锚、物理 purge、离线墓碑及可信恢复阻塞                    |
+| 用户归档        | ✅   | 服务元数据加密下载与只读预览；保留旧格式 UUID 绑定，不包含聊天、私钥或恢复能力                    |
+| 管理后台        | 🟡   | 实际账户、设备、登录、安全事件、审计、邀请、CSV 和业务趋势；流量/GeoIP/灾备仍缺数据源或执行器     |
 
 ## 🧩 系统架构
 
@@ -90,7 +90,7 @@ flowchart LR
 
 > ⛔ **供应链安全准入未通过：** 本轮完整 WASM 活动树包含 `crypto-bigint` 时序公告路径，cargo audit 仍检出三项漏洞和一项维护警告。未忽略公告、未强制套用不兼容补丁，crypto-gate 持续关闭。详情见[密码学](docs/native-cryptography.md)。
 
-本轮在 Codex Cloud 以最新 `main` 基线 `cec82e5…` 运行完整 Rust 依赖解析、native/WASM 构建、cargo audit、真实 Chromium 和临时 PostgreSQL 回归。新增本地原子 Outbox 的恢复与确认前置；产品 MLS 仍未接通。当前结果见[Cloud 核心报告](docs/cloud-review-report.md)，历史本地记录不代表本轮状态。
+上一轮 Codex Cloud 基线 `cec82e5…` 的 Rust、Chromium 与临时 PostgreSQL 回归见[Cloud 核心报告](docs/cloud-review-report.md)。本轮从 `06f37b9` 修复 CI、补充原子 Inbox/Cursor 与独立原生持久化验证；当前范围、额外 SQLite 公告及未完成项见[CI/MLS 续进报告](docs/ci-mls-continuation-report.md)。产品 MLS 仍未接通。
 
 ## 👤 PC 用户端与管理端
 
@@ -154,7 +154,7 @@ npm run build:client
 npm run build:server
 ```
 
-真实数据库和浏览器脚本只对明确确认的临时 Cloud 数据库运行。新库使用独立基线001→002–008；本轮两条迁移路径与008撤销触发器已运行验证，未知持久化环境仍不得自动迁移。操作说明见[迁移文档](migrations/README.md)，Rust命令见[MLS实验](crypto/mls-lab/README.md)，实际范围及失败记录见[本轮报告](docs/cloud-review-report.md)。
+真实数据库和浏览器脚本只对明确确认的临时 Cloud 数据库运行。新库使用独立基线001→002–008；上一轮两条迁移路径与008撤销触发器已运行验证，未知持久化环境仍不得自动迁移。操作说明见[迁移文档](migrations/README.md)，Rust命令见[MLS实验](crypto/mls-lab/README.md)，原生持久化命令见[独立 SQLite 实验](crypto/mls-persistence/README.md)，浏览器存储可运行 `npm run check:local-crypto` 与 `npm run check:inbox`（需要本地 Vite 与 Chromium）。当前范围及失败记录见[本轮续进报告](docs/ci-mls-continuation-report.md)。
 
 ## 🚀 部署与资源
 

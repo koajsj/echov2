@@ -280,7 +280,7 @@ try {
   });
   assert.deepEqual(upgrade, {
     blocked: true,
-    version: 2,
+    version: 3,
     pending: ["old-operation"],
     bytes: [9],
   });

@@ -1,6 +1,12 @@
 # 第三阶段交付报告
 
-> 当前 Cloud 结果见[本轮报告](cloud-review-report.md)；以下保留历史记录，其本机工具缺失、NOT_RUN 和旧 main/PR 状态不描述本轮。
+> 最新结果见[CI/MLS 续进报告](ci-mls-continuation-report.md)；上一轮 [Cloud 报告](cloud-review-report.md)与以下记录保留为历史。本机工具缺失、旧 main/PR 状态不描述当前。
+
+## 当前续进 — 基线 06f37b9
+
+**FIXED**：干净 CI 在引用检查前构建 server，产物路径与脚本一致；最小修复完整 GitHub Actions 已通过。**PASS**：固定 Rust native/WASM、Chromium MLS 实验、原生六项真实 Provider 持久化/并发/进程崩溃/三设备 Remove 验证，以及浏览器 Inbox/Cursor 的事务、冲突、刷新与事务内 Worker 终止验证。新原生测试纳入 CI。
+
+**PARTIAL**：浏览器 Outbox/Inbox/Cursor 仍是合成密封字节的存储前置；原生官方完整 SQLite Provider 是独立实验，未加密、不支持 WASM、无真实账户身份。**BLOCKED**：原有四项 RustSec 未解除，SQLite 候选另命中 RUSTSEC-2026-0459；产品完整 Provider/Worker、根授权、SAS/QR、端到端通信、加密墓碑与恢复仍缺失。**NOT_RUN**：跨实现互操作、真实设备授权/网络离线同步/密钥及异机灾备、物理掉电与旧备份回滚、专用 SAST。门禁关闭；无生产部署。详情、命令退出码与最终 CI 核对见[本轮证据](evidence/ci-mls-continuation/results.json)。
 
 ## cb20341 后的本地核心工程复核 — 2026-11-15
 

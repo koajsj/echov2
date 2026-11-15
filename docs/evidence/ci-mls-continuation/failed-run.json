@@ -1,0 +1,122 @@
+{
+  "conclusion": "failure",
+  "databaseId": 43714125188,
+  "headSha": "06f37b995f26fd95b2bdfae56c9ed36439d2555f",
+  "jobs": [
+    {
+      "completedAt": "2026-11-15T12:30:13Z",
+      "conclusion": "failure",
+      "databaseId": 132811863227,
+      "name": "static",
+      "startedAt": "2026-11-15T12:29:46Z",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Set up Node",
+          "number": 3,
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Record Node and npm versions",
+          "number": 4,
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Install locked npm dependencies",
+          "number": 5,
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "TypeScript",
+          "number": 6,
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "ESLint",
+          "number": 7,
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Prettier",
+          "number": 8,
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "AST",
+          "number": 9,
+          "status": "completed"
+        },
+        {
+          "conclusion": "failure",
+          "name": "Source references",
+          "number": 10,
+          "status": "completed"
+        },
+        {
+          "conclusion": "skipped",
+          "name": "JavaScript syntax",
+          "number": 11,
+          "status": "completed"
+        },
+        {
+          "conclusion": "skipped",
+          "name": "Shell syntax",
+          "number": 12,
+          "status": "completed"
+        },
+        {
+          "conclusion": "skipped",
+          "name": "Install pinned Rust formatter",
+          "number": 13,
+          "status": "completed"
+        },
+        {
+          "conclusion": "skipped",
+          "name": "Rust format (offline)",
+          "number": 14,
+          "status": "completed"
+        },
+        {
+          "conclusion": "skipped",
+          "name": "Post Set up Node",
+          "number": 27,
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 28,
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 29,
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/koajsj/echov2/actions/runs/43714125188/job/132811863227"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/koajsj/echov2/actions/runs/43714125188"
+}

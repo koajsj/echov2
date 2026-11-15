@@ -1,0 +1,16 @@
+{
+  "sqliteAdvisory": {
+    "url": "https://raw.githubusercontent.com/RustSec/advisory-db/02e2517f457a359fc6d3440ea4560c8ea188fee8/crates/libsqlite3-sys/RUSTSEC-2026-0459.md",
+    "sha256": "147ecc23304a18fea1fd34767925e0483532094c2ee0f5884fba73730574f0b2"
+  },
+  "openmls_libcrux_crypto-0.4.0": {
+    "source": "crates.io registry archive verified by Cargo download",
+    "file": "Cargo.toml.orig",
+    "sha256": "a73680f15b9e0f1beb55ea6fcaf20cdafe11746b6832ab6cfa202e83f61097a0"
+  },
+  "openmls_sqlite_storage-0.3.0": {
+    "source": "crates.io registry archive verified by Cargo download",
+    "file": "Cargo.toml.orig",
+    "sha256": "272ba28baf502ea49dd2bc1fe29381216e27d87b6d4488d7b87c9bd60d07ee5e"
+  }
+}

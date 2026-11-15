@@ -1,0 +1,164 @@
+{
+  "openmls": {
+    "url": "https://crates.io/api/v1/crates/openmls",
+    "latest": "0.9.2",
+    "latest_stable": "0.9.2",
+    "recent_versions": [
+      {
+        "num": "0.8.3",
+        "yanked": false,
+        "created_at": "2026-10-22T08:49:33.935784Z"
+      },
+      {
+        "num": "0.9.2",
+        "yanked": false,
+        "created_at": "2026-10-22T08:49:11.723245Z"
+      },
+      {
+        "num": "0.8.2",
+        "yanked": false,
+        "created_at": "2026-10-07T17:08:18.648468Z"
+      },
+      {
+        "num": "0.9.1",
+        "yanked": false,
+        "created_at": "2026-10-07T17:08:06.629349Z"
+      }
+    ]
+  },
+  "openmls_rust_crypto": {
+    "url": "https://crates.io/api/v1/crates/openmls_rust_crypto",
+    "latest": "0.6.0",
+    "latest_stable": "0.6.0",
+    "recent_versions": [
+      {
+        "num": "0.6.0",
+        "yanked": false,
+        "created_at": "2026-08-25T07:46:18.751582Z"
+      },
+      {
+        "num": "0.6.0-rc.4",
+        "yanked": false,
+        "created_at": "2026-08-24T16:10:54.310252Z"
+      },
+      {
+        "num": "0.6.0-rc.3",
+        "yanked": false,
+        "created_at": "2026-08-20T09:03:52.390779Z"
+      },
+      {
+        "num": "0.6.0-rc.2",
+        "yanked": false,
+        "created_at": "2026-08-06T09:54:45.460259Z"
+      }
+    ]
+  },
+  "openmls_basic_credential": {
+    "url": "https://crates.io/api/v1/crates/openmls_basic_credential",
+    "latest": "0.6.0",
+    "latest_stable": "0.6.0",
+    "recent_versions": [
+      {
+        "num": "0.6.0",
+        "yanked": false,
+        "created_at": "2026-08-25T07:46:14.756638Z"
+      },
+      {
+        "num": "0.6.0-rc.4",
+        "yanked": false,
+        "created_at": "2026-08-24T16:10:50.385260Z"
+      },
+      {
+        "num": "0.6.0-rc.3",
+        "yanked": false,
+        "created_at": "2026-08-20T09:03:47.737660Z"
+      },
+      {
+        "num": "0.6.0-rc.2",
+        "yanked": false,
+        "created_at": "2026-08-06T09:54:41.092149Z"
+      }
+    ]
+  },
+  "openmls_sqlite_storage": {
+    "url": "https://crates.io/api/v1/crates/openmls_sqlite_storage",
+    "latest": "0.3.0",
+    "latest_stable": "0.3.0",
+    "recent_versions": [
+      {
+        "num": "0.3.0",
+        "yanked": false,
+        "created_at": "2026-08-25T07:46:15.548766Z"
+      },
+      {
+        "num": "0.3.0-rc.4",
+        "yanked": false,
+        "created_at": "2026-08-24T16:10:51.308384Z"
+      },
+      {
+        "num": "0.3.0-rc.3",
+        "yanked": false,
+        "created_at": "2026-08-20T09:03:48.993388Z"
+      },
+      {
+        "num": "0.3.0-rc.2",
+        "yanked": false,
+        "created_at": "2026-08-06T09:54:42.172018Z"
+      }
+    ]
+  },
+  "hpke-rs-libcrux": {
+    "url": "https://crates.io/api/v1/crates/hpke-rs-libcrux",
+    "latest": "0.8.0",
+    "latest_stable": "0.8.0",
+    "recent_versions": [
+      {
+        "num": "0.8.0",
+        "yanked": false,
+        "created_at": "2026-10-07T06:37:08.058408Z"
+      },
+      {
+        "num": "0.8.0-pre.1",
+        "yanked": false,
+        "created_at": "2026-10-06T15:33:49.885690Z"
+      },
+      {
+        "num": "0.7.0",
+        "yanked": false,
+        "created_at": "2026-07-15T12:57:22.161491Z"
+      },
+      {
+        "num": "0.7.0-pre.1",
+        "yanked": false,
+        "created_at": "2026-07-15T11:17:51.824027Z"
+      }
+    ]
+  },
+  "rusqlite": {
+    "url": "https://crates.io/api/v1/crates/rusqlite",
+    "latest": "0.43.0",
+    "latest_stable": "0.43.0",
+    "recent_versions": [
+      {
+        "num": "0.43.0",
+        "yanked": false,
+        "created_at": "2026-11-15T09:44:41.862693Z"
+      },
+      {
+        "num": "0.42.0",
+        "yanked": false,
+        "created_at": "2026-11-11T06:47:16.370827Z"
+      },
+      {
+        "num": "0.41.1",
+        "yanked": false,
+        "created_at": "2026-10-28T17:58:27.732969Z"
+      },
+      {
+        "num": "0.41.0",
+        "yanked": false,
+        "created_at": "2026-10-24T10:35:41.505736Z"
+      }
+    ]
+  }
+}

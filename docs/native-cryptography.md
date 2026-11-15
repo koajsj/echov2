@@ -2,9 +2,9 @@
 
 ## 当前结论
 
-2026-11-15，Codex Cloud，基线 `cec82e57603b31f1d77030a15b827d76729f4427`。密码学准入 **BLOCKED**，整体 **PARTIAL**。本次实际安装固定工具链、完整解析锁闭依赖、构建 native/WASM、运行 Chromium 实验及 cargo audit；不再沿用“本机缺缓存”的旧阻塞原因。[本轮报告](cloud-review-report.md)与[原始审计](evidence/cloud-review/cargo-audit.json)记录范围。
+2026-11-15，Codex Cloud，最新续进基线 `06f37b995f26fd95b2bdfae56c9ed36439d2555f`。密码学准入 **BLOCKED**，整体 **PARTIAL**。本轮修复干净 CI 构建顺序，重新执行固定 Rust native/WASM 构建、真实 Chromium MLS 实验与 cargo audit；新增浏览器 Inbox/Cursor 原子存储和官方原生 SQLite Provider 验证。准确分界见[本轮续进报告](ci-mls-continuation-report.md)、[本轮审计](evidence/ci-mls-continuation/cargo-audit-lab.json)。此前[Cloud 报告](cloud-review-report.md)保留为上一轮证据；工具链/缓存已具备，不再采用旧缺缓存理由。
 
-固定 Rust 1.99.1、wasm32-unknown-unknown、wasm-bindgen CLI 0.2.105；OpenMLS 0.9.2、RustCrypto/basic credential/traits 0.6.0、tls_codec 0.5.0。未改变 Cargo.lock、算法或上游源码，未设置 audit ignore。
+固定 Rust 1.99.1、wasm32-unknown-unknown、wasm-bindgen CLI 0.2.105；OpenMLS 0.9.2、RustCrypto/basic credential/traits 0.6.0、tls_codec 0.5.0。既有 MLS Cargo.lock、算法和上游源码未改；新增原生实验有独立锁文件，未设置 audit ignore。
 
 ## Rust 公告与兼容性
 
@@ -27,6 +27,10 @@
 
 消息写入在服务端 `requireReviewedCrypto()` 拒绝 `503 MLS_NOT_READY`。未创建空 Worker 或包装实验伪装产品接通。私聊、群聊、成员治理和 MLS 分发仍 **BLOCKED**。
 
+新增 `crypto/mls-persistence` 原生实验直接组合 RustCrypto 与官方 SQLite StorageProvider 0.3.0，不实例化 MemoryStorage。真实 signer、KeyPackage 私钥、树、epoch/message secrets、own leaf、proposal queue 与 pending Commit 从官方存储恢复。事务在加载组之前开始，真实 MLS 变更与 Outbox/Inbox/Cursor 共同提交，失败丢弃对象并 rollback。六项实际测试验证离线顺序消费、重放、Self Update 队列/私钥重启、发送/接收 ratchet 回滚、并发原密文重试、真实子进程提交前后崩溃恢复和三设备 Remove/epoch 隔离。使用相同 OpenMLS 实现，不是跨库互操作。
+
+该实验**不支持 WASM、数据库未加密、身份仅测试标签**，没有接入产品。候选还新增 **RUSTSEC-2026-0459**：bundled `libsqlite3-sys 0.35.0` 对恶意数据库/WAL 文件可能泄露内存；测试仅新建合成库，不导入外部数据库。官方 adapter 要求 rusqlite 0.37，修复后的 sys >=0.39.0 需要另一 rusqlite 家族，未强制不兼容替换。[候选实际 audit](evidence/ci-mls-continuation/cargo-audit-persistence.json)退出 1，四漏洞加一维护警告；原 MLS 锁仍为三漏洞加一警告。此候选不能进入产品或恢复链路。
+
 ## 产品 Crypto 状态转换
 
 原生库负责 MLS、HPKE、HKDF、签名和 ratchet。完整 Provider 与私钥限于客户端；同源恶意代码仍能调用密钥，Worker 不构成 XSS 安全边界。
@@ -45,9 +49,11 @@
 
 `operation-store.ts` 是前置存储模块。调用方提供 opaque sealedState；模块不生成或证明它是完整且正确加密的 Provider。Web Locks 目前覆盖提交与确认，尚未覆盖原生 Provider 加载和推进，CAS 不能替代完整操作边界。
 
-本次数据库升级 v2：Group Record、不可变原操作与 Outbox ID 在同一 strict IndexedDB 事务提交。v1 操作保守回填 pending，保留原 ID/原密文，不能推定已送达。分页限制 1–100 条；未知发送结果从 Outbox 读取原记录。确认核对原密文 SHA-256、消息 ID 格式、seq 与 route_version 的 PostgreSQL bigint 范围，原记录保存收据和移出 Outbox 同事务完成。重复相同确认幂等，摘要或收据冲突拒绝；不修改 Group State、不代表收件人解密或 MLS 验证。调用方必须按原 operationId 查询认证服务的结果，不能凭任意 HTTP 200 删除 Outbox。
+上一轮数据库升级 v2：Group Record、不可变原操作与 Outbox ID 在同一 strict IndexedDB 事务提交。v1 操作保守回填 pending，保留原 ID/原密文，不能推定已送达。分页限制 1–100 条；未知发送结果从 Outbox 读取原记录。确认核对原密文 SHA-256、消息 ID 格式、seq 与 route_version 的 PostgreSQL bigint 范围，原记录保存收据和移出 Outbox 同事务完成。重复相同确认幂等，摘要或收据冲突拒绝；不修改 Group State、不代表收件人解密或 MLS 验证。调用方必须按原 operationId 查询认证服务的结果，不能凭任意 HTTP 200 删除 Outbox。
 
 真实 Chromium 验证双标签 CAS 单胜者、刷新、重复操作拒绝、注入配额失败回滚、确认事务失败回滚、冲突确认拒绝、Worker 完成提交后终止并从持久记录恢复、v1 升级、受阻升级拒绝，以及打开请求排在受阻删除后的超时与迟到连接关闭。注入故障不是物理磁盘满；Worker 结束是在提交完成后，不证明提交中崩溃。Provider/Inbox/游标/去重/pending Commit 的统一事务、状态加密与回滚保护仍缺失。
+
+本轮 v3 增加 Inbox/Cursor：同一 strict 事务提交状态、收件记录与游标，重复相同密文返回原结果，拒绝同序号换密文/消息 ID、同 ID 换序号、版本冲突、游标缺口或溢出。v2 升级保留待发/已确认集合，不重新排队已确认操作。真实 Chromium 验证刷新、双标签重复与收发竞争、故障回滚及 Worker 在事务内被终止后的三表共同回滚。输入仍是合成 sealedState/sealedEvent，不证明 Provider 完整性或真实加密；产品统一 MLS 操作边界与独立防回滚机制仍缺失。没有用服务端删除标记或 highWatermark 跳过密文。
 
 附件仅本地 WebCrypto AES-256-GCM 前置：独立密钥和 96-bit IV、128-bit tag、最大 10 MiB；验证往返、篡改拒绝、独立随机材料和大小边界。文件名/MIME 仍在本地敏感对象，未接通加密上传/下载、MLS 密钥分发和媒体清理。non-extractable CryptoKey 与内存覆盖不保证擦除 JS/WASM/OS 副本。
 

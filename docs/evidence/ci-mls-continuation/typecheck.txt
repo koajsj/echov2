@@ -1,0 +1,3 @@
+
+> echo-native@0.1.0 typecheck
+> tsc -p tsconfig.client.json && tsc -p tsconfig.server.json && tsc -p tsconfig.tools.json

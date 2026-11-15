@@ -1,0 +1,5 @@
+
+> echo-native@0.1.0 check:mls:browser
+> node scripts/check-mls-browser.mjs
+
+{"provider":"OpenMLS 0.9.2/RustCrypto 0.6.0","suite":1,"independentBrowserContexts":2,"KeyPackage":"PASS","Welcome":"PASS","Commit":"PASS","Application":"PASS","ReplayRejected":"PASS","InvalidCommitRejected":"PASS","DiscardPending":"PASS","DiscardReceivedStagedCommit":"PASS","Remove":"PASS","Epoch":"1->2","removedSenderRejected":true,"scope":"provider laboratory only; no account binding or production persistence"}

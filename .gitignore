@@ -17,3 +17,4 @@ coverage/
 *.minisig
 /crypto/mls-lab/target/
 /crypto/mls-lab/pkg/
+/crypto/mls-persistence/target/

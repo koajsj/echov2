@@ -1,6 +1,14 @@
 # 本地静态验证报告
 
-> 当前 Cloud 结果见[本轮报告](cloud-review-report.md)；以下保留历史记录，其本机工具缺失、NOT_RUN 和旧 main/PR 状态不描述本轮。
+> 最新结果见[CI/MLS 续进报告](ci-mls-continuation-report.md)；上一轮 [Cloud 报告](cloud-review-report.md)与以下记录保留为历史。本机工具缺失、旧 main/PR 状态不描述当前。
+
+## 当前续进 — 基线 06f37b9
+
+**FIXED**：工作流在 check:source 前增加真实 build:server，没有排除脚本或放宽检查；[修复提交的完整 GitHub Actions](https://github.com/koajsj/echov2/actions/runs/43714563417)成功，包括原先跳过的 JS、Shell、固定 Rust 格式。后续原生测试纳入同一工作流，最终提交单独核对。
+
+**PASS**：本轮类型、零 warning ESLint、Prettier、AST/源码引用、JS/Shell 语法、两 crate Rust 格式、前后端构建；新增 Rust 原生实验 Clippy 零 warning。固定 native/WASM 构建与真实浏览器/原生测试结果、工具版本及退出码记录在[本轮证据](evidence/ci-mls-continuation/results.json)。
+
+**PARTIAL**：人工安全源码审查；同一库多实例通过不能替代跨实现互操作。**BLOCKED**：既有 Rust 锁仍三项漏洞与一项维护警告，新 SQLite 候选锁四项漏洞与一项维护警告（另有0459），cargo audit 均实际退出1且无 ignore；产品密码学准入未通过。**NOT_RUN**：专用 SAST、第三方审计、产品设备授权/离线墓碑/恢复与生产验证；未改的 SQL/账户端到端流程未重跑，不重复使用历史 PASS 冒充本轮运行。
 
 ## cb20341 后的本地核心复核
 

@@ -1,0 +1,371 @@
+{
+  "status": "PARTIAL",
+  "productionCrypto": "BLOCKED",
+  "baseline": "06f37b995f26fd95b2bdfae56c9ed36439d2555f",
+  "recordedAt": "2026-11-15T12:51:31.118656+00:00",
+  "checks": [
+    {
+      "name": "typecheck",
+      "command": ["npm", "run", "typecheck"],
+      "exitCode": 0,
+      "seconds": 6.202,
+      "output": "typecheck.txt"
+    },
+    {
+      "name": "lint",
+      "command": ["npm", "run", "lint"],
+      "exitCode": 0,
+      "seconds": 3.942,
+      "output": "lint.txt"
+    },
+    {
+      "name": "ast",
+      "command": ["npm", "run", "check:ast"],
+      "exitCode": 0,
+      "seconds": 0.448,
+      "output": "ast.txt"
+    },
+    {
+      "name": "server-build",
+      "command": ["npm", "run", "build:server"],
+      "exitCode": 0,
+      "seconds": 1.463,
+      "output": "server-build.txt"
+    },
+    {
+      "name": "source",
+      "command": ["npm", "run", "check:source"],
+      "exitCode": 0,
+      "seconds": 0.722,
+      "output": "source.txt",
+      "note": "Rerun after final documentation/evidence edits."
+    },
+    {
+      "name": "client-build",
+      "command": ["npm", "run", "build:client"],
+      "exitCode": 0,
+      "seconds": 1.022,
+      "output": "client-build.txt"
+    },
+    {
+      "name": "rust-format-lab",
+      "command": [
+        "cargo",
+        "+1.99.1",
+        "fmt",
+        "--manifest-path",
+        "crypto/mls-lab/Cargo.toml",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.045,
+      "output": "rust-format-lab.txt"
+    },
+    {
+      "name": "rust-format-persistence",
+      "command": [
+        "cargo",
+        "+1.99.1",
+        "fmt",
+        "--manifest-path",
+        "crypto/mls-persistence/Cargo.toml",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.042,
+      "output": "rust-format-persistence.txt"
+    },
+    {
+      "name": "native-clippy",
+      "command": [
+        "cargo",
+        "+1.99.1",
+        "clippy",
+        "--locked",
+        "--manifest-path",
+        "crypto/mls-persistence/Cargo.toml",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exitCode": 0,
+      "seconds": 0.175,
+      "output": "native-clippy.txt"
+    },
+    {
+      "name": "native-persistence",
+      "command": [
+        "cargo",
+        "+1.99.1",
+        "test",
+        "--locked",
+        "--manifest-path",
+        "crypto/mls-persistence/Cargo.toml"
+      ],
+      "exitCode": 0,
+      "seconds": 0.739,
+      "output": "native-persistence.txt"
+    },
+    {
+      "name": "inbox-browser",
+      "command": ["npm", "run", "check:inbox"],
+      "exitCode": 0,
+      "seconds": 4.627,
+      "output": "inbox-browser.txt"
+    },
+    {
+      "name": "local-crypto-browser",
+      "command": ["npm", "run", "check:local-crypto"],
+      "exitCode": 0,
+      "seconds": 12.068,
+      "output": "local-crypto-browser.txt"
+    },
+    {
+      "name": "javascript-syntax",
+      "command": ["node", "--check", "<each author file>"],
+      "exitCode": 0,
+      "files": 15,
+      "failures": []
+    },
+    {
+      "name": "shell-syntax",
+      "command": ["bash", "-n", "<each author file>"],
+      "exitCode": 0,
+      "files": 1,
+      "failures": []
+    },
+    {
+      "name": "npm-audit",
+      "exitCode": 0,
+      "command": [
+        "npm",
+        "audit",
+        "--package-lock-only",
+        "--ignore-scripts",
+        "--json"
+      ],
+      "output": "npm-audit.json"
+    },
+    {
+      "name": "gate-runtime",
+      "command": "Import built server crypto-gate and assert 503 MLS_NOT_READY",
+      "exitCode": 0,
+      "output": "gate.txt"
+    },
+    {
+      "name": "format",
+      "command": ["npm", "run", "format:check"],
+      "exitCode": 0,
+      "output": "format.txt"
+    }
+  ],
+  "versions": {
+    "node": {
+      "value": "v24.22.1",
+      "exitCode": 0
+    },
+    "npm": {
+      "value": "11.9.0",
+      "exitCode": 0
+    },
+    "rustc": {
+      "value": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "exitCode": 0
+    },
+    "cargo": {
+      "value": "cargo 1.99.1 (5f94df478 2026-08-27)",
+      "exitCode": 0
+    },
+    "bindgen": {
+      "value": "wasm-bindgen 0.2.105",
+      "exitCode": 0
+    },
+    "cargo-audit": {
+      "value": "cargo-audit 0.22.0",
+      "exitCode": 0
+    },
+    "chromium": {
+      "value": "Chromium 156.0.8078.79 built on Debian GNU/Linux 13 (trixie)",
+      "exitCode": 0
+    }
+  },
+  "previousActualRuns": [
+    {
+      "name": "CI minimal fix",
+      "sha": "10bf6de45b55efc85b84f066328b7bea5e1e18dd",
+      "run": 43714563417,
+      "conclusion": "success",
+      "output": "ci-fix-run.json"
+    },
+    {
+      "name": "native MLS lab build",
+      "command": "cargo build --locked --release --manifest-path crypto/mls-lab/Cargo.toml",
+      "exitCode": 0,
+      "output": "native-build.txt"
+    },
+    {
+      "name": "WASM MLS lab build",
+      "command": "cargo build --locked --release --target wasm32-unknown-unknown --manifest-path crypto/mls-lab/Cargo.toml",
+      "exitCode": 0,
+      "output": "wasm-build.txt"
+    },
+    {
+      "name": "MLS Chromium lab",
+      "command": "npm run check:mls:browser",
+      "exitCode": 0,
+      "output": "mls-browser.txt"
+    },
+    {
+      "name": "audit original lock",
+      "command": "cargo audit --file crypto/mls-lab/Cargo.lock --json",
+      "exitCode": 1,
+      "vulnerabilities": 3,
+      "unmaintained": 1,
+      "ignored": [],
+      "output": "cargo-audit-lab.json"
+    },
+    {
+      "name": "audit native candidate",
+      "command": "cargo audit --file crypto/mls-persistence/Cargo.lock --json",
+      "exitCode": 1,
+      "vulnerabilities": 4,
+      "unmaintained": 1,
+      "ignored": [],
+      "output": "cargo-audit-persistence.json"
+    }
+  ],
+  "failureHistory": [
+    {
+      "name": "original GitHub Actions",
+      "run": 43714125188,
+      "reason": "server generated import absent before source check",
+      "fix": "build:server before check:source"
+    },
+    {
+      "name": "initial Inbox Worker harness",
+      "exitCode": 1,
+      "reason": "relative import inside Blob module",
+      "fix": "use actual same-origin absolute module URL; retain all assertions"
+    },
+    {
+      "name": "initial optional Clippy",
+      "exitCode": 1,
+      "reason": "pinned toolchain lacked Clippy component",
+      "fix": "install component for exact 1.99.1 toolchain"
+    },
+    {
+      "name": "first Clippy run",
+      "exitCode": 101,
+      "reason": "drop_non_drop for borrowed SQLite Provider",
+      "fix": "remove unnecessary explicit drop; no object escapes transaction helpers; do not suppress lint"
+    },
+    {
+      "name": "format verification before final evidence formatting",
+      "exitCode": 1,
+      "reason": "new generated results.json not yet formatted",
+      "fix": "format JSON with the project Prettier; retain original format rules"
+    }
+  ],
+  "scope": {
+    "nativeProvider": "Official complete SQLite StorageProvider; no MemoryStorage instance; unencrypted synthetic identity/data; no WASM support.",
+    "nativeTests": "Six acceptance tests; ignored crash_child entry explicitly selected twice in real subprocess by parent test.",
+    "browserStorage": "Synthetic sealed state/event; atomic primitive only, not a full Provider or Crypto Worker.",
+    "memoryStorage": "Still transitive through RustCrypto; only original MLS lab instantiates it, never the new SQLite Provider.",
+    "interop": "Same OpenMLS version on both sides; cross-implementation interoperability NOT_RUN.",
+    "crash": "Native child kill before/after commit and Chromium Worker termination inside IDB transaction; not OS/hardware power loss.",
+    "sqliteAdvisory": "New experimental lock has RUSTSEC-2026-0459. Only new synthetic databases; no imported DB/WAL. Not fixed.",
+    "production": "Gate unchanged/closed; no deployment or production VPS access.",
+    "identity": "No trusted root/real device Credential/SAS/QR claim.",
+    "recovery": "Local consistency only; no key recovery, rollback/freshness guarantee or encrypted disaster recovery."
+  },
+  "notRun": [
+    "Cross-implementation MLS interoperability",
+    "Trusted account/device enrollment",
+    "Product network offline synchronization",
+    "Encrypted deletion tombstone propagation",
+    "Identity/key recovery and isolated disaster recovery",
+    "OS power loss/physical disk exhaustion/old-backup rollback",
+    "Dedicated SAST or independent audit",
+    "Unchanged SQL/account/admin end-to-end checks this round"
+  ],
+  "protectedFiles": {
+    "package-lock.json": {
+      "unchangedFromBaseline": true,
+      "sha256": "45bfa2fa9f668e62e6d301f36ec1e4813060cb55926e866591706f9a36ce8034"
+    },
+    "crypto/mls-lab/Cargo.toml": {
+      "unchangedFromBaseline": true,
+      "sha256": "0dcea67257527bbb9305b6b3c270b317394a1cfc368262821201a62f7bb38079"
+    },
+    "crypto/mls-lab/Cargo.lock": {
+      "unchangedFromBaseline": true,
+      "sha256": "9ca0ca55441b04fc379e5f8e3bfacd20ec03d87464ab5d2d3efdbe2ec62760e6"
+    },
+    "src/server/messaging/crypto-gate.ts": {
+      "unchangedFromBaseline": true,
+      "sha256": "6f9571c9d107cb6bbd59aeb23320070ab3112ffc3bff1fac3a9ae84ce5cdd6aa"
+    },
+    "migrations/001-initial.sql": {
+      "unchangedFromBaseline": true,
+      "sha256": "bc404f56cf0658c138c2177a1d277a74ca4292d234a4269aba6c51fde5fb96e6"
+    },
+    "migrations/002-runtime-permissions.sql": {
+      "unchangedFromBaseline": true,
+      "sha256": "8d94e1f7e4eca7814d7bd145978c73d098cfa8d971feeeabf0fa14f1ae076962"
+    },
+    "migrations/003-route-version-and-delivery.sql": {
+      "unchangedFromBaseline": true,
+      "sha256": "8c4bf81e53fa51af3c891a5530388b75334d0e5a1dc6394b024e9c0a2fef1ccf"
+    },
+    "migrations/004-invitation-idempotency.sql": {
+      "unchangedFromBaseline": true,
+      "sha256": "5f79462433d0d182c331767b599f3187e709cf993120945089f1632a422008bb"
+    },
+    "migrations/005-admin-lifecycle.sql": {
+      "unchangedFromBaseline": true,
+      "sha256": "ccb640eb1f7e5c6b1fb740b6f6c2fe1d9291899fc1f306ac90ed3cbb54c0d65e"
+    },
+    "migrations/006-authorization-proof.sql": {
+      "unchangedFromBaseline": true,
+      "sha256": "ba2faca6bf545b5ba1002d82d178ac4ab5092e2207d9305589f9b825793ab999"
+    },
+    "migrations/007-public-user-id.sql": {
+      "unchangedFromBaseline": true,
+      "sha256": "b95faf65f901d3be46a9bd7c5ed23dea319c20e0c21471f90469d853d425f5e8"
+    },
+    "migrations/008-device-revocation.sql": {
+      "unchangedFromBaseline": true,
+      "sha256": "2cfe7b9afd153ea9362ffd400785fb74e25e295c664061f492b08bab5a49201c"
+    },
+    "migrations/baselines/echo-native-v1/001-initial.sql": {
+      "unchangedFromBaseline": true,
+      "sha256": "22afb6fd24d654824f0021b77ba6ce5ec3efbffcac35647ba8e0bf46f011a2e8"
+    },
+    "migrations/baselines/echo-native-v1/manifest.json": {
+      "unchangedFromBaseline": true,
+      "sha256": "db2d842602e06069b3db4eb4093b292c3ab4a67d405e4c8ecc4dde1aae1118ac"
+    }
+  },
+  "finalWorkflow": {
+    "status": "PENDING_PUSH",
+    "note": "Will verify actual remote run for final pushed SHA."
+  },
+  "limitedSecretScan": {
+    "files": 213,
+    "patterns": [
+      "private-key-header",
+      "github-token-prefix",
+      "aws-access-key-id"
+    ],
+    "hits": [],
+    "scope": "Finite pattern scan only, not exhaustive secret detection."
+  },
+  "sourceByteVerification": {
+    "rustsec-0459.md": "sha256 matches downloaded source recorded in sources.json"
+  }
+}

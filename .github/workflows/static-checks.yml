@@ -68,4 +68,8 @@ jobs:
       - name: Rust format (offline)
         env:
           CARGO_NET_OFFLINE: "true"
-        run: cargo +1.99.1 fmt --manifest-path crypto/mls-lab/Cargo.toml --all -- --check
+        run: |
+          cargo +1.99.1 fmt --manifest-path crypto/mls-lab/Cargo.toml --all -- --check
+          cargo +1.99.1 fmt --manifest-path crypto/mls-persistence/Cargo.toml --all -- --check
+      - name: Native MLS persistence (synthetic identities)
+        run: cargo +1.99.1 test --locked --manifest-path crypto/mls-persistence/Cargo.toml
