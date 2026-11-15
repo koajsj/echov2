@@ -36,7 +36,9 @@ API 是普通应用 LOGIN，不授 Schema/数据库所有权，不加入 owner �
 
 ## 执行器
 
-在仓库根目录运行现有 Node/pg，无迁移框架或新增依赖。通过受保护环境设置 MIGRATION_DATABASE_URL，或使用 pg 原生 PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD；不要在命令行或报告粘贴密码。
+在仓库根目录运行现有 Node/pg，无迁移框架或新增依赖。必须通过受保护环境显式设置 MIGRATION_DATABASE_URL：postgres/postgresql 协议、loopback 主机、明确端口、echo_native_owner 用户和 /echo_native 数据库，不接受 URL 查询参数或 fragment。缺失或目标不符在连接前拒绝，不再使用 PGHOST/PGPORT/PGDATABASE/PGUSER 隐式选目标；密码仍通过受保护凭据提供，不在命令行或报告粘贴。连接超时5秒。
+
+这是2026-11-15对运维CLI的目标收紧，未执行任何连接。导出的迁移函数保持不变；历史Cloud测试直接建立显式受限连接，其Unix socket/临时库规则不变，不再作为此CLI可用目标。角色、版本、收据及apply确认名仍在连接后独立核查，URL校验不证明数据库实际权限。
 
 ```sh
 node scripts/migrate.mjs inspect

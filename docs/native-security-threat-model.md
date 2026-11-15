@@ -1,5 +1,11 @@
 # 安全威胁模型与证据矩阵
 
+## 最终静态收敛 — 2026-11-15
+
+PARTIAL。当前全量类型/Lint/AST/引用检查与有限敏感模式扫描独立记录于[工程报告](static-verification-report.md)；npm锁审计本轮重新查询为零公告，Semgrep/cargo-audit/SQL解析器NOT_AVAILABLE。Terra只读复核覆盖Rust/MLS、服务端和前端，不是独立第三方审计。以下Semgrep/Cloud描述是历史证据，不能冒充当前运行。
+
+本轮修复WSS异步认证前监听空窗、迁移CLI隐式目标、bigint版本边界、表单冲突/未知结果恢复及错误页焦点目标；详细编号见[修复台账](phase-three-report.md)。没有发现可静态确认且仍未处理的新P0/P1源码缺陷，不构成零漏洞保证。MLS、可信身份/撤权、删除新鲜性、恢复与低配运行条件继续BLOCKED，crypto-gate不开放。
+
 ## 当前状态 — 2026-11-12
 
 本轮补齐用户/管理员服务会话隔离，以及跨账号共用删除 operationId 时的冲突与读取隐藏一致性。Semgrep 实际运行，npm 审计零公告，但 Cargo 审计仍有未解决项；不将自动扫描视为独立完整安全审计。MLS 可信身份、provider 持久化、离线删除和备份防回滚缺口仍存在，生产门禁不解除。扫描范围、公告与残余风险见[工程验证](static-verification-report.md)和[密码学](native-cryptography.md)。
@@ -25,12 +31,12 @@ PASS仅可指列出的静态事实；PARTIAL表示有部分基础源码，BLOCKE
 | account data替代通道           | 私人MLS组；业务schema限本人设备                           | 未实现该组；无任意明文设置上传API                                             | BLOCKED：删除/备注/收藏多设备不能声称可用                                                    |
 | 媒体上传/下载/预览             | 每对象AEAD、MLS传key、私有文件服务、本地预览              | Schema和Caddy阻止公开媒体目录；页内标准AEAD基础；无上传下载处理器             | BLOCKED：不得以只有表就说附件安全完成                                                        |
 | HTTPS历史/离线同步             | 归属、设备/跨度、游标、到期/待删除门控                    | delivery-service真实参数化SQL，写依赖可信设备及crypto gate                    | PARTIAL：尚无完整删日志高水位/客户端MLS处理；不供未授权设备读取                              |
-| WSS                            | 有限通知、认证/Origin、背压/上限、断线HTTPS恢复           | 实际@fastify/websocket注册、连接管理/60秒重认证及撤session关闭                | PARTIAL：依赖未安装/运行；不承载聊天写入或私密内容                                           |
+| WSS                            | 有限通知、认证/Origin、背压/上限、断线HTTPS恢复           | 实际@fastify/websocket注册、连接管理/60秒重认证及撤session关闭                | PARTIAL：已有依赖，当前运行未验证；不承载聊天写入或私密内容                                  |
 | 后台密钥接收                   | 原生库在Worker内，已验证凭证/顺序后才能merge              | 没有虚构后台SDK或私钥API                                                      | BLOCKED：provider/Worker/持久化尚未集成                                                      |
 | 搜索/缓存/导出                 | 本地解密后搜索，受删除与授权门控；加密归档                | 没有远程正文搜索/历史重发/活跃state导入                                       | BLOCKED：聊天索引/历史归档未实现；新增有限元数据归档不覆盖此项，浏览器副本难保证擦除         |
 | 日志/分析/通知                 | 固定元数据白名单、无正文、无token/密码、无URL Preview     | Fastify禁自动请求日志/敏感redact，错误仅固定码；Caddy无访问采集               | PARTIAL：实际代理、DB日志/崩溃日志需核验；没有已接通全站流量                                 |
 | 其它客户端/管理员              | 无通用业务明文路由；管理员只看业务元数据                  | 无Matrix入口；管理员查表/配置/服务封禁，不能调用MLS                           | PARTIAL：恶意客户端可上传非MLS字节/主动泄密，不能承诺服务器绝无明文                          |
-| 前端供应链/发布                | 同源资源、CSP、固定版本、无第三方脚本；独立交付审查       | 原图标与tokens选择性迁移；Caddy CSP；无远程字体/脚本                          | PARTIAL：无lock/SBOM/构建验签，WASM CSP/inline style仍需实测                                 |
+| 前端供应链/发布                | 同源资源、CSP、固定版本、无第三方脚本；独立交付审查       | 原图标与tokens选择性迁移；Caddy CSP；无远程字体/脚本                          | PARTIAL：已有lock/SBOM，缺发布验签；WASM CSP/inline style仍需实测                            |
 
 允许服务器可见：User/Device/Group UUID及路由关系、公开Credential/KeyPackage、roles投影、外层消息/操作ID、序号/声明epoch、到期/删除目标、密文对象及大小、时间、IP和必要认证日志。不得把这些称为“零元数据”。不采集正文分析、私人组名、联系人备注、附件文件名/MIME或客户端私钥。
 
@@ -55,7 +61,7 @@ KeyPackage一次消费、历史epoch清理、用户归档和key销毁会影响FS
 
 ## 必须单列的验证
 
-当前静态检查仅检查可用工具覆盖的语法/引用/Schema文本、调用链、敏感候选与Diff；完整类型因依赖缺失标BLOCKED，缺独立工具标NOT_AVAILABLE；TSX由现有AST解析覆盖。后续需获授权在固定版本进行真实浏览器、原生向量/互操作、Commit冲突、撤权、离线删除、数据库事务/权限、磁盘满与隔离恢复验证；独立安全审查必须包含实际provider、存储、前端和AS/DS。编译成功、上游审计、HTTP200与源码存在均不能替代这些证据。
+当前静态检查覆盖完整类型、Hooks Lint、AST/引用/Schema文本、调用链、敏感候选与Diff；缺独立SAST/SQL工具标NOT_AVAILABLE；不能替代运行和专业安全审计。后续需获授权在固定版本进行真实浏览器、原生向量/互操作、Commit冲突、撤权、离线删除、数据库事务/权限、磁盘满与隔离恢复验证；独立安全审查必须包含实际provider、存储、前端和AS/DS。编译成功、上游审计、HTTP200与源码存在均不能替代这些证据。
 
 ## 第二阶段证据与残余风险
 

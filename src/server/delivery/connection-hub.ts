@@ -35,8 +35,6 @@ export class ConnectionHub {
     this.connections.add(connection);
     socket.on("close", () => this.connections.delete(connection));
     socket.on("error", () => this.connections.delete(connection));
-    // Notification-only socket. Client messages never become persisted chat messages.
-    socket.on("message", () => socket.close(1008, "Use HTTPS for writes"));
     socket.send(JSON.stringify({ type: "connected", syncRequired: true }));
   }
   notify(userId: string): void {

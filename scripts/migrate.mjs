@@ -312,9 +312,24 @@ export async function main() {
     throw new Error(
       "Usage: node scripts/migrate.mjs inspect|plan|status|apply --confirm-database NAME",
     );
+  const connectionString = process.env.MIGRATION_DATABASE_URL;
+  if (!connectionString)
+    throw new Error("Explicit MIGRATION_DATABASE_URL required");
+  const target = new URL(connectionString);
+  if (
+    !["postgres:", "postgresql:"].includes(target.protocol) ||
+    !["127.0.0.1", "localhost", "[::1]"].includes(target.hostname) ||
+    !target.port ||
+    target.username !== "echo_native_owner" ||
+    target.pathname !== "/echo_native" ||
+    target.search ||
+    target.hash
+  )
+    throw new Error("Explicit local echo_native owner URL required");
   const manifest = await loadManifest(selectedManifest);
   const db = new pg.Client({
-    connectionString: process.env.MIGRATION_DATABASE_URL,
+    connectionString,
+    connectionTimeoutMillis: 5000,
   });
   await db.connect();
   try {

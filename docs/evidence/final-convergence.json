@@ -1,0 +1,312 @@
+{
+  "date": "2026-11-15",
+  "status": "PARTIAL",
+  "baseline": {
+    "main": "c6068557a53ca5fd6b99fef07b88e00605c18578",
+    "initialHead": "f54fc345d8ca4833e2b9b297e364c7e4fc98ddab",
+    "branch": "codex/native-hardening-review",
+    "initialWorktree": "clean",
+    "preservedAncestor": "d17b0d689af7aff60b3477c4eea74015b13145a2",
+    "integrationPullRequest": 4,
+    "supersededPullRequest": 3
+  },
+  "constraints": {
+    "dependenciesInstalledOrUpgraded": false,
+    "testsAddedOrRun": false,
+    "buildsRun": false,
+    "servicesStarted": false,
+    "sqlOrDatabaseOrVpsAccess": false,
+    "computerUse": false,
+    "oldProjectModified": false,
+    "cryptoGate": "BLOCKED"
+  },
+  "review": {
+    "status": "PARTIAL",
+    "method": "Primary agent source/call-chain/diff review plus three user-authorized gpt-6.1-terra read-only reviews: Rust/MLS, server, frontend. Not an independent third-party security audit.",
+    "scope": [
+      "All authored TS/TSX and hooks",
+      "Fastify routes, auth, CSRF, sessions and authorization",
+      "SQL schema, ACL, FK, indexes, transactions and lock order",
+      "MLS lab versus product, key and deletion lifecycles",
+      "Frontend API contracts, unknown outcomes and resource cleanup",
+      "Scripts, deployment, dependencies, licenses, links and sensitive patterns"
+    ]
+  },
+  "issues": [
+    {
+      "id": "FINAL-01",
+      "severity": "medium",
+      "files": [
+        "src/server/delivery/delivery-routes.ts",
+        "src/server/delivery/connection-hub.ts"
+      ],
+      "rootCause": "Inbound message rejection was installed only after async authentication and row-lock waits.",
+      "change": "Install the sole message rejection synchronously; terminate on socket error.",
+      "status": "FIXED",
+      "verification": "TypeScript, ESLint, listener/attach call-chain review; WSS concurrency NOT_RUN.",
+      "line": 46
+    },
+    {
+      "id": "FINAL-02",
+      "severity": "medium",
+      "files": ["scripts/migrate.mjs", "migrations/README.md"],
+      "rootCause": "Missing URL or port could select an unintended pg default target.",
+      "change": "Require explicit loopback PostgreSQL URL, port, echo_native_owner, echo_native, no query/fragment before connecting; 5s connect timeout. Exported migration helpers unchanged.",
+      "status": "FIXED",
+      "verification": "JS syntax, ESLint, installed pg parser and guard order review; no CLI/SQL/database execution.",
+      "line": 315
+    },
+    {
+      "id": "FINAL-03",
+      "severity": "low",
+      "files": ["src/server/accounts/account-routes.ts"],
+      "rootCause": "19-digit rename version could exceed PostgreSQL bigint and become a generic 500.",
+      "change": "Reuse existing bounded sequence validation before rename.",
+      "status": "FIXED",
+      "verification": "TypeScript, ESLint, route/service/schema tracing; HTTP NOT_RUN.",
+      "line": 251
+    },
+    {
+      "id": "FINAL-04",
+      "severity": "medium",
+      "files": [
+        "src/client/features/admin/RegistrationPage.tsx",
+        "src/client/features/account/AccountPage.tsx"
+      ],
+      "rootCause": "CAS failures retained stale versions without a recovery action.",
+      "change": "Refresh registration settings in finally; provide explicit account refresh while preserving the visible error.",
+      "status": "FIXED",
+      "verification": "TypeScript and Hooks ESLint, query refresh and remount tracing; NEEDS_RUNTIME_VERIFICATION.",
+      "line": 73
+    },
+    {
+      "id": "FINAL-05",
+      "severity": "medium",
+      "files": ["src/client/features/account/AuthPage.tsx"],
+      "rootCause": "Unknown registration outcome kept operation ID but reset input, allowing incompatible retries.",
+      "change": "Keep original username/invitation in current DOM and readonly, reuse operation ID, clear password after every attempt, permit original retry even after mode closes, require explicit confirmation for another registration. No persistence across reload/navigation.",
+      "status": "FIXED",
+      "verification": "TypeScript, Hooks ESLint, response-loss/login-toggle/mode-change source tracing and Terra re-review; NEEDS_RUNTIME_VERIFICATION.",
+      "line": 24
+    },
+    {
+      "id": "FINAL-06",
+      "severity": "low",
+      "files": ["src/client/app/ErrorBoundary.tsx"],
+      "rootCause": "Error fallback did not retain the normal page main-content location/focus contract.",
+      "change": "Preserve main ID and tabIndex in failure fallback.",
+      "status": "FIXED",
+      "verification": "TypeScript, AST and focus target reference; keyboard/screenreader NEEDS_RUNTIME_VERIFICATION.",
+      "line": 13
+    },
+    {
+      "id": "FINAL-07",
+      "severity": "low",
+      "files": ["src/client/styles/app.css", "src/client/styles/screens.css"],
+      "rootCause": "Dead metrics/chart-observations styles remained after BoardUI migration.",
+      "change": "Remove only unreferenced rules; retain split-panels.",
+      "status": "FIXED",
+      "verification": "Repository references and formatting; final CSS size NOT_RUN.",
+      "line": 149
+    },
+    {
+      "id": "FINAL-08",
+      "severity": "low",
+      "files": [
+        "README.md",
+        "CHANGELOG.md",
+        "docs/phase-three-report.md",
+        "docs/static-verification-report.md",
+        "docs/native-cryptography.md",
+        "docs/native-identity-devices-recovery.md",
+        "docs/native-protocol-delivery.md",
+        "docs/native-data-lifecycle.md",
+        "docs/native-security-threat-model.md",
+        "docs/native-deployment-operations.md",
+        "migrations/README.md"
+      ],
+      "rootCause": "Docs mixed old and current evidence and retained obsolete ID/dependency/CLI descriptions.",
+      "change": "Update required documents and evidence, preserve history, screenshots, licenses and blockers.",
+      "status": "FIXED",
+      "verification": "Format, local references, lock/SBOM/migration/screenshot hashes; final diff review.",
+      "line": 1
+    }
+  ],
+  "rust": {
+    "status": "BLOCKED",
+    "cargoTree": {
+      "status": "NOT_AVAILABLE",
+      "command": "cargo +stable tree --locked --offline --target wasm32-unknown-unknown",
+      "cwd": "crypto/mls-lab",
+      "exitCode": 101,
+      "reason": "no matching package named getrandom found in crates.io index/cache"
+    },
+    "advisories": [
+      {
+        "id": "RUSTSEC-2026-0387",
+        "locked": "crypto-bigint 0.5.5",
+        "fixed": ">=0.7.6",
+        "path": "crypto-bigint <- elliptic-curve <- p256 <- openmls_basic_credential <- echo-mls-lab; additional RustCrypto/HPKE curve paths",
+        "status": "BLOCKED"
+      },
+      {
+        "id": "RUSTSEC-2026-0331",
+        "locked": "libcrux-kem 0.0.9",
+        "fixed": ">=0.0.10",
+        "path": "libcrux-kem <- hpke-rs-libcrux 0.7.0 <- hpke-rs 0.7.0 <- openmls_rust_crypto 0.6.0 <- echo-mls-lab",
+        "status": "BLOCKED"
+      },
+      {
+        "id": "RUSTSEC-2026-0330",
+        "locked": "libcrux-kem 0.0.9",
+        "fixed": ">=0.0.10",
+        "status": "BLOCKED"
+      },
+      {
+        "id": "RUSTSEC-2026-0173",
+        "locked": "proc-macro-error2 2.0.1",
+        "fixed": null,
+        "path": "proc-macro-error2 <- hax-lib-macros <- hax-lib <- libcrux-sha3 <- hpke-rs <- openmls_rust_crypto <- echo-mls-lab",
+        "status": "BLOCKED"
+      }
+    ],
+    "features": "Lock candidates are not active feature proof. Historical WASM tree had bigint active and optional KEM inactive; cannot re-resolve current target offline. Macro path can exist independently of KEM.",
+    "releaseCondition": "Reviewed compatible upstream provider/fixes and complete cached dependencies/toolchain, then authorized locked resolution, audit, compilation and interoperability verification; no forced incompatible lock edits, forks or ignores."
+  },
+  "mls": {
+    "status": "BLOCKED",
+    "lab": "PARTIAL",
+    "productGate": "unconditional 503 MLS_NOT_READY before message processing",
+    "missing": [
+      "Account-root/device credential binding, SAS/QR, trusted onboarding and recovery",
+      "Product WASM/Crypto Worker and complete encrypted native Storage Provider",
+      "Credential/KeyPackage/Welcome/Proposal/Commit/staged merge-discard consistency",
+      "Atomic native state/outbox/inbox/cursors, multi-tab fencing and crash recovery",
+      "Private/group roles, valid Remove/new epoch and future key exclusion",
+      "Encrypted multi-device tombstones, independent deletion freshness, purge/media cleanup",
+      "Full encrypted user history, system DB/media backups and isolated anti-rollback recovery"
+    ],
+    "boundary": "MemoryStorage/synthetic BasicCredential lab and caller-provided opaque sealedState do not establish production MLS."
+  },
+  "npmAudit": {
+    "status": "PASS",
+    "command": "npm audit --package-lock-only --ignore-scripts --json",
+    "exitCode": 0,
+    "totalVulnerabilities": 0,
+    "dependencyLocations": 425,
+    "scope": "Registry advisory metadata only; no install/download/upgrade of dependencies; not a full supply-chain audit."
+  },
+  "checks": {
+    "typecheck": {
+      "status": "PASS",
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "configs": 3
+    },
+    "lint": {
+      "status": "PASS",
+      "command": "npm run lint",
+      "exitCode": 0
+    },
+    "prettier": {
+      "status": "PASS",
+      "command": "npm run format:check",
+      "exitCode": 0
+    },
+    "ast": {
+      "status": "PASS",
+      "command": "npm run check:ast",
+      "exitCode": 0,
+      "files": 77,
+      "localBindings": 256
+    },
+    "source": {
+      "status": "PASS",
+      "command": "npm run check:source",
+      "exitCode": 0,
+      "files": 161,
+      "parsed": 52,
+      "jsxParsed": 38,
+      "literalModuleReferences": 400,
+      "localDocumentLinks": 121
+    },
+    "rustfmt": {
+      "status": "PASS",
+      "command": "CARGO_NET_OFFLINE=true cargo +stable fmt --manifest-path crypto/mls-lab/Cargo.toml --all -- --check",
+      "exitCode": 0,
+      "scope": "Formatting only, installed stable 1.99.0, not pinned 1.99.1 build"
+    },
+    "scriptSyntax": {
+      "status": "PASS",
+      "nodeFiles": 13,
+      "bashFiles": 1,
+      "exitCode": 0
+    },
+    "protectedArtifactBytes": {
+      "status": "PASS",
+      "files": 25,
+      "scope": "Dependencies, manifests, all SQL/manifest, license notices and eight historical PC screenshots unchanged from f54fc345"
+    },
+    "migrationHashes": {
+      "status": "PASS",
+      "files": 9,
+      "mismatches": 0
+    },
+    "dependencyMetadata": {
+      "status": "PASS",
+      "npmPositions": 425,
+      "npmUniqueComponents": 418,
+      "rustPackagesWithRoot": 192,
+      "rustSbomComponents": 191,
+      "missingOrExtraComponents": 0,
+      "missingLicenseFields": 0,
+      "rustChecksumMismatches": 0,
+      "scope": "Metadata only, historical SBOM timestamps retained; not legal compliance or active feature proof"
+    },
+    "sensitivePatternsAndDiff": {
+      "status": "PASS",
+      "authorFiles": 161,
+      "patternMatches": 0,
+      "scope": "Private key/GitHub/API/AWS/PostgreSQL password patterns and diff; limited patterns only, not complete SAST"
+    },
+    "sqlSemanticsAndSecurityReview": {
+      "status": "PARTIAL",
+      "scope": "Manual DDL/ACL/FK/index and call-chain/transaction/lock-order review only; no SQL execution"
+    },
+    "tools": {
+      "status": "NOT_AVAILABLE",
+      "missing": ["cargo-audit", "Semgrep", "PostgreSQL AST parser"]
+    }
+  },
+  "performance": {
+    "status": "PARTIAL",
+    "currentBuild": "NOT_RUN",
+    "sourceCommit": "f54fc345d8ca4833e2b9b297e364c7e4fc98ddab",
+    "existingArtifactGraphReview": "dist/bundle-review-before.json and dist/bundle-review-after.json",
+    "historicalInitialJsBytesBefore": 1014265,
+    "historicalInitialJsBytesAfter": 447321,
+    "historicalGzipAfter": 143345,
+    "historicalChunkCount": 11,
+    "historicalLargestChunkBytes": 395857,
+    "historicalTotalJsAfter": 1023188,
+    "boundary": "Final source differs; prior artifact sizes are not current build validation. Preserve route lazy-loading, shared HeroUI/React and real BoardUI charts, without manual over-splitting.",
+    "existingArtifactGraphStatus": "PASS",
+    "existingArtifactDuplicateNonemptyModules": 0,
+    "existingArtifactChartsOrRemixInInitialClosure": 0
+  },
+  "runtime": {
+    "status": "NOT_RUN",
+    "clipboardKeyboardFormsRoutes": "NEEDS_RUNTIME_VERIFICATION",
+    "testsServicesDatabaseMigrationsRustWasmBuilds": "NOT_RUN",
+    "screenshots": "Eight historical real PC screenshots preserved byte-for-byte; current UI screenshots NOT_RUN."
+  },
+  "delivery": {
+    "status": "PARTIAL",
+    "intent": "Push normal fast-forward to existing branch, update draft PR #4, close contained duplicate PR #3, retain both branch histories; never merge main or deploy. Verify remote SHA/tree/blob hashes after push."
+  },
+  "lockSha256": {
+    "package-lock.json": "45bfa2fa9f668e62e6d301f36ec1e4813060cb55926e866591706f9a36ce8034",
+    "crypto/mls-lab/Cargo.lock": "9ca0ca55441b04fc379e5f8e3bfacd20ec03d87464ab5d2d3efdbe2ec62760e6"
+  },
+  "historicalLockBoundary": "Both current lock files unchanged from main/f54fc345. Old verification.json npm lock hash refers to an earlier Cloud snapshot, not current main; preserve it as history."
+}

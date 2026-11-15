@@ -10,7 +10,7 @@ export class ErrorBoundary extends Component<
   }
   render() {
     return this.state.failed ? (
-      <main>
+      <main id="main" tabIndex={-1}>
         <h1>页面暂时不可用</h1>
         <p>未收集聊天、凭据或错误堆栈。请重新载入页面。</p>
         <a href="/">重新打开 Echo</a>

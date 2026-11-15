@@ -1,5 +1,11 @@
 # 低配部署、删除证据与系统恢复
 
+## 最终CLI收敛 — 2026-11-15
+
+FIXED仅指源码：迁移CLI在连接前要求显式MIGRATION_DATABASE_URL，限定postgres/postgresql、loopback、明确端口、echo_native_owner和/echo_native，无query/hash，连接超时5秒。禁止缺URL或缺目标字段时回退PG*选择实例；URL不证明真实ACL，owner/版本/台账/apply确认名仍独立核查。历史Cloud导出函数/测试入口不变，CLI不再接受socket/临时库目标，详见[迁移规范](../migrations/README.md)。本轮CLI/数据库/SQL/备份/恢复/部署均NOT_RUN。
+
+当前前端代码有后续小幅修复，下面447,321字节及CSS数值仅为f54fc345历史构建，不是最终提交产物。未重新构建或测量网络。
+
 ## 本地主环境与待执行变更 — 2026-11-15
 
 GitHub main的PR #2成果已在本地echov2接管，旧echo-v2只读；仅使用已有node_modules、不安装或升级Node/Rust/WASM依赖，不启动服务、执行SQL或访问VPS。以下Cloud资源和功能数字是历史证据，本轮没有重新运行。保留前序008迁移工件、WSS权限竞态修复与管理员账号版本条件；本轮补齐锁后期限检查、通知会话期限及前端按需加载，未修改生产配置/资源预算。

@@ -91,6 +91,14 @@ export function AccountPage({
           确认修改
         </Button>
         <p role="status">{message}</p>
+        <Button
+          type="button"
+          variant="ghost"
+          isDisabled={pending}
+          onPress={onChanged}
+        >
+          刷新账户状态
+        </Button>
       </Form>
     </section>
   );

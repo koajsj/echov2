@@ -64,13 +64,13 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
           version: overview.data.registration.version,
         },
       });
-      setRevision((value) => value + 1);
       setMessage("注册模式已更新并审计。");
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "设置结果未确认，请刷新核实。",
       );
     } finally {
+      setRevision((value) => value + 1);
       setBusy(false);
     }
   }

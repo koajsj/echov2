@@ -43,7 +43,8 @@ export function deliveryRoutes(
     },
     (socket, request) => {
       // Install listeners synchronously; no inbound messages are accepted.
-      socket.on("error", () => socket.close());
+      socket.on("error", () => socket.terminate());
+      socket.on("message", () => socket.close(1008, "Use HTTPS for writes"));
       void sessions
         .require(request)
         .then(async (current) => {

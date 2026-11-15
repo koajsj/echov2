@@ -21,6 +21,8 @@ OpenMLS仍为可行性优先候选；ts-mls1.6.4为条件备选，不能因Rust�
 | [RUSTSEC-2026-0330](https://rustsec.org/advisories/RUSTSEC-2026-0330.html)             | 同上                                                                                                                                          | BLOCKED。短seed混合封装panic，官方修复>=0.0.10；不能以“不是套件1”忽略公告或关闭扫描                                                              |
 | [RUSTSEC-2026-0173](https://rustsec.org/advisories/RUSTSEC-2026-0173.html)（维护警告） | proc-macro-error2 2.0.1 ← hax-lib-macros0.3.7 ← hax-lib0.3.7 ← libcrux-sha3 0.0.10 ← hpke-rs0.7.0 ← RustCrypto Provider；另有KEM链            | BLOCKED。公告未给修复版本，需上游迁移/替代复核；不是密码算法漏洞证明，不能因KEM可选便认定宏也非活动。本轮没有完整cargo审计，不自行fork宏/密码库  |
 
+Terra以当前Cargo.lock重新遍历候选图：bigint经p256→openmls_basic_credential→实验根，也经RustCrypto/HPKE曲线路径；KEM经hpke-rs-libcrux→hpke-rs→RustCrypto；宏经libcrux-sha3的路径不依赖KEM。重新执行未带反向过滤的WASM离线树仍退出101，缺getrandom；历史活动结论没有升级为当前PASS。安全公告风险及解除条件均保持BLOCKED。
+
 本机没有固定1.99.1工具链或wasm-bindgen CLI依赖闭包；使用已安装stable1.99.0仅执行rustfmt检查，不声称符合固定版本构建验证。npm/Rust锁文件未更改。本轮对上游兼容性的可核验范围为官方修复版本、锁闭父依赖版本和历史活动树；没有固定依赖源码，无法验证新Provider对补丁版本的API/feature兼容，不能把“有补丁版本”当作安全升级方案。最小安全替代是保留独立实验和关闭产品写入；兼容修复必须在获授权准备依赖的环境中重新锁闭、审查、编译、审计和互操作验证。
 
 ## 产品Crypto边界与状态转换

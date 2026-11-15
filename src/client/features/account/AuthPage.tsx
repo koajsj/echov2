@@ -21,6 +21,8 @@ export function AuthPage({
   const [register, setRegister] = useState(false);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
+  const [retryingRegistration, setRetryingRegistration] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const registrationId = useRef(crypto.randomUUID());
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -34,6 +36,7 @@ export function AuthPage({
     try {
       if (register) {
         const invitation = String(data.get("invitation") ?? "");
+        setRetryingRegistration(true);
         await api("/v1/accounts", {
           method: "POST",
           body: {
@@ -49,7 +52,9 @@ export function AuthPage({
         });
         setMessage("注册已完成，请登录。登录不会自动建立设备信任。");
         setRegister(false);
+        setRetryingRegistration(false);
         registrationId.current = crypto.randomUUID();
+        form.reset();
       } else {
         await api("/v1/sessions", {
           method: "POST",
@@ -67,7 +72,9 @@ export function AuthPage({
         error instanceof Error ? error.message : "操作未完成，请核实后重试。",
       );
     } finally {
-      form.reset();
+      const passwordInput = form.elements.namedItem("password");
+      if (passwordInput instanceof HTMLInputElement) passwordInput.value = "";
+      if (!register && !retryingRegistration) form.reset();
       setPending(false);
     }
   }
@@ -92,6 +99,7 @@ export function AuthPage({
               : "欢迎回来"}
         </h2>
         <Form
+          ref={formRef}
           onSubmit={(event) => {
             void submit(event);
           }}
@@ -105,6 +113,7 @@ export function AuthPage({
               maxLength={32}
               pattern="[a-zA-Z0-9_]+"
               autoComplete="username"
+              readOnly={pending || retryingRegistration}
             />
           </label>
           <label>
@@ -118,7 +127,7 @@ export function AuthPage({
               autoComplete={register ? "new-password" : "current-password"}
             />
           </label>
-          {register && (
+          <div hidden={!register}>
             <label>
               邀请码（按注册模式）
               <Input
@@ -126,28 +135,68 @@ export function AuthPage({
                 autoComplete="off"
                 maxLength={128}
                 minLength={32}
-                required={mode === "invite"}
+                disabled={!register}
+                required={mode === "invite" && !retryingRegistration}
+                readOnly={pending || retryingRegistration}
               />
             </label>
-          )}
+          </div>
           <Button
             type="submit"
             isPending={pending}
-            isDisabled={register && mode !== "open" && mode !== "invite"}
+            isDisabled={
+              register &&
+              !retryingRegistration &&
+              mode !== "open" &&
+              mode !== "invite"
+            }
           >
-            {register ? "注册" : "登录"}
+            {register
+              ? retryingRegistration
+                ? "核实并重试原注册"
+                : "注册"
+              : "登录"}
           </Button>
         </Form>
+        {retryingRegistration && (
+          <>
+            <p>
+              请重新输入原密码重试原注册，或返回登录核实账号。用户名和邀请码保持原请求；不会自动发起另一注册。
+            </p>
+            <Button
+              variant="ghost"
+              isDisabled={pending}
+              onPress={() => {
+                if (!confirm("确认已核实原注册结果，开始另一注册操作？"))
+                  return;
+                registrationId.current = crypto.randomUUID();
+                setRegister(true);
+                setRetryingRegistration(false);
+                formRef.current?.reset();
+                setMessage("");
+              }}
+            >
+              核实后开始另一注册
+            </Button>
+          </>
+        )}
         {audience === "user" && (
           <Button
             variant="ghost"
-            isDisabled={pending || (!register && mode === "closed")}
+            isDisabled={
+              pending ||
+              (!register && mode === "closed" && !retryingRegistration)
+            }
             onPress={() => {
               setRegister(!register);
               setMessage("");
             }}
           >
-            {register ? "已有账号，返回登录" : "创建新账号"}
+            {register
+              ? "已有账号，返回登录"
+              : retryingRegistration
+                ? "返回核实原注册"
+                : "创建新账号"}
           </Button>
         )}
         {audience === "user" && (

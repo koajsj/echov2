@@ -1,8 +1,23 @@
 # 第三阶段交付报告
 
-2026-11-15，本地与GitHub main核对一致：`c6068557a53ca5fd6b99fef07b88e00605c18578`。保留前序`d17b0d6`和接管时未提交的组件改动，在`codex/native-hardening-review`继续。**整体PARTIAL，产品通信和生产准入BLOCKED。** 本轮无依赖安装、测试、服务、SQL或部署；已执行现有工具的全项目静态检查与客户端构建。历史Cloud证据不能替代本轮运行验证。
+2026-11-15，本地与GitHub main核对一致：`c6068557a53ca5fd6b99fef07b88e00605c18578`。保留前序`d17b0d6`和接管时未提交的组件改动，在`codex/native-hardening-review`继续。**整体PARTIAL，产品通信和生产准入BLOCKED。** 最终集中修复从干净的`f54fc345`继续，无依赖安装、测试、构建、服务、SQL或部署；已执行现有工具的全项目静态检查。前次f54fc345构建和历史Cloud证据不能替代本轮运行验证。
 
-## 2026-11-15修复台账
+## 最终集中修复台账 — 2026-11-15
+
+最终工作以PR #4为唯一整合路径；PR #3的d17b0d6是f54fc345祖先，保留分支和提交，只关闭冗余PR，不重复cherry-pick或合并main。FIXED只表示源码与下列静态证据；完整结构化记录见[最终收敛证据](evidence/final-convergence.json)。
+
+| ID       | 文件 / 位置                                                         | 严重程度 | 根因与修复                                                                                                                                      | 验证结果                                                                                     |
+| -------- | ------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| FINAL-01 | `src/server/delivery/delivery-routes.ts:46`；`connection-hub.ts:35` | 中       | 入站拒绝监听在异步认证/行锁之后才安装；移到路由同步入口，error terminate，移除重复监听                                                          | FIXED；类型/Lint/唯一message与attach调用链PASS，WSS竞争NOT_RUN                               |
+| FINAL-02 | `scripts/migrate.mjs:315`；迁移README                               | 中       | 缺URL可用pg默认目标，缺端口仍读PGPORT；连接前要求明确本地协议/主机/端口/owner/库且无query/hash，5秒连接上限                                     | FIXED；JS语法/Lint/校验先于connect顺序PASS；CLI/数据库NOT_RUN                                |
+| FINAL-03 | `src/server/accounts/account-routes.ts:251`                         | 低       | schema允许19位超bigint值传SQL导致500；rename前复用sequence，400拒绝                                                                             | FIXED；类型/Lint/调用契约PASS，HTTP NOT_RUN                                                  |
+| FINAL-04 | `RegistrationPage.tsx:73`；`AccountPage.tsx:100`                    | 中       | 配置/账号CAS冲突后只能重试旧version；设置finally刷新，账户提供明确刷新，保留错误可见                                                            | FIXED；类型/Hooks Lint/权威query链PASS，浏览器NEEDS_RUNTIME_VERIFICATION                     |
+| FINAL-05 | `AuthPage.tsx:24`                                                   | 中       | 注册响应未知后清空原参数但保留operationId，换参数会冲突；保留当前页原用户名/邀请码并锁定，密码每次清空重输，原ID重试/登录核实，明确确认才新操作 | FIXED；类型/Hooks/字段与操作生命周期PASS，页面刷新不持久，真实交互NEEDS_RUNTIME_VERIFICATION |
+| FINAL-06 | `ErrorBoundary.tsx:13`                                              | 低       | 错误页未保留正常页面的主内容定位与可聚焦契约；补main ID和tabIndex                                                                               | FIXED；类型/AST/目标引用PASS，键盘读屏NEEDS_RUNTIME_VERIFICATION                             |
+| FINAL-07 | `styles/app.css:149`；`styles/screens.css:88`                       | 低       | BoardUI替代后残留metrics/chart-observations无引用样式；仅删死规则，保留split-panels                                                             | FIXED；全仓引用/格式PASS，最终CSS体积NOT_RUN                                                 |
+| FINAL-08 | README/CHANGELOG与八份技术文档；`migrations/README.md`              | 低       | 当前/历史构建审计混淆，身份文档仍将公共ID说作UUID，依赖状态过时；同步实际API、历史范围、公告/阻塞、子智能体和检查证据                           | FIXED；格式/链接/锁/SBOM/截图摘要核验PASS，不改历史运行记录                                  |
+
+## 前次2026-11-15修复台账（f54fc345）
 
 FIXED仅指源码修复及列出的静态核验；浏览器和竞争运行不在其中。具体行号和产物字节保存在[结构化证据](evidence/native-hardening-review.json)，命令结果见[工程报告](static-verification-report.md)。
 
@@ -78,6 +93,6 @@ FIXED 表示源码缺陷已修正并经静态复核，不表示并发、数据�
 
 保留原模块化单体和PC布局；未引入依赖、服务、Matrix接口、Mock、密码学适配空壳或新测试。仅将新组件样式命名为`copy-button.css`，更新唯一导入，没有重排成熟模块。11-12前序新增 `008-device-revocation.sql` 和一份机器可读[本地审查证据](evidence/local-security-review.json)。历史001–007及独立基线SQL、package/Cargo声明与锁文件保持原字节；manifest只追加008。未删除源码或截图，没有无依据文件移动。两份报告合并过时重复叙述；主题技术规格继续各自为权威来源。旧echo-v2只读保留。
 
-静态检查实际结果见[工程报告](static-verification-report.md)。本轮没有子智能体或独立第三方审计；主智能体在实施后另做完整Diff及调用链复核，不能称为独立审计。本轮客户端构建PASS；运行、迁移、测试、真实数据及生产VPS均NOT_RUN。需要运行解除的结论保持BLOCKED，未把“代码已编写”当产品安全通过。
+静态检查实际结果见[工程报告](static-verification-report.md)。本轮有三个Terra只读复核任务，主智能体在实施后做完整Diff及调用链复核；不构成独立第三方审计。本轮构建、运行、迁移、测试、真实数据及生产VPS均NOT_RUN；f54fc345客户端构建保留为历史PASS。需要运行解除的结论保持BLOCKED，未把“代码已编写”当产品安全通过。
 
 提交到独立分支、推送后以GitHub真实head/PR记录为准；不自动合并main或部署。历史证据：[PC审查](evidence/pc-review.json)、[前次复核](evidence/final-review.json)、[Cloud验证](evidence/verification.json)。本阶段结束等待审查，不增加第四阶段。
