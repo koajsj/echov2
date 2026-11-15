@@ -25,7 +25,8 @@
     "check:browser": "node scripts/check-app-browser.mjs",
     "check:mls:browser": "node scripts/check-mls-browser.mjs",
     "check:local-crypto": "node scripts/check-local-crypto-browser.mjs",
-    "check:deletion": "node scripts/check-deletion-race.mjs"
+    "check:deletion": "node scripts/check-deletion-race.mjs",
+    "check:devices": "node scripts/check-device-revocation.mjs"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.5",

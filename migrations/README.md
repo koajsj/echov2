@@ -1,10 +1,10 @@
 # PostgreSQL 迁移
 
-## 当前迁移清单：001–008（008未执行）
+## 当前迁移清单：001–008（Cloud 隔离验证通过）
 
-新增 `008-device-revocation.sql`，只作为待审工件；本机未执行SQL。001–007及独立基线SQL不变，manifest追加008摘要，执行器只接受明确有序前缀。008要求普通owner，固定pg_catalog search_path、全表名限定的SECURITY DEFINER触发器在设备状态转为revoked的同事务标记公开Credential撤销并删除未领取KeyPackage。API无直接Credential/KeyPackage写权限，PUBLIC/API无函数执行权；不授予签发、激活或解冻能力。已经领取的包和凭证字节保留供对账，不承诺追回外部分发副本。
+`008-device-revocation.sql` 本轮已在临时 Cloud 新库及合成旧库执行，原字节未改；生产未执行。001–007及独立基线SQL不变，manifest追加008摘要，执行器只接受明确有序前缀。008要求普通owner，固定pg_catalog search_path、全表名限定的SECURITY DEFINER触发器在设备状态转为revoked的同事务标记公开Credential撤销并删除未领取KeyPackage。API无直接Credential/KeyPackage写权限，PUBLIC/API无函数执行权；不授予签发、激活或解冻能力。已经领取的包和凭证字节保留供对账，不承诺追回外部分发副本。
 
-008会补偿此前已撤销设备的上述公开材料；申请SHARE ROW EXCLUSIVE锁，执行窗口需独立规划。数据库中原生MLS Group State/私钥不存在；本迁移不是Remove Commit，也不解除组冻结。使用前必须在隔离环境验证owner/ACL、触发器回滚、重复撤销、并发领包、历史回填和两条迁移路径；本轮均NOT_RUN。现有维护脚本使用manifest加载008，历史Cloud报告只覆盖至007。
+008会补偿此前已撤销设备的上述公开材料；申请SHARE ROW EXCLUSIVE锁，执行窗口需独立规划。数据库中原生MLS Group State/私钥不存在；本迁移不是Remove Commit，也不解除组冻结。使用前必须在隔离环境验证owner/ACL、触发器回滚、重复撤销、并发领包、历史回填和两条迁移路径；本轮两条迁移路径、owner/ACL、触发器回滚、重复撤销、公开材料清理、群组冻结及真实 WebSocket 断开通过。并发领包与已有撤销行回填场景未单独验证，不宣称完整覆盖；详情见[本轮报告](../docs/cloud-review-report.md)。
 
 此前新增 `007-public-user-id.sql`，在006之后由独立owner显式执行；不是新项目阶段。001–006、初始基线SQL原字节保持不变，现有manifest仅追加007及其SHA-256，baseline_id不变。迁移执行器仍验证旧回执和完整有序前缀，不自动认领未知数据库，应用启动不运行迁移。
 

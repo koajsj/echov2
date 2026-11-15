@@ -1,6 +1,6 @@
 # OpenMLS browser laboratory
 
-当前主开发已切换到本机；本机没有完整固定依赖/工具链，禁止执行会下载1.99.1/wasm32或新crate的默认cargo命令。本轮仅使用已安装stable的rustfmt和显式offline依赖查询；离线树解析失败，产品门禁继续BLOCKED。下面Cloud实验命令/结果为历史可复核信息，不是本轮执行记录。现状见[密码学规格](../../docs/native-cryptography.md)。
+2026-11-15 在 Codex Cloud 安装固定 Rust 1.99.1、wasm32 目标和 wasm-bindgen CLI 0.2.105，完整解析 Cargo.lock，native/WASM 构建及双上下文浏览器实验通过。cargo audit 仍退出 1（三项漏洞、一项维护警告），产品门禁保持 BLOCKED。当前证据与兼容性结论见[密码学规格](../../docs/native-cryptography.md)及[Cloud 报告](../../docs/cloud-review-report.md)。
 
 **PARTIAL. Not an application adapter or production encryption feature.** The
 application crypto gate remains closed. Credentials here are synthetic labels;
@@ -40,12 +40,4 @@ and Web Locks with opaque synthetic bytes. It cannot make MemoryStorage persiste
 or establish that a caller supplied a complete, correctly sealed provider snapshot.
 Sending remains forbidden until those boundaries and identity binding are reviewed.
 
-The historical Cloud `cargo audit` failed: its active WASM tree included `crypto-bigint 0.5.5`
-(RUSTSEC-2026-0387); the compatible P-256/P-384 dependencies require 0.13 and
-cannot simply use patched bigint >=0.7.6. Suite 1 does not select P-256, but no
-complete reachability proof or upstream fix has been accepted here. The lock also
-contains optional inactive `libcrux-kem 0.0.9` advisories and unmaintained
-`proc-macro-error2`. The current offline tree is NOT_AVAILABLE because the local
-crate index/cache is incomplete; cargo-audit is not installed. Historical
-reachability is not a fresh feature-resolution result. No advisories are ignored. See the authoritative
-[cryptography review](../../docs/native-cryptography.md).
+The current Cloud `cargo audit` fails with no ignored advisories. `crypto-bigint 0.5.5` remains in the active WASM graph; `libcrux-kem 0.0.9` is locked but its optional backend is inactive; `proc-macro-error2` is locked under `cfg(hax)` and inactive by default. No compatible released provider fix was found. The complete tree, features and official advisory evidence are linked from the authoritative [cryptography review](../../docs/native-cryptography.md).

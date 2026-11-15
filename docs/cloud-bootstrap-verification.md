@@ -1,5 +1,7 @@
 # Cloud 数据库兼容验证
 
+> 当前 Cloud 结果见[本轮报告](cloud-review-report.md)；以下保留历史记录，其本机工具缺失、NOT_RUN 和旧 main/PR 状态不描述本轮。
+
 ## 当前增量007验证
 
 当前证据见[PC复核](evidence/pc-review.json)。在Cloud独立新库与合成旧库依次执行001–007，每份退出0，ON_ERROR_STOP与失败停止策略保留；23表、33外键、17唯一约束、56索引、3业务触发器、4函数。原001–006及独立基线SQL未改，manifest只追加007。公共ID回填保留旧UUID/设备FK；强制碰撞、耗尽回滚、API修改拒绝和并发幂等均通过。RLS启用表数0，当前授权在服务层与列ACL，不宣称RLS隔离。

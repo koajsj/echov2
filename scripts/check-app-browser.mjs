@@ -57,7 +57,11 @@ async function capture(name) {
   screenshots.push(name);
 }
 page.on("console", (message) => {
-  if (message.type() === "error") consoleErrors.push(message.text());
+  if (message.type() === "error")
+    consoleErrors.push({
+      message: message.text(),
+      url: message.location().url,
+    });
 });
 page.on("pageerror", (e) => errors.push(e.message));
 async function instrumentUrls() {
@@ -333,19 +337,25 @@ try {
     0,
   );
   assert.deepEqual(errors, []);
-  const unexpectedConsole = consoleErrors.filter(
-    (message) =>
-      !/^Failed to load resource: the server responded with a status of (401|403) \(\)$/.test(
+  const expectedDenial = ({ path, status }) =>
+    (path === "/v1/session" && status === 401) ||
+    (path === "/v1/conversations" && status === 403);
+  const unexpectedConsole = consoleErrors.filter(({ message, url }) => {
+    const match =
+      /^Failed to load resource: the server responded with a status of (401|403) \((?:Unauthorized|Forbidden)?\)$/.exec(
         message,
-      ),
-  );
-  const unexpectedHttp = httpErrors.filter(
-    ({ path, status }) =>
-      !(
-        (path === "/v1/session" && status === 401) ||
-        (path === "/v1/conversations" && status === 403)
-      ),
-  );
+      );
+    if (!match || !url) return true;
+    const path = new URL(url).pathname;
+    const status = Number(match[1]);
+    return (
+      !expectedDenial({ path, status }) ||
+      !httpErrors.some(
+        (error) => error.path === path && error.status === status,
+      )
+    );
+  });
+  const unexpectedHttp = httpErrors.filter((error) => !expectedDenial(error));
   assert.deepEqual(unexpectedConsole, []);
   assert.deepEqual(unexpectedHttp, []);
   console.log(
@@ -377,6 +387,19 @@ try {
         "PC Chromium only; no comprehensive accessibility audit or product messaging E2E",
     }),
   );
+} catch (error) {
+  console.error(
+    JSON.stringify({
+      status: "FAIL",
+      pageErrors: errors,
+      consoleErrors,
+      httpErrors,
+    }),
+  );
+  await page
+    .screenshot({ path: "/tmp/echo-app-browser-failure.png", fullPage: true })
+    .catch(() => {});
+  throw error;
 } finally {
   await db.query(
     "UPDATE echo.site_settings SET registration_mode='closed',superadmin_user_id=$1",

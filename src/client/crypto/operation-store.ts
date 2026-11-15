@@ -1,5 +1,6 @@
 // Storage prerequisite only. Not wired to sending until the MLS provider can
 // produce a complete encrypted snapshot inside the same operation boundary.
+import { uuidPattern } from "../../shared/validation";
 export interface CryptoOperation {
   id: string;
   group: string;
@@ -13,6 +14,14 @@ interface GroupRecord {
 }
 interface OperationRecord extends CryptoOperation {
   version: number;
+  receipt?: TransportReceipt;
+}
+// A transport receipt proves neither MLS validation nor decryption by recipients.
+export interface TransportReceipt {
+  messageId: string;
+  seq: string;
+  routeVersion: string;
+  ciphertextSha256: string;
 }
 function request<T>(value: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -27,7 +36,7 @@ export async function openOperationStore(
     throw new Error("存储命名空间无效");
   if (!navigator.locks || typeof indexedDB === "undefined")
     throw new Error("浏览器缺少可靠的本地存储或单写者锁");
-  const opening = indexedDB.open(`echo-crypto-${namespace}`, 1);
+  const opening = indexedDB.open(`echo-crypto-${namespace}`, 2);
   return new Promise((resolve, reject) => {
     let refused = false;
     // An open queued behind a blocked delete receives no blocked event itself.
@@ -45,8 +54,23 @@ export async function openOperationStore(
         opening.transaction?.abort();
         return;
       }
-      opening.result.createObjectStore("groups");
-      opening.result.createObjectStore("operations");
+      const db = opening.result;
+      if (!db.objectStoreNames.contains("groups"))
+        db.createObjectStore("groups");
+      if (!db.objectStoreNames.contains("operations"))
+        db.createObjectStore("operations");
+      const outbox = db.createObjectStore("outbox");
+      // Upgrading never assumes an older operation was delivered. Retrying must
+      // use its original ID and bytes, after reconciling the server's result.
+      const cursor = opening
+        .transaction!.objectStore("operations")
+        .openCursor();
+      cursor.onsuccess = () => {
+        const row = cursor.result;
+        if (!row) return;
+        outbox.add(row.key, row.key);
+        row.continue();
+      };
     };
     opening.onerror = () => {
       clearTimeout(timer);
@@ -88,9 +112,13 @@ export async function commitCryptoOperation(
     ciphertext: input.ciphertext.slice(0),
   };
   return navigator.locks.request(db.name, { mode: "exclusive" }, async () => {
-    const transaction = db.transaction(["groups", "operations"], "readwrite", {
-      durability: "strict",
-    });
+    const transaction = db.transaction(
+      ["groups", "operations", "outbox"],
+      "readwrite",
+      {
+        durability: "strict",
+      },
+    );
     const finished = new Promise<void>((resolve, reject) => {
       transaction.oncomplete = () => resolve();
       transaction.onabort = () =>
@@ -127,6 +155,9 @@ export async function commitCryptoOperation(
           operation.id,
         ),
       );
+      await request(
+        transaction.objectStore("outbox").add(operation.id, operation.id),
+      );
       await finished;
       return version;
     } catch (error) {
@@ -138,6 +169,89 @@ export async function commitCryptoOperation(
       await finished.catch(() => {});
       throw error;
     }
+  });
+}
+
+export async function pendingCryptoOperations(
+  db: IDBDatabase,
+  after: string | null = null,
+  limit = 50,
+): Promise<{ ids: string[]; next: string | null }> {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 100)
+    throw new Error("Outbox 分页大小无效");
+  const ids = await request<IDBValidKey[]>(
+    db
+      .transaction("outbox", "readonly")
+      .objectStore("outbox")
+      .getAllKeys(
+        after === null ? undefined : IDBKeyRange.lowerBound(after, true),
+        limit + 1,
+      ),
+  );
+  if (!ids.every((id) => typeof id === "string"))
+    throw new Error("Outbox 损坏，禁止发送");
+  return {
+    ids: ids.slice(0, limit) as string[],
+    next: ids.length > limit ? (ids[limit - 1] as string) : null,
+  };
+}
+
+export async function acknowledgeCryptoOperation(
+  db: IDBDatabase,
+  id: string,
+  receipt: TransportReceipt,
+): Promise<void> {
+  const validSequence = (v: string) =>
+    /^(0|[1-9][0-9]{0,18})$/.test(v) && BigInt(v) <= 9223372036854775807n;
+  if (
+    !new RegExp(uuidPattern).test(receipt.messageId) ||
+    !validSequence(receipt.seq) ||
+    receipt.seq === "0" ||
+    !validSequence(receipt.routeVersion) ||
+    !/^[0-9a-f]{64}$/.test(receipt.ciphertextSha256)
+  )
+    throw new Error("发送确认格式无效");
+  const confirmed = { ...receipt };
+  await navigator.locks.request(db.name, { mode: "exclusive" }, async () => {
+    const operation = await readCryptoOperation(db, id);
+    if (!operation) throw new Error("找不到原操作；禁止重新加密");
+    const digest = new Uint8Array(
+      await crypto.subtle.digest("SHA-256", operation.ciphertext),
+    );
+    const hash = Array.from(digest, (v) =>
+      v.toString(16).padStart(2, "0"),
+    ).join("");
+    if (hash !== confirmed.ciphertextSha256)
+      throw new Error("确认密文与原操作不一致");
+    if (
+      operation.receipt &&
+      (operation.receipt.messageId !== confirmed.messageId ||
+        operation.receipt.seq !== confirmed.seq ||
+        operation.receipt.routeVersion !== confirmed.routeVersion ||
+        operation.receipt.ciphertextSha256 !== confirmed.ciphertextSha256)
+    )
+      throw new Error("发送确认冲突；必须冻结并核实原操作");
+    // Immutable operations are only written by commitCryptoOperation. All writes
+    // share this Web Lock; no transaction is kept alive across WebCrypto awaits.
+    const tx = db.transaction(["operations", "outbox"], "readwrite", {
+      durability: "strict",
+    });
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onabort = () =>
+        reject(tx.error ?? new Error("发送确认未持久化；保留原操作"));
+      tx.onerror = () => {};
+      try {
+        tx.objectStore("operations").put(
+          { ...operation, receipt: confirmed },
+          id,
+        );
+        tx.objectStore("outbox").delete(id);
+      } catch (error) {
+        tx.abort();
+        reject(error);
+      }
+    });
   });
 }
 export async function readCryptoOperation(

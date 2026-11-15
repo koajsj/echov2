@@ -88,13 +88,9 @@ flowchart LR
 
 服务器可见账户和设备目录、会话、IP/登录事件、审计、成员/路由关系、投递时间/长度/顺序、删除目标及附件引用。管理员无法通过现有 API 获取聊天明文、附件明文或用户私钥；服务器仍可拒绝服务，元数据真实性和可用性也有局限。
 
-> ⛔ **供应链安全准入未通过：** 历史 WASM 活动树包含 `crypto-bigint` 时序公告路径；本轮离线树因缺缓存不可重验，Cargo 锁闭另有公告。未忽略公告、未强制套用不兼容补丁，crypto-gate 持续关闭。详情见[密码学](docs/native-cryptography.md)。
+> ⛔ **供应链安全准入未通过：** 本轮完整 WASM 活动树包含 `crypto-bigint` 时序公告路径，cargo audit 仍检出三项漏洞和一项维护警告。未忽略公告、未强制套用不兼容补丁，crypto-gate 持续关闭。详情见[密码学](docs/native-cryptography.md)。
 
-前次提交`f54fc345`于2026-11-15本地收尾统一公共ID复制入口，补齐锁等待后的会话、设备凭证和邀请码期限检查，通知期限不超过服务会话。用户工作区、管理端、图表和归档页按需加载，真实构建的用户入口静态JS闭包由1,014,265降至447,321字节；未删图表或调高警告阈值。继承的008待审迁移用于服务公开材料撤销，不代表MLS Remove。浏览器剪贴板、并发和迁移均未运行；完整台账见[第三阶段报告](docs/phase-three-report.md)。
-
-最终集中修复补齐WSS认证前入站拒绝、迁移CLI显式本地目标、改名bigint边界、注册设置版本刷新、账户冲突恢复和注册未知结果重试；清除无引用旧图表CSS，错误页保留焦点目标。三个Terra子智能体只读复核Rust/MLS、服务端和前端；这不构成第三方安全审计。八张截图保持原字节，未展示本轮新增交互；真实复制/键盘/表单/网络仍NEEDS_RUNTIME_VERIFICATION。
-
-在`981948b`基础上继续核心安全收敛：运行数据库、管理员初始化与迁移入口均要求显式非零端口，避免目标端口回退环境变量；本地密码学存储打开受阻或等待超时时拒绝并清理迟到连接；设备页可重新核实会话与目录，邀请码撤销无论响应是否确认都重新读取记录。这些是源码修复，运行交互仍待验证。当前缓存不足以解析完整WASM活动依赖，未调整依赖；四项Rust公告、真实MLS身份/Provider/Worker/原子Outbox、多设备删除和恢复继续BLOCKED，生产准入不变。
+本轮在 Codex Cloud 以最新 `main` 基线 `cec82e5…` 运行完整 Rust 依赖解析、native/WASM 构建、cargo audit、真实 Chromium 和临时 PostgreSQL 回归。新增本地原子 Outbox 的恢复与确认前置；产品 MLS 仍未接通。当前结果见[Cloud 核心报告](docs/cloud-review-report.md)，历史本地记录不代表本轮状态。
 
 ## 👤 PC 用户端与管理端
 
@@ -146,13 +142,19 @@ echov2/
 
 ## 🔍 开发与验证
 
-当前主开发环境为本地 `echov2`，main基线为`c6068557a53ca5fd6b99fef07b88e00605c18578`；独立分支保留先前安全提交`d17b0d6`及接管时未提交改动。旧 `echo-v2` 未修改。本轮不安装/下载/升级依赖或 Rust/WASM 工具链，不运行测试、服务、数据库迁移或生产部署；最终集中修复仅使用已有node_modules执行工程静态检查，不重新构建。前次f54fc345构建及历史Cloud成功记录不作为当前修改的运行验证。
+本轮开发仅在 Codex Cloud，直接修改并推送 `main`，未部署生产。固定工具链和项目依赖可在授权 Cloud 中安装，禁止在用户 Mac 下载依赖。Node 24.x，Rust 1.99.1、wasm32-unknown-unknown、wasm-bindgen CLI 0.2.105；锁文件保持固定。
 
-已有项目依赖支持`npm run typecheck`、`npm run lint`、`npm run format:check`、`npm run check:ast`和`npm run check:source`，最终集中修复均重新执行。已有`dist/bundle-review-*`只用于复查前次产物；本轮未构建或预览。Rust活动树离线解析、cargo-audit和完整SAST工具不可用；不修改规则或补假类型。本轮`npm audit --package-lock-only --ignore-scripts --json`重新查询零公告，不能替代完整供应链审计；详情见[工程报告](docs/static-verification-report.md)。
+```sh
+npm run typecheck
+npm run lint
+npm run format:check
+npm run check:ast
+npm run check:source
+npm run build:client
+npm run build:server
+```
 
-Rust/WASM 和库实验命令见 [MLS 实验](crypto/mls-lab/README.md)。真实数据库、认证、短 ID、删除竞争及浏览器脚本需要明确隔离环境参数，不对任意数据库直接运行。命令与实际退出码见[工程验证](docs/static-verification-report.md)。
-
-新库规划使用修正版独立基线001 → 002 → 003 → 004 → 005 → 006 → 007公共ID → **008设备公开材料撤销**。008尚未执行或运行验证；已有已核验前缀只追加缺失版本；未知持久化环境不得自动迁移。应用启动不执行迁移。操作前阅读[迁移说明](migrations/README.md)。
+真实数据库和浏览器脚本只对明确确认的临时 Cloud 数据库运行。新库使用独立基线001→002–008；本轮两条迁移路径与008撤销触发器已运行验证，未知持久化环境仍不得自动迁移。操作说明见[迁移文档](migrations/README.md)，Rust命令见[MLS实验](crypto/mls-lab/README.md)，实际范围及失败记录见[本轮报告](docs/cloud-review-report.md)。
 
 ## 🚀 部署与资源
 
@@ -162,22 +164,21 @@ Cloud 实际 cgroup 仍为32 GB / 4核，swap 无限制；Docker 请求2 GB / 1�
 
 ## 📚 权威文档
 
-| 分类           | 文档                                                                                                                                                                         |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 当前状态与证据 | [第三阶段报告](docs/phase-three-report.md) · [工程验证](docs/static-verification-report.md) · [PC改造证据](docs/evidence/pc-review.json)                                     |
-| 架构与投递     | [原生架构](docs/native-architecture.md) · [投递协议](docs/native-protocol-delivery.md)                                                                                       |
-| 密码学与身份   | [密码学](docs/native-cryptography.md) · [身份、设备与恢复](docs/native-identity-devices-recovery.md) · [MLS实验](crypto/mls-lab/README.md)                                   |
-| 数据与迁移     | [迁移](migrations/README.md) · [Cloud数据库](docs/cloud-bootstrap-verification.md) · [生命周期](docs/native-data-lifecycle.md)                                               |
-| 安全与运维     | [威胁模型](docs/native-security-threat-model.md) · [部署](docs/native-deployment-operations.md) · [准入计划](docs/native-implementation-plan.md) · [决策](docs/decisions.md) |
-| 供应链         | [npm SBOM](docs/evidence/npm-sbom.json) · [Rust SBOM](docs/evidence/rust-sbom.json) · [BoardUI许可](src/client/components/boardui/notice.md)                                 |
+| 分类           | 文档                                                                                                                                                                                        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 当前状态与证据 | [Cloud本轮报告](docs/cloud-review-report.md) · [历史第三阶段报告](docs/phase-three-report.md) · [工程验证](docs/static-verification-report.md) · [PC改造证据](docs/evidence/pc-review.json) |
+| 架构与投递     | [原生架构](docs/native-architecture.md) · [投递协议](docs/native-protocol-delivery.md)                                                                                                      |
+| 密码学与身份   | [密码学](docs/native-cryptography.md) · [身份、设备与恢复](docs/native-identity-devices-recovery.md) · [MLS实验](crypto/mls-lab/README.md)                                                  |
+| 数据与迁移     | [迁移](migrations/README.md) · [Cloud数据库](docs/cloud-bootstrap-verification.md) · [生命周期](docs/native-data-lifecycle.md)                                                              |
+| 安全与运维     | [威胁模型](docs/native-security-threat-model.md) · [部署](docs/native-deployment-operations.md) · [准入计划](docs/native-implementation-plan.md) · [决策](docs/decisions.md)                |
+| 供应链         | [npm SBOM](docs/evidence/npm-sbom.json) · [Rust SBOM](docs/evidence/rust-sbom.json) · [BoardUI许可](src/client/components/boardui/notice.md)                                                |
 
 ## 🧭 当前限制与路线图
 
-- ✅ **本轮PASS：** 全项目类型、Lint、格式、AST、源码/引用检查及npm锁公告查询；当前构建NOT_RUN，前次体积与Cloud运行证据单列。
-- 🟡 **部分完成：** 设备目录、消息投递基础、删除意图、本地附件、元数据归档、管理后台与有限静态扫描。
-- ⛔ **BLOCKED：** 活动密码学依赖公告、可信设备、产品MLS、私聊/群聊、离线同步与墓碑、密钥恢复、灾备和低配资源验收。
-- 🔍 **NEEDS_RUNTIME_VERIFICATION：** 剪贴板真实成功/拒绝、键盘/读屏、懒加载切换、锁等待期限、本地存储阻塞与未知操作结果刷新；安全内核接通后还需产品多设备、Commit冲突、崩溃/磁盘满、删除新鲜性及隔离恢复验证。
-- ◆ **交付边界：** 第三阶段继续收敛，不增加第四阶段，不自动合并或生产部署。
+- ✅ **PASS：** 固定 Rust native/WASM 构建、独立 MLS 浏览器实验、本地存储/Outbox 前置、临时 PostgreSQL 迁移/认证/并发与工程检查，范围见[Cloud报告](docs/cloud-review-report.md)。
+- 🟡 **PARTIAL：** 设备目录和服务撤销、密文投递基础、删除意图、附件与元数据归档、管理后台。
+- ⛔ **BLOCKED：** Rust 公告、可信设备和真实产品 MLS、完整 Provider/Worker/Inbox、通信与删除传播、密钥恢复、灾备和低配验收。
+- 🔍 **NOT_RUN：** 物理磁盘满/掉电、提交中 Worker 崩溃、旧备份回滚、外部灾备及真实低配持续负载。
 
 ## 🤝 许可证与贡献
 

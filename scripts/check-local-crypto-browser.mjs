@@ -100,6 +100,221 @@ try {
     return { rejected, missing: missing === undefined, version };
   });
   assert.deepEqual(aborted, { rejected: true, missing: true, version: 2 });
+  const outbox = await pages[1].evaluate(async (winner) => {
+    const store = window.storeModule;
+    const receipt = {
+      messageId: crypto.randomUUID(),
+      seq: "42",
+      routeVersion: "7",
+      ciphertextSha256: [
+        ...new Uint8Array(
+          await crypto.subtle.digest("SHA-256", new Uint8Array([1, 2, 3])),
+        ),
+      ]
+        .map((v) => v.toString(16).padStart(2, "0"))
+        .join(""),
+    };
+    const before = await store.pendingCryptoOperations(window.db, null, 1);
+    let mismatch = false,
+      conflict = false,
+      rollback = false;
+    try {
+      await store.acknowledgeCryptoOperation(window.db, winner, {
+        ...receipt,
+        ciphertextSha256: "0".repeat(64),
+      });
+    } catch {
+      mismatch = true;
+    }
+    const remove = IDBObjectStore.prototype.delete;
+    IDBObjectStore.prototype.delete = function () {
+      throw new DOMException("Injected I/O failure", "UnknownError");
+    };
+    try {
+      await store.acknowledgeCryptoOperation(window.db, winner, receipt);
+    } catch {
+      rollback = true;
+    } finally {
+      IDBObjectStore.prototype.delete = remove;
+    }
+    const original = await store.readCryptoOperation(window.db, winner);
+    const retained = await store.pendingCryptoOperations(window.db);
+    await store.acknowledgeCryptoOperation(window.db, winner, receipt);
+    await store.acknowledgeCryptoOperation(window.db, winner, receipt);
+    try {
+      await store.acknowledgeCryptoOperation(window.db, winner, {
+        ...receipt,
+        seq: "43",
+      });
+    } catch {
+      conflict = true;
+    }
+    const remaining = await store.pendingCryptoOperations(window.db);
+    return {
+      paginated: before.ids.length === 1 && before.next !== null,
+      mismatch,
+      conflict,
+      rollback,
+      retained: retained.ids.includes(winner) && !original.receipt,
+      pending: remaining.ids,
+      groupVersion: (await store.readCryptoGroup(window.db, "synthetic"))
+        .version,
+    };
+  }, "race-" + winner);
+  assert.deepEqual(outbox, {
+    paginated: true,
+    mismatch: true,
+    conflict: true,
+    rollback: true,
+    retained: true,
+    pending: ["after-abort"],
+    groupVersion: 2,
+  });
+  const workerRecovery = await pages[0].evaluate(async (namespace) => {
+    const moduleUrl = new URL(
+      "/src/client/crypto/operation-store.ts",
+      location.origin,
+    ).href;
+    const source = `import * as store from ${JSON.stringify(moduleUrl)};
+      const db = await store.openOperationStore(${JSON.stringify(namespace)});
+      await store.commitCryptoOperation(db, {id:"worker-unknown",group:"synthetic",expectedVersion:2,sealedState:new Uint8Array(64).buffer,ciphertext:new Uint8Array([4,5,6]).buffer});
+      postMessage("committed");`;
+    const url = URL.createObjectURL(
+      new Blob([source], { type: "text/javascript" }),
+    );
+    const worker = new Worker(url, { type: "module" });
+    try {
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(
+          () => reject(new Error("Worker timed out")),
+          10000,
+        );
+        worker.onmessage = () => {
+          clearTimeout(timeout);
+          resolve();
+        };
+        worker.onerror = (e) => {
+          clearTimeout(timeout);
+          reject(new Error(e.message));
+        };
+      });
+    } finally {
+      worker.terminate();
+      URL.revokeObjectURL(url);
+    }
+    // Discard the caller's result and reconcile only from the durable operation.
+    const op = await window.storeModule.readCryptoOperation(
+      window.db,
+      "worker-unknown",
+    );
+    const pending = await window.storeModule.pendingCryptoOperations(window.db);
+    return {
+      version: op.version,
+      bytes: [...new Uint8Array(op.ciphertext)],
+      pending: pending.ids.includes(op.id),
+    };
+  }, namespace);
+  assert.deepEqual(workerRecovery, {
+    version: 3,
+    bytes: [4, 5, 6],
+    pending: true,
+  });
+  const upgrade = await pages[0].evaluate(async () => {
+    const namespace = "upgrade-" + crypto.randomUUID();
+    const name = "echo-crypto-" + namespace;
+    const old = await new Promise((resolve, reject) => {
+      const r = indexedDB.open(name, 1);
+      r.onupgradeneeded = () => {
+        r.result.createObjectStore("groups");
+        r.result.createObjectStore("operations");
+      };
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    });
+    await new Promise((resolve, reject) => {
+      const tx = old.transaction(["groups", "operations"], "readwrite");
+      tx.objectStore("groups").put(
+        { version: 1, sealedState: new Uint8Array(64).buffer },
+        "old-group",
+      );
+      tx.objectStore("operations").add(
+        {
+          id: "old-operation",
+          group: "old-group",
+          expectedVersion: 0,
+          version: 1,
+          sealedState: new Uint8Array(64).buffer,
+          ciphertext: new Uint8Array([9]).buffer,
+        },
+        "old-operation",
+      );
+      tx.oncomplete = resolve;
+      tx.onabort = () => reject(tx.error);
+    });
+    let blocked = false;
+    try {
+      await window.storeModule.openOperationStore(namespace);
+    } catch {
+      blocked = true;
+    }
+    old.close();
+    const upgraded = await window.storeModule.openOperationStore(namespace);
+    const pending = await window.storeModule.pendingCryptoOperations(upgraded);
+    const op = await window.storeModule.readCryptoOperation(
+      upgraded,
+      "old-operation",
+    );
+    const result = {
+      blocked,
+      version: upgraded.version,
+      pending: pending.ids,
+      bytes: [...new Uint8Array(op.ciphertext)],
+    };
+    upgraded.close();
+    await new Promise((resolve, reject) => {
+      const r = indexedDB.deleteDatabase(name);
+      r.onsuccess = resolve;
+      r.onerror = () => reject(r.error);
+    });
+    return result;
+  });
+  assert.deepEqual(upgrade, {
+    blocked: true,
+    version: 2,
+    pending: ["old-operation"],
+    bytes: [9],
+  });
+  const queuedDelete = await pages[0].evaluate(async () => {
+    const namespace = "delete-wait-" + crypto.randomUUID();
+    const name = "echo-crypto-" + namespace;
+    const held = await window.storeModule.openOperationStore(namespace);
+    held.onversionchange = null;
+    const deleting = new Promise((resolve, reject) => {
+      const r = indexedDB.deleteDatabase(name);
+      r.onsuccess = resolve;
+      r.onerror = () => reject(r.error);
+    });
+    let rejected = false;
+    try {
+      await window.storeModule.openOperationStore(namespace);
+    } catch {
+      rejected = true;
+    }
+    held.close();
+    await deleting;
+    const reopened = await window.storeModule.openOperationStore(namespace);
+    const empty =
+      (await window.storeModule.pendingCryptoOperations(reopened)).ids
+        .length === 0;
+    reopened.close();
+    await new Promise((resolve, reject) => {
+      const r = indexedDB.deleteDatabase(name);
+      r.onsuccess = resolve;
+      r.onerror = () => reject(r.error);
+    });
+    return { rejected, empty };
+  });
+  assert.deepEqual(queuedDelete, { rejected: true, empty: true });
   const aead = await pages[0].evaluate(async () => {
     const {
       prepareAttachment,
@@ -158,6 +373,13 @@ try {
       reload: "state and ciphertext recovered together",
       duplicateOperation: "rejected",
       injectedQuotaFailure: "atomic rollback",
+      outbox:
+        "pagination, hash binding, idempotent receipt, conflicting receipt rejection, atomic acknowledgment rollback",
+      queuedDelete: "open timeout rejects and late connection is closed",
+      upgrade:
+        "blocked upgrade rejects; v1 operation backfilled without regenerating ciphertext",
+      workerRecovery:
+        "committed bytes recovered after Worker termination with unknown caller result",
       attachmentAEAD:
         "roundtrip, independent key/IV, tamper and 10MiB boundary",
       limitations:

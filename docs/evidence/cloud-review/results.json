@@ -1,0 +1,537 @@
+{
+  "date": "2026-11-15T12:28:09.151285+00:00",
+  "baseline": "cec82e57603b31f1d77030a15b827d76729f4427",
+  "environment": {
+    "provider": "cloud",
+    "specRevision": "1",
+    "observedSpecRevision": "1",
+    "globalLatestPublishedConfig": "NOT_AVAILABLE",
+    "data": "synthetic only"
+  },
+  "versions": {
+    "node": "24.22.1",
+    "npm": "11.9.0",
+    "rustc": "1.99.1 (58cf8f9c3 2026-10-13)",
+    "cargo": "1.99.1 (5f94df478 2026-08-27)",
+    "wasmBindgen": "0.2.105",
+    "cargoAudit": "0.22.0",
+    "postgres": "17.11",
+    "chromium": "156.0.8078.79"
+  },
+  "commands": [
+    {
+      "command": "cargo build --release --locked",
+      "exitCode": 0,
+      "status": "PASS",
+      "result": "    Finished `release` profile [optimized] target(s) in 58.72s"
+    },
+    {
+      "command": "cargo build --release --locked --target wasm32-unknown-unknown",
+      "exitCode": 0,
+      "status": "PASS",
+      "result": "    Finished `release` profile [optimized] target(s) in 44.39s"
+    },
+    {
+      "command": "npm run check:mls:browser",
+      "exitCode": 0,
+      "status": "PASS",
+      "result": {
+        "provider": "OpenMLS 0.9.2/RustCrypto 0.6.0",
+        "suite": 1,
+        "independentBrowserContexts": 2,
+        "KeyPackage": "PASS",
+        "Welcome": "PASS",
+        "Commit": "PASS",
+        "Application": "PASS",
+        "ReplayRejected": "PASS",
+        "InvalidCommitRejected": "PASS",
+        "DiscardPending": "PASS",
+        "DiscardReceivedStagedCommit": "PASS",
+        "Remove": "PASS",
+        "Epoch": "1->2",
+        "removedSenderRejected": true,
+        "scope": "provider laboratory only; no account binding or production persistence"
+      }
+    },
+    {
+      "command": "npm run check:local-crypto",
+      "exitCode": 0,
+      "status": "PASS",
+      "result": {
+        "status": "PASS",
+        "multiTabCAS": "one winner",
+        "reload": "state and ciphertext recovered together",
+        "duplicateOperation": "rejected",
+        "injectedQuotaFailure": "atomic rollback",
+        "outbox": "pagination, hash binding, idempotent receipt, conflicting receipt rejection, atomic acknowledgment rollback",
+        "queuedDelete": "open timeout rejects and late connection is closed",
+        "upgrade": "blocked upgrade rejects; v1 operation backfilled without regenerating ciphertext",
+        "workerRecovery": "committed bytes recovered after Worker termination with unknown caller result",
+        "attachmentAEAD": "roundtrip, independent key/IV, tamper and 10MiB boundary",
+        "limitations": "no physical disk exhaustion, OS crash or provider snapshot recovery; synthetic opaque state only"
+      }
+    },
+    {
+      "command": "PGHOST=/workspace/.echo-test/socket PGPORT=55432 TEST_NEW_DATABASE=echo_native TEST_LEGACY_DATABASE=echo_legacy CONFIRM_CLOUD_TEST_DATABASES=echo_native,echo_legacy node scripts/check-migrations.mjs",
+      "exitCode": 0,
+      "status": "PASS",
+      "result": {
+        "newPath": "PASS",
+        "legacyPath": "PASS",
+        "proof": {
+          "value": "000102ff",
+          "length": 4
+        },
+        "schemaDump": "identical",
+        "catalog": "identical",
+        "baseTables": 23,
+        "permissionDenials": 10,
+        "advisoryLock": "PASS",
+        "checksums": "PASS",
+        "failedReceipt": "PASS",
+        "unknownOutcome": "PASS",
+        "noAdoption": "PASS",
+        "pendingNonemptyRefused": "PASS",
+        "initializationRollback": "PASS",
+        "suppressedReceiptRefused": "PASS",
+        "legacy003Guard": "PASS",
+        "invalid006States": 7,
+        "fixture": "0eaf99e9235e4330984eb3261392c18638f13dc1de407039a0b4834b25d6e943",
+        "artifacts": "/tmp/echo-synthetic-legacy-yh5qfr"
+      }
+    },
+    {
+      "command": "PGHOST=/workspace/.echo-test/socket PGPORT=55432 CONFIRM_CLOUD_AUTH=echo_native npm run check:devices",
+      "exitCode": 0,
+      "status": "PASS",
+      "result": {
+        "status": "PASS",
+        "serviceSessions": "revoked",
+        "websocket": "authenticated socket disconnected after HTTP revoke; old session rejected",
+        "directoryCredentials": "revoked atomically",
+        "unclaimedPackages": "deleted",
+        "claimedPackages": "retained",
+        "conversation": "frozen",
+        "transactionRollback": "PASS",
+        "reactivationDenied": "PASS",
+        "cryptographicRemoval": "BLOCKED: no MLS Remove/epoch or trusted admission"
+      }
+    },
+    {
+      "command": "PGHOST=/workspace/.echo-test/socket PGPORT=55432 CONFIRM_CLOUD_AUTH=echo_native node --import tsx scripts/check-expiry-races.mjs",
+      "exitCode": 0,
+      "status": "PASS",
+      "result": {
+        "status": "PASS",
+        "deviceExpiry": "rejected after observed account lock wait",
+        "invitationExpiry": "rejected after observed settings lock wait",
+        "createdDevices": 0,
+        "consumedInvitations": 0,
+        "registeredAccounts": 0
+      }
+    },
+    {
+      "command": "PGHOST=/workspace/.echo-test/socket PGPORT=55432 CONFIRM_CLOUD_PUBLIC_IDS=echo_public_ids node --import tsx scripts/check-public-user-id.mjs",
+      "exitCode": 0,
+      "status": "PASS",
+      "result": {
+        "status": "PASS",
+        "backfill": "UUID and device FK preserved",
+        "generated": 5000,
+        "unique": 5000,
+        "collisionRetry": "second candidate succeeds",
+        "idempotent": true,
+        "concurrentIdempotent": true,
+        "exhaustion": "503 and zero rows",
+        "apiUpdateDenied": true,
+        "uniqueConstraint": true
+      }
+    },
+    {
+      "command": "PGHOST=/workspace/.echo-test/socket PGPORT=55432 CONFIRM_CLOUD_AUTH=echo_native node scripts/check-auth-workflow.mjs",
+      "exitCode": 0,
+      "status": "PASS",
+      "result": {
+        "status": "PASS",
+        "checks": [
+          {
+            "label": "registration mode",
+            "status": 200
+          },
+          {
+            "label": "register",
+            "status": 201
+          },
+          {
+            "label": "operation retry",
+            "status": 201
+          },
+          {
+            "label": "digest conflict",
+            "status": 409
+          },
+          {
+            "label": "username unique",
+            "status": 409
+          },
+          {
+            "label": "invite consume",
+            "status": 201
+          },
+          {
+            "label": "invite retry",
+            "status": 201
+          },
+          {
+            "label": "invite exhausted",
+            "status": 403
+          },
+          {
+            "label": "login",
+            "status": 200
+          },
+          {
+            "label": "session",
+            "status": 200
+          },
+          {
+            "label": "user denied admin overview",
+            "status": 401
+          },
+          {
+            "label": "user denied admin users",
+            "status": 401
+          },
+          {
+            "label": "user denied admin devices",
+            "status": 401
+          },
+          {
+            "label": "user denied admin logins",
+            "status": 401
+          },
+          {
+            "label": "user denied admin audit",
+            "status": 401
+          },
+          {
+            "label": "user denied admin security",
+            "status": 401
+          },
+          {
+            "label": "user denied admin growth",
+            "status": 401
+          },
+          {
+            "label": "user denied admin invitations",
+            "status": 401
+          },
+          {
+            "label": "user denied admin backups",
+            "status": 401
+          },
+          {
+            "label": "user denied admin deletions",
+            "status": 401
+          },
+          {
+            "label": "user denied admin storage",
+            "status": 401
+          },
+          {
+            "label": "user denied admin trends",
+            "status": 401
+          },
+          {
+            "label": "CSRF denied",
+            "status": 403
+          },
+          {
+            "label": "origin denied",
+            "status": 403
+          },
+          {
+            "label": "stale tab denied",
+            "status": 409
+          },
+          {
+            "label": "public ID lookup",
+            "status": 200
+          },
+          {
+            "label": "user audience isolation",
+            "status": 200
+          },
+          {
+            "label": "user cannot revoke admin",
+            "status": 200
+          },
+          {
+            "label": "reauthenticate",
+            "status": 200
+          },
+          {
+            "label": "rename",
+            "status": 200
+          },
+          {
+            "label": "logout",
+            "status": 204
+          },
+          {
+            "label": "revoked session",
+            "status": 401
+          },
+          {
+            "label": "closed mode",
+            "status": 200
+          },
+          {
+            "label": "closed rejection",
+            "status": 403
+          }
+        ],
+        "invitationUses": 1,
+        "registrationRows": 1,
+        "sessionAfterLogout": 0,
+        "syntheticSources": "RFC 5737 addresses isolate rate-limit scenarios; rules unchanged"
+      }
+    },
+    {
+      "command": "PGHOST=/workspace/.echo-test/socket PGPORT=55432 TEST_DELETION_DATABASE=echo_final8_new CONFIRM_CLOUD_DELETION=echo_final8_new node scripts/check-deletion-race.mjs",
+      "exitCode": 0,
+      "status": "PASS",
+      "result": {
+        "status": "PASS",
+        "concurrentRequests": 2,
+        "operationRows": 1,
+        "hiddenMessages": 1,
+        "conflict": "409 OPERATION_CONFLICT",
+        "retry": "pending-anchor",
+        "scope": "SQL transaction test only; no deletion anchor, purge or offline propagation"
+      }
+    },
+    {
+      "command": "PGHOST=/workspace/.echo-test/socket PGPORT=55432 CONFIRM_CLOUD_AUTH=echo_native CHROMIUM_PATH=/workspace/.echo-test/chromium npm run check:browser",
+      "exitCode": 0,
+      "status": "PASS",
+      "result": {
+        "status": "PASS",
+        "registration": "201 plus real row",
+        "login": "real session",
+        "reauth": "PASS",
+        "metadataArchive": "authenticated export, download, encrypted preview",
+        "csv": "real admin query, correct filename and contents, 3 repeated downloads",
+        "urlCreated": 4,
+        "urlRevoked": 4,
+        "logout": "keyboard plus database row removed",
+        "navigation": 9,
+        "desktop1024": "no page horizontal overflow",
+        "publicIdCopyAndLookup": "PASS",
+        "independentEntries": "PASS",
+        "boardui": "three real official free charts; time filter verified",
+        "reducedMotion": "media preference applied",
+        "pageErrors": [],
+        "consoleErrors": [
+          {
+            "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+            "url": "https://localhost:8443/v1/session?audience=admin"
+          },
+          {
+            "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+            "url": "https://localhost:8443/v1/session?audience=user"
+          },
+          {
+            "message": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+            "url": "https://localhost:8443/v1/conversations"
+          },
+          {
+            "message": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+            "url": "https://localhost:8443/v1/conversations"
+          },
+          {
+            "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+            "url": "https://localhost:8443/v1/session?audience=user"
+          },
+          {
+            "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+            "url": "https://localhost:8443/v1/session?audience=admin"
+          },
+          {
+            "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+            "url": "https://localhost:8443/v1/session?audience=admin"
+          }
+        ],
+        "httpErrors": [
+          {
+            "path": "/v1/session",
+            "status": 401
+          },
+          {
+            "path": "/v1/session",
+            "status": 401
+          },
+          {
+            "path": "/v1/conversations",
+            "status": 403
+          },
+          {
+            "path": "/v1/conversations",
+            "status": 403
+          },
+          {
+            "path": "/v1/session",
+            "status": 401
+          },
+          {
+            "path": "/v1/session",
+            "status": 401
+          },
+          {
+            "path": "/v1/session",
+            "status": 401
+          }
+        ],
+        "unexpectedConsole": [],
+        "unexpectedHttp": [],
+        "screenshots": [
+          "user-auth-desktop",
+          "user-conversations-desktop",
+          "user-devices-desktop",
+          "admin-auth-desktop",
+          "admin-dashboard-desktop",
+          "admin-users-desktop",
+          "admin-devices-desktop",
+          "admin-security-desktop"
+        ],
+        "limitations": "PC Chromium only; no comprehensive accessibility audit or product messaging E2E"
+      }
+    },
+    {
+      "command": "node scripts/check-resource-limits.mjs",
+      "exitCode": 1,
+      "status": "BLOCKED",
+      "result": {
+        "status": "BLOCKED",
+        "memoryMax": "34359738368",
+        "cpuMax": "400000 100000",
+        "scope": "limit admission only; not a workload, disk quota or VPS capacity test"
+      }
+    },
+    {
+      "command": "cargo fetch --locked",
+      "exitCode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "cargo tree --locked --target wasm32-unknown-unknown",
+      "exitCode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "cargo tree --locked --target wasm32-unknown-unknown -e features",
+      "exitCode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "cargo fmt --all -- --check",
+      "exitCode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "wasm-bindgen target/wasm32-unknown-unknown/release/echo_mls_lab.wasm --out-dir pkg --target web",
+      "exitCode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "npm run check:ast",
+      "exitCode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "npm run check:source",
+      "exitCode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "npm run format:check",
+      "exitCode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "npm run build:client",
+      "exitCode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "npm run build:server",
+      "exitCode": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "status": "PASS"
+    }
+  ],
+  "priorFailures": [
+    {
+      "command": "npm run check:browser",
+      "exitCode": 1,
+      "reason": "Expected 401/403 console reason text changed; URL/status correlation fixed"
+    },
+    {
+      "command": "npm run check:browser",
+      "exitCode": 1,
+      "reason": "Chart wait timeout during consecutive runs; isolated app restarted with unchanged rate limits; fresh full run passed; root cause not conclusively established"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 1,
+      "reason": "Generated wasm-bindgen d.ts ESLint directives; generated pkg removed after browser tests, no lint rule weakened"
+    }
+  ],
+  "securityAudit": {
+    "command": "cargo audit --json",
+    "exitCode": 1,
+    "status": "BLOCKED",
+    "vulnerabilities": 3,
+    "unmaintained": 1,
+    "ignored": []
+  },
+  "npmAudit": {
+    "command": "npm audit --package-lock-only --ignore-scripts --json",
+    "exitCode": 0,
+    "status": "PASS",
+    "vulnerabilities": 0
+  },
+  "limitations": [
+    "opaque synthetic state; not real MLS provider persistence",
+    "no product crypto worker or identity binding",
+    "post-commit Worker termination only; no mid-transaction or OS crash",
+    "quota and I/O injection only; no physical disk full",
+    "no external backup or independent deletion freshness",
+    "no production deployment",
+    "partial source review, not exhaustive audit"
+  ],
+  "upstreamProviderCommit": "6100df3fb1d8c3eeab53e349fcbd621f98c44fe2",
+  "cleanup": {
+    "temporaryPostgres": "fast stop exit 0; synthetic cluster removed after tests",
+    "production": "not accessed or deployed"
+  },
+  "sourceReview": {
+    "boundedSecretPatterns": "PASS; 177 files, no matching private key header/GitHub token prefix/AWS key ID; not exhaustive",
+    "dedicatedSastScanner": "NOT_RUN",
+    "reviewCoverage": "PARTIAL"
+  }
+}

@@ -1,5 +1,7 @@
 # 身份、设备与恢复
 
+> 当前 Cloud 验证见[本轮报告](cloud-review-report.md)：008 公开材料撤销、事务回滚、服务 Session 撤销和真实 WebSocket 断开已验证，MLS Remove/新 Epoch 仍 BLOCKED。以下本机记录保留为历史。
+
 ## cb20341 后的核心身份复核
 
 BLOCKED。当前没有把账号根、设备签名密钥和实际 MLS Credential 绑定的产品实现；目录 API 与密码登录不能建立该信任。没有新增 SAS/QR 或恢复按钮冒充授权。解除条件为经审查的根/设备授权与独立恢复凭据、KeyPackage 生命周期、逐组 Remove Commit 与新 Epoch 确认；Session/WSS 撤销证据不能替代这些条件。本轮只读追踪未确认新的可安全修复缺陷，真实授权/迁移/恢复均 NOT_RUN。

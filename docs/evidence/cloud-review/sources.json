@@ -1,0 +1,27 @@
+[
+  {
+    "path": "rustsec-0387.md",
+    "url": "https://raw.githubusercontent.com/RustSec/advisory-db/main/crates/crypto-bigint/RUSTSEC-2026-0387.md",
+    "sha256": "7c9f3f944105638e613e83e97690035198e453d701e56506ee911e1fbfcb46f3"
+  },
+  {
+    "path": "rustsec-0331.md",
+    "url": "https://raw.githubusercontent.com/RustSec/advisory-db/main/crates/libcrux-kem/RUSTSEC-2026-0331.md",
+    "sha256": "c0954a633d53516f100f91446c954f7acd9ff07ac628a07b82ad2b5fefd489e9"
+  },
+  {
+    "path": "rustsec-0330.md",
+    "url": "https://raw.githubusercontent.com/RustSec/advisory-db/main/crates/libcrux-kem/RUSTSEC-2026-0330.md",
+    "sha256": "5b81c92a63e56228ce9a1c62e344a5ab13724b42c9862ee41db9e8cd6eb62d2b"
+  },
+  {
+    "path": "rustsec-0173.md",
+    "url": "https://raw.githubusercontent.com/RustSec/advisory-db/main/crates/proc-macro-error2/RUSTSEC-2026-0173.md",
+    "sha256": "b5a24f00b97870cb5b5ae7717a908c5ae84ad1da80cb2d4a3ba98a07521cf237"
+  },
+  {
+    "path": "upstream-provider.toml",
+    "url": "https://raw.githubusercontent.com/openmls/openmls/6100df3fb1d8c3eeab53e349fcbd621f98c44fe2/openmls_rust_crypto/Cargo.toml",
+    "sha256": "a94e7dc550837b61cb24078561358a88f8f7906e57785728d0e52cb2e69e690b"
+  }
+]

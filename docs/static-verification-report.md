@@ -1,5 +1,7 @@
 # 本地静态验证报告
 
+> 当前 Cloud 结果见[本轮报告](cloud-review-report.md)；以下保留历史记录，其本机工具缺失、NOT_RUN 和旧 main/PR 状态不描述本轮。
+
 ## cb20341 后的本地核心复核
 
 2026-11-15，整体 PARTIAL；代码、依赖锁、SQL及截图未改，前轮检查不冒充当前运行证据。本轮实际重新执行：typecheck、零 warning ESLint、AST（77份TS/TSX、256绑定）、source（161作者文件、400模块引用、127本地文档链接）均退出0；npm audit --package-lock-only --ignore-scripts 返回425依赖位置、零公告。Rust仅用现有 stable 执行 fmt --check，退出0。9份SQL摘要匹配，SBOM覆盖418个npm唯一组件与191个Rust注册表组件，许可字段齐全、Rust校验和匹配；有限私钥/token/密码URL模式扫描零命中。151个未改文件与cb20341逐字节一致，只有指定10份文档更新。全项目 Prettier 与 Git Diff 空白检查通过。没有新测试或服务。Rust 离线 WASM tree 再次退出101，默认 Cargo registry 无 index/cache/src，固定1.99.1与目标缺失；相关工程 BLOCKED。四项官方公告再次核实，未获得可离线兼容修复依据。三项 Terra 核心只读复核未确认新缺陷，不构成独立审计；范围与解除条件见[本轮台账](phase-three-report.md)。
