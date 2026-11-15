@@ -1,5 +1,13 @@
 # MLS 与浏览器密码学
 
+## cb20341 后的本机依赖核实
+
+BLOCKED。默认 `~/.cargo/registry` 只有 CACHEDIR.TAG，无 index/cache/src；不是仅缺一个 getrandom。`cargo +stable tree --locked --offline --target wasm32-unknown-unknown` 退出101，首个报告 getrandom 缺失。固定 Rust 1.99.1、wasm32-unknown-unknown target 和 wasm-bindgen 0.2.105 CLI 亦未就绪。精确直接依赖及完整191个注册表包版本以 Cargo.toml/Cargo.lock 为准，不能只补 getrandom 就宣布闭包完整。
+
+四项 RustSec 官方页面再次读取：crypto-bigint 0.5.5 的修复门槛仍为 >=0.7.6；libcrux-kem 0.0.9 两项修复仍为 >=0.0.10；proc-macro-error2 2.0.1 仍无修复版本。无源码和索引无法证明上游约束及 feature 兼容，因此未改声明或 lock。需先获授权准备完整可信缓存与固定工具链，再完成依赖解析、兼容修复、WASM 活动树与安全验证；工具就绪本身不授予产品准入。
+
+## 前轮 cb20341 证据
+
 2026-11-15本地收敛。**产品集成 BLOCKED；独立实验 PARTIAL。** 固定候选 OpenMLS 0.9.2 / RustCrypto 0.6.0，RFC 9420套件1。当前只审查既有源码、锁文件、历史运行工件和官方公告；未下载依赖、修改密码学算法、构建或运行实验。
 
 ## 实际实现与候选

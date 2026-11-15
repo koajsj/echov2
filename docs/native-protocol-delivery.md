@@ -1,5 +1,9 @@
 # 应用协议与一致性投递
 
+## cb20341 后的产品通信复核
+
+BLOCKED。重新追踪 append 的首个调用，requireReviewedCrypto 仍无条件抛出503；没有产品 Worker、Welcome 收件箱生产者或经验证的 Commit 投影/恢复接口。route_version、seq 不等于 mls_epoch。离线分页和投递骨架不构成可用私聊/群聊；本轮不扩充未经原生状态验证的发送接口。解除条件包括真实 Credential/Welcome/Commit 验证、状态冲突冻结、精确原操作幂等恢复，以及完整 Provider 与收发状态原子边界。
+
 ## 最终静态收敛 — 2026-11-15
 
 PARTIAL。WSS在进入异步认证前同步注册唯一的message拒绝监听，错误直接terminate；避免认证/行锁等待期间忽略入站消息。注册设置成功或失败后刷新权威版本；改名复用有界序号校验。真实WSS、HTTP与并发NOT_RUN。服务期限取数据库session到期与60秒较早值；notify/统计过滤过期连接，物理连接由既有30秒循环回收，不承诺在无事件时精确到毫秒断开。

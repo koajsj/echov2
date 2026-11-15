@@ -1,5 +1,9 @@
 # 低配部署、删除证据与系统恢复
 
+## cb20341 后的本地工程边界
+
+生产部署准入 BLOCKED。本轮只在本地复核源码与依赖元数据，未连接 VPS、启动服务/数据库或执行 SQL。未提供完整数据库/媒体备份执行器、独立删除证据或防回滚隔离恢复能力；签名与单机时间也不能证明备份最新。需先完成产品密码学准入，再在另行授权的隔离环境验证备份覆盖、恢复完整性与删除新鲜性；现有部署配置不是这些验证的替代。固定工具链和完整缓存缺失的精确说明见[密码学](native-cryptography.md)。
+
 ## 最终CLI收敛 — 2026-11-15
 
 FIXED仅指源码：迁移CLI在连接前要求显式MIGRATION_DATABASE_URL，限定postgres/postgresql、loopback、明确端口、echo_native_owner和/echo_native，无query/hash，连接超时5秒。禁止缺URL或缺目标字段时回退PG*选择实例；URL不证明真实ACL，owner/版本/台账/apply确认名仍独立核查。历史Cloud导出函数/测试入口不变，CLI不再接受socket/临时库目标，详见[迁移规范](../migrations/README.md)。本轮CLI/数据库/SQL/备份/恢复/部署均NOT_RUN。

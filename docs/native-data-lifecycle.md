@@ -1,5 +1,11 @@
 # 数据模型与生命周期
 
+## cb20341 后的状态与生命周期复核
+
+PARTIAL。重新核对 operation-store、附件 AEAD、元数据归档及调用链，未确认新的可安全修复缺陷。operation-store 仍仅为实验脚本使用的存储前置，产品没有 Worker；Web Lock 只包提交，未覆盖原生 Provider 加载/推进。不能凭 opaque sealedState 或 strict 事务证明完整私钥、pending Commit、Outbox/Inbox、游标与去重状态一致。
+
+BLOCKED。Delete for me、七天回收、加密多设备墓碑、完整历史归档、根/Group State 恢复仍缺实现；Delete for everyone 只有意图与读取隐藏，独立删除收据和物理清理未接入。解除条件为经审查的完整 Provider 存储和恢复协议、删除传播与新鲜证据及媒体清理执行器；没有将元数据预览升级为恢复入口。本轮相关运行验证 NOT_RUN。
+
 ## 最终静态收敛 — 2026-11-15
 
 PARTIAL。复核现有DDL/ACL/外键/索引、参数化查询、账号→Session→设备→会话/head锁序、删除原作者授权与操作ID绑定、到期隐藏和元数据快照。001–008、基线及manifest字节未改，摘要重新核对；SQL解析器不可用，数据库/迁移/竞争NOT_RUN，不由文本审查推断真实权限通过。

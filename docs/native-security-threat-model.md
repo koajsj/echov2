@@ -1,5 +1,9 @@
 # 安全威胁模型与证据矩阵
 
+## cb20341 后的准入复核
+
+PARTIAL。当前重点复核 Rust 依赖、真实身份、Provider 一致性、投递和删除恢复，未确认新的可安全实施源码修复；不等于全项目无漏洞。活动 WASM 闭包不可解析、四项 Rust 公告、可信设备及密码学撤权、完整删除传播和恢复仍 BLOCKED。未修改 crypto-gate、权限或安全参数，未把历史 Cloud 运行证据用作当前准入。准确环境限制与解除条件集中记录于[本轮台账](phase-three-report.md)。
+
 ## 最终静态收敛 — 2026-11-15
 
 PARTIAL。当前全量类型/Lint/AST/引用检查与有限敏感模式扫描独立记录于[工程报告](static-verification-report.md)；npm锁审计本轮重新查询为零公告，Semgrep/cargo-audit/SQL解析器NOT_AVAILABLE。Terra只读复核覆盖Rust/MLS、服务端和前端，不是独立第三方审计。以下Semgrep/Cloud描述是历史证据，不能冒充当前运行。

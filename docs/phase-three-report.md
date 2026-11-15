@@ -1,5 +1,23 @@
 # 第三阶段交付报告
 
+## cb20341 后的本地核心工程复核 — 2026-11-15
+
+整体 PARTIAL，生产部署准入 BLOCKED。本轮从干净 `cb20341921b5124994d35e42d610909f2062ed03` 开始，本地/远程 main 同为 `c6068557a53ca5fd6b99fef07b88e00605c18578`，PR #4 HEAD 与分支一致且为 Draft。以下旧章节保留前轮证据，不代表本轮再次修复 CORE-01–04。三个既有 Terra 子智能体只读复核核心链路；主代理复核源码、离线失败与本机工具清单。没有确认新的可安全实施源码缺陷，故本轮交付仅更新证据与指定文档，不制造 FIXED。
+
+| 编号     | 文件 / 位置                                                                            | 严重程度 | 根因 / 当前处置                                                                               | 验证与最小解除条件                                                                                        |
+| -------- | -------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| LOCAL-01 | crypto/mls-lab/Cargo.toml、Cargo.lock；rust-toolchain.toml                             | 高       | BLOCKED；缺完整注册表缓存，固定工具链与目标未安装，当前不能证明四项公告修复兼容               | 离线 tree 退出101；经授权提供可信完整锁定依赖缓存与固定工具链，重新解析 WASM features、审查兼容修复并验证 |
+| LOCAL-02 | crypto/mls-lab/src/lib.rs；src/client/crypto/operation-store.ts                        | 高       | BLOCKED；实验 MemoryStorage/合成标签，产品无 Worker 与完整 Provider，提交 CAS 不覆盖加载/推进 | 调用链只读核对；需真实原生持久化、私钥保护、pending/staged 状态、Outbox/Inbox/游标/去重原子一致与崩溃恢复 |
+| LOCAL-03 | src/server/identity/identity-service.ts；src/server/devices/device-service.ts          | 高       | BLOCKED；目录与 Session 撤销不证明根授权、Credential 或逐组密码学撤权                         | 需真实根/设备授权、SAS/QR、KeyPackage、Remove 与 Epoch 确认及独立恢复凭据                                 |
+| LOCAL-04 | src/server/messaging/crypto-gate.ts；src/server/delivery/delivery-service.ts           | 高       | BLOCKED；503 门禁仍在 append 首部，缺 Welcome/Commit 投影与恢复闭环                           | 需真实 MLS 私聊/群聊、收件箱、离线重连、无效 Commit 冻结和精确原操作恢复，不绕过门禁                      |
+| LOCAL-05 | src/server/lifecycle/deletion-service.ts；src/client/features/data/metadata-archive.ts | 高       | BLOCKED；只有删除意图/隐藏及元数据归档，没有多设备墓碑、物理清理或可信恢复                    | 需独立删除收据、媒体执行器、加密墓碑/回收协议、完整历史及根恢复；系统备份需隔离验证与防旧备份回滚         |
+
+精确直接依赖：OpenMLS 0.9.2，openmls_rust_crypto / openmls_basic_credential / openmls_traits 均0.6.0，tls_codec 0.5.0，wasm-bindgen 0.2.105，getrandom（别名 getrandom_old）0.2.16。分别提供 MLS/Provider/凭据/接口、TLS 编码、WASM 绑定与浏览器随机源；完整191个注册表依赖及校验和以未改的 Cargo.lock 为准。默认 `~/.cargo/registry` 仅 CACHEDIR.TAG，不能将错误中的 getrandom 当唯一缺包。已安装 stable 1.99.0 只有 aarch64-apple-darwin target；项目固定1.99.1、wasm32-unknown-unknown 和匹配0.2.105的 wasm-bindgen CLI 均缺。当前无授权安装，相关工程暂停；即使补齐，也必须另行完成兼容修复与真实产品准入。
+
+本轮没有更改源码、锁文件、SQL、设计、组件、八张截图或历史成果。测试、构建、浏览器、服务、数据库、迁移、备份恢复及部署 NOT_RUN；运行一致性 NEEDS_RUNTIME_VERIFICATION。全项目静态结果见[静态报告](static-verification-report.md)，人工源码/SQL/SAST 范围仍为 PARTIAL；不宣称穷尽所有缺陷。
+
+## 前轮 cb20341 证据
+
 2026-11-15，本地与GitHub main核对一致：`c6068557a53ca5fd6b99fef07b88e00605c18578`。本次核心复核从干净的`981948b9e8d201cab33762f57273ef9da13cd840`继续，在`codex/native-hardening-review`保留前序全部提交和组件改动。**整体PARTIAL，产品通信和生产准入BLOCKED。** 无依赖安装、测试、构建、服务、SQL或部署；已执行现有工具的全项目静态检查。前次f54fc345构建和历史Cloud证据不能替代本轮运行验证。
 
 ## 核心安全缺口复核 — 2026-11-15
