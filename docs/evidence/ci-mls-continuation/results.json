@@ -351,10 +351,6 @@
       "sha256": "db2d842602e06069b3db4eb4093b292c3ab4a67d405e4c8ecc4dde1aae1118ac"
     }
   },
-  "finalWorkflow": {
-    "status": "PENDING_PUSH",
-    "note": "Will verify actual remote run for final pushed SHA."
-  },
   "limitedSecretScan": {
     "files": 213,
     "patterns": [
@@ -367,5 +363,21 @@
   },
   "sourceByteVerification": {
     "rustsec-0459.md": "sha256 matches downloaded source recorded in sources.json"
-  }
+  },
+  "verifiedImplementationWorkflow": {
+    "status": "PASS",
+    "sha": "392c0024f475251c0143726c565cf2084fc86d5a",
+    "run": 43716261924,
+    "url": "https://github.com/koajsj/echov2/actions/runs/43716261924",
+    "allSteps": "success",
+    "output": "implementation-run.json",
+    "note": "This evidence update is documentation only; the final main SHA is verified separately in the delivery response."
+  },
+  "cleanup": {
+    "vite": "Task process 30627 stopped after browser checks.",
+    "wasmBindings": "Temporary mls-lab/pkg bindings removed after MLS browser verification.",
+    "syntheticSQLite": "Created under tempfile::TempDir by tests and removed on test completion. No imported databases or WAL.",
+    "production": "No production/API/PostgreSQL connections started this round. No deployment."
+  },
+  "updatedAt": "2026-11-15T12:57:05.758339+00:00"
 }

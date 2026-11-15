@@ -6,7 +6,7 @@
 
 [失败运行 43714125188](https://github.com/koajsj/echov2/actions/runs/43714125188) 在 `check:source` 检测 `scripts/check-device-revocation.mjs` 的静态导入时找不到 `../dist/server/server/devices/device-service.js`。`tsconfig.server.json` 的 `rootDir: ./src` 与 `build:server` 的 `--outDir dist/server` 正确生成 `dist/server/server/devices/device-service.js`，无须改导入。
 
-提交 `10bf6de45b55efc85b84f066328b7bea5e1e18dd` 仅在 `check:source` 前增加 `npm run build:server`。[完整修复运行 43714563417](https://github.com/koajsj/echov2/actions/runs/43714563417) 已成功，类型、Lint、格式、AST、真实服务端构建、引用、JS/Shell、固定 Rust 安装与 Rust 格式步骤全部执行。没有排除脚本、忽略引用、容错成功或关闭规则。后续改动另将新原生持久化测试和格式检查纳入同一工作流；最终 SHA 的 Actions 结果需单独核对。
+提交 `10bf6de45b55efc85b84f066328b7bea5e1e18dd` 仅在 `check:source` 前增加 `npm run build:server`。[完整修复运行 43714563417](https://github.com/koajsj/echov2/actions/runs/43714563417) 已成功，类型、Lint、格式、AST、真实服务端构建、引用、JS/Shell、固定 Rust 安装与 Rust 格式步骤全部执行。没有排除脚本、忽略引用、容错成功或关闭规则。后续工程提交 `392c0024f475251c0143726c565cf2084fc86d5a` 将新原生持久化测试和格式检查纳入同一工作流，[完整运行 43716261924](https://github.com/koajsj/echov2/actions/runs/43716261924) 同样成功，全部步骤 success，包含新增六项验收及由父测试启动的两个真实崩溃子进程。后续仅记录证据的文档提交也按其实际 SHA 核对，最终 main 运行链接记录在交付回复，避免用旧运行替代新提交。
 
 ## 本轮工程
 
@@ -61,7 +61,7 @@
 
 本任务固定工具链位于 `/workspace/.echo-rustup`、Cargo 位于 `/workspace/.echo-cargo`；实际命令设置相应 `RUSTUP_HOME`/`CARGO_HOME` 并将 Cargo bin 加入 PATH。浏览器仅访问临时 Vite `127.0.0.1:5173`；本轮未启动产品数据库/API。新实验 SQLite 数据仅由测试创建并清理。
 
-**PASS**：CI 最小修复的完整 GitHub 运行；锁闭 Rust native/WASM release 构建；同一 OpenMLS 实现两份独立 Chromium context 的 Welcome/Commit/Application/Remove、pending/staged discard、重放/无效 Commit 拒绝；新原生六项持久化/并发/进程崩溃测试；浏览器旧 Outbox/附件及新 Inbox 测试。运行日志与退出码见[本轮证据](evidence/ci-mls-continuation/results.json)。
+**PASS**：CI 最小修复及包含新增原生测试的工程提交，两次完整 GitHub 运行；锁闭 Rust native/WASM release 构建；同一 OpenMLS 实现两份独立 Chromium context 的 Welcome/Commit/Application/Remove、pending/staged discard、重放/无效 Commit 拒绝；新原生六项持久化/并发/进程崩溃测试；浏览器旧 Outbox/附件及新 Inbox 测试。运行日志与退出码见[本轮证据](evidence/ci-mls-continuation/results.json)。
 
 **PARTIAL**：人工源码审查与安全依赖约束分析，非第三方审计；两份同一 OpenMLS 实例通信不是跨实现互操作。加密状态及根身份没有借占位数据宣称通过。
 

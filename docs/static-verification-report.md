@@ -4,7 +4,7 @@
 
 ## 当前续进 — 基线 06f37b9
 
-**FIXED**：工作流在 check:source 前增加真实 build:server，没有排除脚本或放宽检查；[修复提交的完整 GitHub Actions](https://github.com/koajsj/echov2/actions/runs/43714563417)成功，包括原先跳过的 JS、Shell、固定 Rust 格式。后续原生测试纳入同一工作流，最终提交单独核对。
+**FIXED**：工作流在 check:source 前增加真实 build:server，没有排除脚本或放宽检查；[修复提交的完整 GitHub Actions](https://github.com/koajsj/echov2/actions/runs/43714563417)成功，包括原先跳过的 JS、Shell、固定 Rust 格式。后续原生测试纳入同一工作流；[工程提交 392c002 的完整运行](https://github.com/koajsj/echov2/actions/runs/43716261924) 也已全部成功，原始步骤证据见[工程运行](evidence/ci-mls-continuation/implementation-run.json)。最终仅记录证据的提交另行核对。
 
 **PASS**：本轮类型、零 warning ESLint、Prettier、AST/源码引用、JS/Shell 语法、两 crate Rust 格式、前后端构建；新增 Rust 原生实验 Clippy 零 warning。固定 native/WASM 构建与真实浏览器/原生测试结果、工具版本及退出码记录在[本轮证据](evidence/ci-mls-continuation/results.json)。
 

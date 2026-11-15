@@ -8,7 +8,7 @@
 
 > 🛡️ **当前整体 PARTIAL，尚不具备生产部署条件。** 账户、迁移、管理元数据和桌面界面已在 Cloud 隔离环境验证；产品级 MLS、可信设备、离线删除和恢复仍阻塞。聊天写入继续拒绝 `503 MLS_NOT_READY`。
 
-> **2026-11-15 CI 修复与 MLS 续进：PARTIAL。** main `06f37b9` 的 CI 缺失服务端构建已修复，[完整 Actions 已通过](https://github.com/koajsj/echov2/actions/runs/43714563417)。新增浏览器原子 Inbox/Cursor 存储前置及官方原生 SQLite Provider 的真实 MLS 持久化、并发和进程崩溃验证；后者是未加密、无可信账号身份且不支持 WASM 的独立实验。原有四项 RustSec 未解除，新 SQLite 候选另命中 RUSTSEC-2026-0459，均未 ignore。产品 Worker、可信设备、通信、墓碑与恢复仍阻塞；详见[本轮状态与证据](docs/ci-mls-continuation-report.md)。
+> **2026-11-15 CI 修复与 MLS 续进：PARTIAL。** main `06f37b9` 的 CI 缺失服务端构建已修复，[含新增原生测试的完整 Actions 已通过](https://github.com/koajsj/echov2/actions/runs/43716261924)。新增浏览器原子 Inbox/Cursor 存储前置及官方原生 SQLite Provider 的真实 MLS 持久化、并发和进程崩溃验证；后者是未加密、无可信账号身份且不支持 WASM 的独立实验。原有四项 RustSec 未解除，新 SQLite 候选另命中 RUSTSEC-2026-0459，均未 ignore。产品 Worker、可信设备、通信、墓碑与恢复仍阻塞；详见[本轮状态与证据](docs/ci-mls-continuation-report.md)。
 
 [项目](#项目简介) · [能力](#-核心能力) · [架构](#-系统架构) · [安全](#-安全与元数据) · [界面](#-pc-用户端与管理端) · [截图](#-真实界面截图) · [开发](#-开发与验证) · [文档](#-权威文档) · [限制](#-当前限制与路线图)
 
