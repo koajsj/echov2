@@ -1,5 +1,25 @@
 # 数据模型与生命周期
 
+## cb20341 后的状态与生命周期复核
+
+PARTIAL。重新核对 operation-store、附件 AEAD、元数据归档及调用链，未确认新的可安全修复缺陷。operation-store 仍仅为实验脚本使用的存储前置，产品没有 Worker；Web Lock 只包提交，未覆盖原生 Provider 加载/推进。不能凭 opaque sealedState 或 strict 事务证明完整私钥、pending Commit、Outbox/Inbox、游标与去重状态一致。
+
+BLOCKED。Delete for me、七天回收、加密多设备墓碑、完整历史归档、根/Group State 恢复仍缺实现；Delete for everyone 只有意图与读取隐藏，独立删除收据和物理清理未接入。解除条件为经审查的完整 Provider 存储和恢复协议、删除传播与新鲜证据及媒体清理执行器；没有将元数据预览升级为恢复入口。本轮相关运行验证 NOT_RUN。
+
+## 最终静态收敛 — 2026-11-15
+
+PARTIAL。复核现有DDL/ACL/外键/索引、参数化查询、账号→Session→设备→会话/head锁序、删除原作者授权与操作ID绑定、到期隐藏和元数据快照。001–008、基线及manifest字节未改，摘要重新核对；SQL解析器不可用，数据库/迁移/竞争NOT_RUN，不由文本审查推断真实权限通过。
+
+本次核心复核未新增删除、归档或备份执行器。存储打开受阻或等待超时现在明确拒绝；它不提供完整Provider快照、删除checkpoint或游标恢复，不能用于恢复旧MLS状态。数据库目标要求显式非零端口，避免部署时误选另一同机实例；此配置约束不证明数据库身份、ACL、删除新鲜性或灾备可恢复。本轮SQL工件和八张PC截图保持原字节，数据库/恢复操作仍NOT_RUN。
+
+Delete for me、本地隐藏/七天回收/恢复/永久阶段、多设备加密墓碑和离线补偿仍BLOCKED；Delete for everyone只有删除意图与新快照隐藏，独立证据、MLS撤回、密文/媒体物理清理未完成。附件仅当前页AEAD，元数据导出只读且不是聊天备份。密钥/设备恢复、用户历史归档、DB/媒体完整备份、隔离恢复与删除防回滚均继续BLOCKED，解除条件见本文和[运维](native-deployment-operations.md)。以下运行结果保留为历史Cloud证据。
+
+## 本地增量 — 2026-11-12
+
+001–007及独立基线SQL保持原字节，manifest追加[008设备撤销](../migrations/008-device-revocation.sql)。owner触发器在设备撤销同事务失效公开Credential、删除未领取KeyPackage，并补偿已有revoked目录；保留已领取包/凭证字节对账。只清服务器公开准入材料，不擦除客户端key、不发送Remove、不修改MLS epoch。具体权限与实施条件唯一见[迁移说明](../migrations/README.md)。008本轮未执行或运行验证。
+
+删除体系仍仅有本人删除意图/读取隐藏及既有30秒到期调度。没有加密墓碑、完整离线传播、独立锚、物理purge、附件清理或注销执行器；不将新增设备公开材料清理算作消息删除完成。系统/历史恢复仍因缺独立最新删除证据而关闭；原始副本、截图及外部已解密内容无法收回。
+
 ## 当前状态 — 2026-11-12
 
 原 001 的 authorization 语法失败已由独立修正版基线和 006 兼容迁移处理，历史 001–005 不变；两条合成临时库路径最终 Schema 与 ACL 一致。迁移历史仍 UNKNOWN，不能将临时库结果当持久化环境证据。操作步骤唯一维护于[迁移说明](../migrations/README.md)。
@@ -20,7 +40,7 @@ Cloud 兼容实现更新：历史 001–005 保持原字节。新库独立 echo-
 
 | 表                    | 主键/重要约束、索引和用途                                                                                                              | 生命周期                                                                               |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| users                 | UUID；规范化ASCII小写用户名唯一；registration_id唯一；Argon2id哈希、status、version                                                    | UUID不重分配；注销按关闭流程，不级联抹掉审计/墓碑                                      |
+| users                 | UUID；唯一12位Base32公共ID；规范化ASCII小写用户名唯一；registration_id唯一；Argon2id哈希、status、version                              | UUID不重分配，公共ID非凭据；注销按关闭流程，不级联抹掉审计/墓碑                        |
 | site_settings         | true单例；唯一superadmin UUID外键；注册模式/version                                                                                    | 后端配置；API无改superadmin列权限                                                      |
 | invitations           | UUID、token_hash唯一、可空operation_id唯一及request_hash配对（004）、uses≤max_uses、有效期、issuer外键                                 | 原始token仅创建时返回；消费与注册同事务                                                |
 | devices               | UUID及(user,id)唯一、用户外键、状态/撤销时间一致、用户时间索引                                                                         | API只能插入pending、转换到revoked；根授权尚未开放                                      |
@@ -102,7 +122,7 @@ Cloud 兼容实现更新：历史 001–005 保持原字节。新库独立 echo-
 
 唯一实际导出范围为本账号当前username/UUID/version、全部设备目录、本人发送消息对应删除请求；不含session/token/password hash、根私钥/credential私密材料、聊天、附件内容或全站数据。后端在REPEATABLE READ事务复核账号/session，从同一快照读取；UTC ISO时间只标捕获时点，不证明删除状态新鲜。每集合最多5000条，序列化JSON最多1 MiB，任一超限返回413，不静默截断。更大集合的分页一致快照尚未实现。
 
-客户端 metadata-archive 使用标准WebCrypto PBKDF2-HMAC-SHA256（600000次，随机16byte salt）派生不可导出AES-256-GCM key，随机12byte IV、128bit tag。二进制格式为8byte ASCII `ECHOMD01` + salt + IV（36byte头）+ AEAD密文/tag，完整头作为AAD。固定算法/参数与版本，无攻击者可配置KDF成本；最多1 MiB明文/1 MiB+52byte文件。口令12–256字符，两次确认，不上传，不以普通SHA冒充加密。它是范围受限的本地文件封装，未经浏览器运行/互操作审验，不能作为生产密钥备份格式。
+客户端 metadata-archive 使用标准WebCrypto PBKDF2-HMAC-SHA256（600000次，随机16byte salt）派生不可导出AES-256-GCM key，随机12byte IV、128bit tag。二进制格式为8byte ASCII `ECHOMD01` + salt + IV（36byte头）+ AEAD密文/tag，完整头作为AAD。固定算法/参数与版本，无攻击者可配置KDF成本；最多1 MiB明文/1 MiB+52byte文件。口令12–256字符，两次确认，不上传，不以普通SHA冒充加密。它是范围受限的本地文件封装；历史Chromium验证仅覆盖元数据导出/下载/预览，本轮未重验，跨浏览器互操作未完成，不能作为生产密钥备份格式。
 
 导入只认证解密、严格结构/范围/重复ID、同账号UUID/同origin/版本核对并显示计数；口令错误/篡改/未知格式失败，未修改任何服务器或浏览器持久状态。不重发历史、不恢复设备、不覆盖墓碑、不导入Group State；无“恢复确认”按钮。AEAD认证不证明服务器真实、文件最新或独立删除证据。任何实际历史/系统恢复仍须G6新鲜证据，否则停止。
 

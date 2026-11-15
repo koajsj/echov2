@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Button } from "@heroui/react";
 import { Brand } from "../components/Brand";
 import { Icon } from "../components/Icon";
@@ -6,7 +7,9 @@ import { ServiceState } from "../components/ServiceState";
 import { AuthPage } from "../features/account/AuthPage";
 import { userNavigation } from "./navigation";
 import { useSession } from "./use-session";
-import { Workspace } from "./Workspace";
+const Workspace = lazy(() =>
+  import("./Workspace").then((module) => ({ default: module.Workspace })),
+);
 export function UserApp({ page }: { page: string }) {
   const realm = useSession("user");
   const session = realm.query.data;
@@ -56,12 +59,14 @@ export function UserApp({ page }: { page: string }) {
             登出
           </Button>
         </header>
-        <Workspace
-          key={`${session.account.id}:${realm.revision}:${active}`}
-          session={session}
-          page={active}
-          onChanged={realm.changed}
-        />
+        <Suspense fallback={<p role="status">正在加载页面…</p>}>
+          <Workspace
+            key={`${session.sessionId}:${realm.revision}:${active}`}
+            session={session}
+            page={active}
+            onChanged={realm.changed}
+          />
+        </Suspense>
         <p role="status">{realm.message}</p>
       </main>
     </div>

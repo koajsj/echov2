@@ -12,9 +12,9 @@ interface User {
   publicId: string;
   username: string;
   status: string;
+  version: string;
 }
 interface Detail extends User {
-  version: string;
   created_at: string;
   device_count: string;
   active_sessions: string;
@@ -81,18 +81,27 @@ export function UsersPage({ sessionId }: { sessionId: string }) {
     setBusy(true);
     setMessage("");
     try {
-      await api(`/v1/admin/users/${user.id}/status`, {
-        method: "POST",
-        audience: "admin",
-        sessionId,
-        body: {
-          suspended: user.status === "active",
+      const result = await api<{ updated: boolean }>(
+        `/v1/admin/users/${user.id}/status`,
+        {
+          method: "POST",
+          audience: "admin",
+          sessionId,
+          body: {
+            suspended: user.status === "active",
+            version: user.version,
+          },
         },
-      });
+      );
       setRevision((value) => value + 1);
       setSelected(null);
-      setMessage("服务状态已更新并审计；密码学移除仍未完成。");
+      setMessage(
+        result.updated
+          ? "服务状态已更新并审计；密码学移除仍未完成。"
+          : "账号已处于目标状态，未重复变更或审计；密码学移除仍未完成。",
+      );
     } catch (error) {
+      setRevision((value) => value + 1);
       setMessage(
         error instanceof Error ? error.message : "操作结果未知，请刷新核实。",
       );

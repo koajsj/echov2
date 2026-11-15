@@ -1,0 +1,257 @@
+{
+  "date": "2026-11-12",
+  "environment": "Local macOS; source/static review only",
+  "baseline": "c6068557a53ca5fd6b99fef07b88e00605c18578",
+  "branch": "codex/native-security-closure",
+  "overall": "PARTIAL",
+  "productCryptoGate": "BLOCKED",
+  "baselineVerification": {
+    "localMain": "c6068557a53ca5fd6b99fef07b88e00605c18578",
+    "githubMain": "c6068557a53ca5fd6b99fef07b88e00605c18578",
+    "pr2": "MERGED",
+    "initialWorktree": "clean"
+  },
+  "tools": {
+    "node": "24.17.0",
+    "npm": "11.13.0",
+    "typescript": "5.9.3 (existing tool in another project, not installed/restored here)",
+    "prettier": "3.9.10 (existing cache)",
+    "eslint": "10.14.0 entry only; project plugins unavailable",
+    "rust": "stable 1.99.0; pinned 1.99.1 unavailable"
+  },
+  "priorChecksThisRound": [
+    {
+      "name": "client typecheck",
+      "command": "node /Users/wyc/Desktop/vela/node_modules/typescript/bin/tsc -p tsconfig.client.json",
+      "exitCode": 2,
+      "status": "NOT_AVAILABLE",
+      "reason": "TS2688 missing vite/client"
+    },
+    {
+      "name": "server typecheck",
+      "command": "node /Users/wyc/Desktop/vela/node_modules/typescript/bin/tsc -p tsconfig.server.json",
+      "exitCode": 2,
+      "status": "NOT_AVAILABLE",
+      "reason": "TS2688 missing node types"
+    },
+    {
+      "name": "tools typecheck",
+      "command": "node /Users/wyc/Desktop/vela/node_modules/typescript/bin/tsc -p tsconfig.tools.json",
+      "exitCode": 2,
+      "status": "NOT_AVAILABLE",
+      "reason": "TS2688 missing node types"
+    },
+    {
+      "name": "ESLint",
+      "command": "node /Users/wyc/.npm/_npx/360157ef5dc9b5fb/node_modules/eslint/bin/eslint.js . --max-warnings 0",
+      "exitCode": 2,
+      "status": "NOT_AVAILABLE",
+      "reason": "ERR_MODULE_NOT_FOUND typescript-eslint; configuration unchanged"
+    },
+    {
+      "name": "npm audit",
+      "command": "npm audit --package-lock-only --ignore-scripts --json",
+      "exitCode": 0,
+      "status": "PASS",
+      "result": {
+        "vulnerabilities": {
+          "info": 0,
+          "low": 0,
+          "moderate": 0,
+          "high": 0,
+          "critical": 0,
+          "total": 0
+        },
+        "dependencyEntries": 425
+      },
+      "scope": "npm advisory query, not installed package integrity or Rust"
+    },
+    {
+      "name": "WASM reverse tree",
+      "command": "cargo +stable tree --locked --offline --target wasm32-unknown-unknown -i crypto-bigint",
+      "exitCode": 101,
+      "status": "NOT_AVAILABLE",
+      "reason": "No matching getrandom package in offline crates.io index; no retry with network"
+    },
+    {
+      "name": "cargo audit",
+      "status": "NOT_AVAILABLE",
+      "reason": "cargo-audit executable absent; no audit run"
+    },
+    {
+      "name": "SAST",
+      "status": "NOT_AVAILABLE",
+      "reason": "semgrep absent; targeted manual source and pattern review is not a complete SAST scan"
+    },
+    {
+      "name": "SQL AST",
+      "status": "NOT_AVAILABLE",
+      "reason": "pglast/sqlparse unavailable; manual SQL/permission review only"
+    }
+  ],
+  "rustAdvisories": [
+    {
+      "id": "RUSTSEC-2026-0387",
+      "package": "crypto-bigint",
+      "lockedVersion": "0.5.5",
+      "patched": ">=0.7.6",
+      "status": "BLOCKED",
+      "path": "elliptic-curve 0.13.8 -> p256/p384/k256/ecdsa/primeorder -> OpenMLS provider/basic credential/hpke-rs-rust-crypto",
+      "reachability": "Historically present in WASM dependency tree; local active-feature resolution unavailable; suite 1 alone is not a proof of absence of secret-bearing execution",
+      "source": "https://rustsec.org/advisories/RUSTSEC-2026-0387.html"
+    },
+    {
+      "id": "RUSTSEC-2026-0331",
+      "package": "libcrux-kem",
+      "lockedVersion": "0.0.9",
+      "patched": ">=0.0.10",
+      "status": "BLOCKED",
+      "path": "hpke-rs-libcrux 0.7.0 -> hpke-rs 0.7.0 -> openmls_rust_crypto 0.6.0",
+      "reachability": "Not active in historical WASM tree; lockfile includes optional dependency; local features unverified",
+      "source": "https://rustsec.org/advisories/RUSTSEC-2026-0331.html"
+    },
+    {
+      "id": "RUSTSEC-2026-0330",
+      "package": "libcrux-kem",
+      "lockedVersion": "0.0.9",
+      "patched": ">=0.0.10",
+      "status": "BLOCKED",
+      "path": "Same optional hpke-rs-libcrux chain",
+      "source": "https://rustsec.org/advisories/RUSTSEC-2026-0330.html"
+    },
+    {
+      "id": "RUSTSEC-2026-0173",
+      "package": "proc-macro-error2",
+      "lockedVersion": "2.0.1",
+      "status": "BLOCKED",
+      "path": "hax-lib-macros 0.3.7 -> hax-lib -> libcrux chains",
+      "scope": "Historical maintenance advisory from unchanged local evidence, not a fresh cargo audit"
+    }
+  ],
+  "migration008": {
+    "status": "PARTIAL",
+    "executed": false,
+    "securityBoundary": "Owner-only artifact; schema-qualified SQL; fixed pg_catalog search_path; PUBLIC/API direct execute revoked; no credential issuance/activation grants; preserve claimed packages and credential bytes",
+    "requiresRuntime": [
+      "owner/ACL and trigger rollback",
+      "previously revoked backfill",
+      "concurrent package claims/revocation",
+      "fresh and legacy migration paths"
+    ],
+    "notEquivalentTo": "MLS Remove Commit or key erasure"
+  },
+  "sourceReview": {
+    "scope": [
+      "all author-file inventory and literal references",
+      "Fastify authentication/CSRF/audience and row-lock call chains",
+      "delivery gate/route_version/seq",
+      "deletion/expiry and restore boundaries",
+      "client crypto prerequisites and Rust lab source",
+      "SQL constraints/grants/migration receipts",
+      "frontend session scope and real-data controls",
+      "deployment/logs/resources"
+    ],
+    "reviewer": "Primary Codex; no subagents or third-party audit",
+    "findings": [
+      "LOCAL-01 WSS attach/revoke race fixed in source",
+      "LOCAL-02 WSS expiry/backpressure/closing cleanup fixed in source",
+      "LOCAL-03 public credential/package revocation pending migration/runtime validation",
+      "LOCAL-04 admin stale account-state update fixed in source",
+      "LOCAL-05 offline existing TypeScript source-check tooling",
+      "LOCAL-06 current local workflow and evidence documentation"
+    ],
+    "limitations": "Static call-chain review and separate diff pass cannot establish runtime cryptographic safety"
+  },
+  "preservation": {
+    "legacyEchoV2SnapshotFiles": 185,
+    "legacyEchoV2SnapshotMatch": true,
+    "oldSql001Through007AndBaselineUnchanged": true,
+    "dependencyManifestsAndLocksUnchanged": true,
+    "noEmptyAuthorDirectories": true,
+    "namingIrregularities": [],
+    "secretPatternFiles": [],
+    "secretScanScope": "Private key headers, GitHub/AWS/OpenAI token patterns; not exhaustive secret detection"
+  },
+  "licenseMetadata": {
+    "npmLockInstallLocations": 425,
+    "npmSbomUniqueNameVersionComponents": 418,
+    "duplicateInstallLocations": 7,
+    "rustLockIncludingLab": 192,
+    "rustSbomNonRootComponents": 191,
+    "missingLicenseMetadata": 0,
+    "scope": "Existing metadata and unique name/version coverage only; not license text or legal/distribution compliance"
+  },
+  "notRun": [
+    "tests or new test creation",
+    "application/build/WASM compilation",
+    "HTTP/WSS/browser runtime",
+    "SQL/migrations/database access",
+    "MLS product/identity/device recovery/offline deletion/system restore",
+    "VPS/deployment/production data"
+  ],
+  "finalChecks": [
+    {
+      "name": "AST and local named exports",
+      "command": "node scripts/check-typescript-ast.mjs /Users/wyc/Desktop/vela/node_modules/typescript/lib/typescript.js",
+      "scope": "TS/TSX syntax and local named exports only",
+      "exitCode": 0,
+      "status": "PASS",
+      "output": "{\n  \"status\": \"PASS\",\n  \"typescript\": \"5.9.3\",\n  \"files\": 76,\n  \"localBindings\": 258,\n  \"errors\": [],\n  \"scope\": \"TS/TSX syntax and direct local named exports only; no types, package exports, SQL or runtime validation\"\n}\n"
+    },
+    {
+      "name": "author source references and local document links",
+      "command": "node --experimental-vm-modules scripts/check-source.mjs /Users/wyc/Desktop/vela/node_modules/typescript/lib/typescript.js",
+      "scope": "No application module import/evaluation; no package type validation",
+      "exitCode": 0,
+      "status": "PASS",
+      "output": "{\n  \"status\": \"PASS\",\n  \"files\": 156,\n  \"parsed\": 52,\n  \"jsxParsed\": 37,\n  \"literalModuleReferences\": 392,\n  \"localDocumentLinks\": 111,\n  \"failures\": [],\n  \"limitations\": [\n    \"This script checks author-file syntax, literal references and local documentation links; not TypeScript types, ESLint, Prettier or SQL semantics.\",\n    \"Literal references do not prove exports, runtime routes or cryptographic correctness.\",\n    \"No application module was imported, linked or evaluated.\"\n  ]\n}\n(node:19209) ExperimentalWarning: VM Modules is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:19209) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time\n"
+    },
+    {
+      "name": "7-file strict TypeScript",
+      "command": "node /Users/wyc/Desktop/vela/node_modules/typescript/bin/tsc --noEmit --strict --noUnusedLocals --noUnusedParameters --noUncheckedIndexedAccess --exactOptionalPropertyTypes --target ES2023 --module ESNext --moduleResolution Bundler --lib ES2023,DOM,DOM.Iterable src/shared/contracts.ts src/shared/validation.ts src/shared/capabilities.ts src/client/crypto/readiness.ts src/client/crypto/operation-store.ts src/client/crypto/attachment-crypto.ts src/client/features/data/metadata-archive.ts",
+      "scope": "Seven self-contained files; not full-project TypeScript",
+      "exitCode": 0,
+      "status": "PASS",
+      "output": ""
+    },
+    {
+      "name": "Rust formatting",
+      "command": "cargo +stable fmt --manifest-path crypto/mls-lab/Cargo.toml --all -- --check",
+      "scope": "Existing stable only; no compilation or dependency install",
+      "exitCode": 0,
+      "status": "PASS",
+      "output": ""
+    },
+    {
+      "name": "Git diff whitespace",
+      "command": "git diff --check",
+      "scope": "Working-tree diff whitespace only",
+      "exitCode": 0,
+      "status": "PASS",
+      "output": ""
+    },
+    {
+      "name": "JS/Shell syntax, JSON/TOML, manifest integrity, ignore boundaries and SBOM coverage",
+      "exitCode": 0,
+      "status": "PASS",
+      "output": "{\n  \"status\": \"PASS\",\n  \"authorFiles\": 156,\n  \"jsSyntaxFiles\": 13,\n  \"jsErrors\": [],\n  \"shellSyntaxExitCode\": 0,\n  \"jsonParsed\": 13,\n  \"tomlParsed\": 3,\n  \"migrationManifestChecksums\": \"PASS\",\n  \"ignoreBoundaries\": \"PASS\",\n  \"sbomUniqueNameVersionCoverage\": \"PASS\"\n}\n",
+      "scope": "Static parsing and metadata only; no SQL execution or application imports"
+    },
+    {
+      "name": "Full-project Prettier",
+      "command": "node /Users/wyc/.npm/_npx/360157ef5dc9b5fb/node_modules/prettier/bin/prettier.cjs --check .",
+      "exitCode": 0,
+      "status": "PASS",
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n",
+      "scope": "Formatting only; existing 3.9.10"
+    }
+  ],
+  "authorFileCount": 156,
+  "finalDiffReview": {
+    "status": "PASS",
+    "scope": "Separate primary-agent review of full source/SQL/document diff; not an independent reviewer or runtime security audit",
+    "findingsRemaining": "G1-G6 and data-source/resource blockers documented; migration 008 not executed",
+    "noForcePush": true,
+    "noAutomaticMainMerge": true
+  }
+}

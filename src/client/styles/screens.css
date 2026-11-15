@@ -85,14 +85,6 @@
   height: 36px;
   color: var(--echo-muted);
 }
-.chart-observations {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 24px;
-  padding-inline-start: 20px;
-  font-size: var(--echo-type-meta);
-  font-variant-numeric: tabular-nums;
-}
 fieldset {
   min-width: 0;
   margin: 0;

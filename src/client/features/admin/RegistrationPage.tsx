@@ -64,13 +64,13 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
           version: overview.data.registration.version,
         },
       });
-      setRevision((value) => value + 1);
       setMessage("注册模式已更新并审计。");
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "设置结果未确认，请刷新核实。",
       );
     } finally {
+      setRevision((value) => value + 1);
       setBusy(false);
     }
   }
@@ -126,13 +126,13 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
         audience: "admin",
         sessionId,
       });
-      setRevision((v) => v + 1);
       setMessage("邀请码撤销已确认并审计。");
     } catch (error) {
       setMessage(
-        error instanceof Error ? error.message : "结果未确认，请刷新核实。",
+        `撤销结果未确认，请以刷新后的记录为准。${error instanceof Error ? error.message : ""}`,
       );
     } finally {
+      setRevision((value) => value + 1);
       setBusy(false);
     }
   }
@@ -142,6 +142,13 @@ export function RegistrationPage({ sessionId }: { sessionId: string }) {
         <h1>注册与邀请码</h1>
         <p>配置版本比较、注册事务与幂等创建。</p>
       </header>
+      <Button
+        variant="ghost"
+        isDisabled={busy || overview.loading || invitations.loading}
+        onPress={() => setRevision((value) => value + 1)}
+      >
+        刷新注册与邀请记录
+      </Button>
       <ServiceState {...overview} />
       {overview.data && (
         <Form

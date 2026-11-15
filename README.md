@@ -8,6 +8,8 @@
 
 > 🛡️ **当前整体 PARTIAL，尚不具备生产部署条件。** 账户、迁移、管理元数据和桌面界面已在 Cloud 隔离环境验证；产品级 MLS、可信设备、离线删除和恢复仍阻塞。聊天写入继续拒绝 `503 MLS_NOT_READY`。
 
+> **2026-11-15 核心工程复核：BLOCKED。** 从 `cb20341` 核对本地与 PR #4。默认 Cargo registry 无索引、crate 包或源码，固定 Rust 1.99.1 与 WASM target 未安装；不能离线解析当前依赖闭包。按授权暂停依赖修复和真实 MLS 集成，未新增产品密码学能力。准确版本与解除条件见[核心复核台账](docs/phase-three-report.md)。
+
 [项目](#项目简介) · [能力](#-核心能力) · [架构](#-系统架构) · [安全](#-安全与元数据) · [界面](#-pc-用户端与管理端) · [截图](#-真实界面截图) · [开发](#-开发与验证) · [文档](#-权威文档) · [限制](#-当前限制与路线图)
 
 ## 项目简介
@@ -73,7 +75,7 @@ flowchart LR
 | Rust / wasm-bindgen        | 1.99.1 / 0.2.105                       | native/WASM 构建                                |
 | Caddy / systemd            | Cloud 实验 Caddy 2.6.2；systemd 未锁版 | 目标 HTTPS 入口与进程管理                       |
 
-依赖以 [package.json](package.json)、[npm 锁文件](package-lock.json)、[Cargo.toml](crypto/mls-lab/Cargo.toml) 和 [Cargo.lock](crypto/mls-lab/Cargo.lock) 为准。BoardUI 以源码分发，不虚构运行时包版本；版权、修改范围和 MIT 文本见[来源说明](src/client/components/boardui/notice.md)。未复制未授权 Pro 源码。
+依赖以 [package.json](package.json)、[npm 锁文件](package-lock.json)、[Cargo.toml](crypto/mls-lab/Cargo.toml) 和 [Cargo.lock](crypto/mls-lab/Cargo.lock) 为准。BoardUI 以源码分发，不虚构运行时包版本；版权、修改范围和 MIT 文本见[来源说明](src/client/components/boardui/notice.md)。未复制未授权 Pro 源码。Cult UI 按需复用 Copy Button，用于公共用户 ID 的复制反馈，无新增运行时依赖；上游版本、修改范围和 MIT 文本见[Cult UI 来源说明](src/client/components/cultui/notice.md)。
 
 ## 🔐 安全与元数据
 
@@ -86,7 +88,13 @@ flowchart LR
 
 服务器可见账户和设备目录、会话、IP/登录事件、审计、成员/路由关系、投递时间/长度/顺序、删除目标及附件引用。管理员无法通过现有 API 获取聊天明文、附件明文或用户私钥；服务器仍可拒绝服务，元数据真实性和可用性也有局限。
 
-> ⛔ **供应链安全准入未通过：** `crypto-bigint` 时序公告进入当前 WASM 依赖树；Cargo 锁闭另有公告。未忽略公告、未强制套用不兼容补丁，crypto-gate 持续关闭。详情见[密码学](docs/native-cryptography.md)。
+> ⛔ **供应链安全准入未通过：** 历史 WASM 活动树包含 `crypto-bigint` 时序公告路径；本轮离线树因缺缓存不可重验，Cargo 锁闭另有公告。未忽略公告、未强制套用不兼容补丁，crypto-gate 持续关闭。详情见[密码学](docs/native-cryptography.md)。
+
+前次提交`f54fc345`于2026-11-15本地收尾统一公共ID复制入口，补齐锁等待后的会话、设备凭证和邀请码期限检查，通知期限不超过服务会话。用户工作区、管理端、图表和归档页按需加载，真实构建的用户入口静态JS闭包由1,014,265降至447,321字节；未删图表或调高警告阈值。继承的008待审迁移用于服务公开材料撤销，不代表MLS Remove。浏览器剪贴板、并发和迁移均未运行；完整台账见[第三阶段报告](docs/phase-three-report.md)。
+
+最终集中修复补齐WSS认证前入站拒绝、迁移CLI显式本地目标、改名bigint边界、注册设置版本刷新、账户冲突恢复和注册未知结果重试；清除无引用旧图表CSS，错误页保留焦点目标。三个Terra子智能体只读复核Rust/MLS、服务端和前端；这不构成第三方安全审计。八张截图保持原字节，未展示本轮新增交互；真实复制/键盘/表单/网络仍NEEDS_RUNTIME_VERIFICATION。
+
+在`981948b`基础上继续核心安全收敛：运行数据库、管理员初始化与迁移入口均要求显式非零端口，避免目标端口回退环境变量；本地密码学存储打开受阻或等待超时时拒绝并清理迟到连接；设备页可重新核实会话与目录，邀请码撤销无论响应是否确认都重新读取记录。这些是源码修复，运行交互仍待验证。当前缓存不足以解析完整WASM活动依赖，未调整依赖；四项Rust公告、真实MLS身份/Provider/Worker/原子Outbox、多设备删除和恢复继续BLOCKED，生产准入不变。
 
 ## 👤 PC 用户端与管理端
 
@@ -125,7 +133,7 @@ Cloud Chromium 实际运行，临时 PostgreSQL 与合成账户；桌面视口14
 echov2/
 ├── src/client/app/         PC 双入口、独立工作区与共享 Hooks
 ├── src/client/features/    账户、设备、数据与管理页面
-├── src/client/components/  HeroUI 组合及 BoardUI 免费源码
+├── src/client/components/  HeroUI 组合、BoardUI 与 Cult UI 按需源码
 ├── src/server/             认证、身份、投递、生命周期与管理 API
 ├── src/shared/             类型契约与输入校验
 ├── crypto/mls-lab/         独立 OpenMLS / WASM 实验
@@ -138,22 +146,13 @@ echov2/
 
 ## 🔍 开发与验证
 
-使用 **Codex Cloud** 远程开发；Mac 本机不安装、下载或构建项目依赖。锁文件固定依赖解析，在获授权的 Cloud 中运行：
+当前主开发环境为本地 `echov2`，main基线为`c6068557a53ca5fd6b99fef07b88e00605c18578`；独立分支保留先前安全提交`d17b0d6`及接管时未提交改动。旧 `echo-v2` 未修改。本轮不安装/下载/升级依赖或 Rust/WASM 工具链，不运行测试、服务、数据库迁移或生产部署；最终集中修复仅使用已有node_modules执行工程静态检查，不重新构建。前次f54fc345构建及历史Cloud成功记录不作为当前修改的运行验证。
 
-```sh
-npm ci
-npm run typecheck
-npm run lint
-npm run format:check
-npm run check:ast
-npm run check:source
-npm run build:client
-npm run build:server
-```
+已有项目依赖支持`npm run typecheck`、`npm run lint`、`npm run format:check`、`npm run check:ast`和`npm run check:source`，最终集中修复均重新执行。已有`dist/bundle-review-*`只用于复查前次产物；本轮未构建或预览。Rust活动树离线解析、cargo-audit和完整SAST工具不可用；不修改规则或补假类型。本轮`npm audit --package-lock-only --ignore-scripts --json`重新查询零公告，不能替代完整供应链审计；详情见[工程报告](docs/static-verification-report.md)。
 
 Rust/WASM 和库实验命令见 [MLS 实验](crypto/mls-lab/README.md)。真实数据库、认证、短 ID、删除竞争及浏览器脚本需要明确隔离环境参数，不对任意数据库直接运行。命令与实际退出码见[工程验证](docs/static-verification-report.md)。
 
-新库使用修正版独立基线001 → 002 → 003 → 004 → 005 → 006 → **007公共ID**。已有已核验前缀仅追加007；未知持久化环境不得自动迁移。应用启动不执行迁移。操作前阅读[迁移说明](migrations/README.md)。
+新库规划使用修正版独立基线001 → 002 → 003 → 004 → 005 → 006 → 007公共ID → **008设备公开材料撤销**。008尚未执行或运行验证；已有已核验前缀只追加缺失版本；未知持久化环境不得自动迁移。应用启动不执行迁移。操作前阅读[迁移说明](migrations/README.md)。
 
 ## 🚀 部署与资源
 
@@ -174,14 +173,14 @@ Cloud 实际 cgroup 仍为32 GB / 4核，swap 无限制；Docker 请求2 GB / 1�
 
 ## 🧭 当前限制与路线图
 
-- ✅ **已验证范围：** 账户、公共ID迁移、权限和幂等；PC双入口；真实元数据图表、查询、复制及下载；工程检查与独立MLS实验。
+- ✅ **本轮PASS：** 全项目类型、Lint、格式、AST、源码/引用检查及npm锁公告查询；当前构建NOT_RUN，前次体积与Cloud运行证据单列。
 - 🟡 **部分完成：** 设备目录、消息投递基础、删除意图、本地附件、元数据归档、管理后台与有限静态扫描。
 - ⛔ **BLOCKED：** 活动密码学依赖公告、可信设备、产品MLS、私聊/群聊、离线同步与墓碑、密钥恢复、灾备和低配资源验收。
-- 🔍 **NEEDS_RUNTIME_VERIFICATION：** 安全内核接通后的产品级多设备、Commit冲突、真实崩溃/磁盘满、删除新鲜性、隔离恢复与完整可访问性验证。
+- 🔍 **NEEDS_RUNTIME_VERIFICATION：** 剪贴板真实成功/拒绝、键盘/读屏、懒加载切换、锁等待期限、本地存储阻塞与未知操作结果刷新；安全内核接通后还需产品多设备、Commit冲突、崩溃/磁盘满、删除新鲜性及隔离恢复验证。
 - ◆ **交付边界：** 第三阶段继续收敛，不增加第四阶段，不自动合并或生产部署。
 
 ## 🤝 许可证与贡献
 
-项目根目录没有确认的整体 LICENSE，不擅自声明开源授权。BoardUI 免费源码单独保留上游 MIT 许可，其他依赖义务见 SBOM；这不授予本项目整体许可证。
+项目根目录没有确认的整体 LICENSE，不擅自声明开源授权。BoardUI 免费源码和 Cult UI 改编组件分别保留上游 MIT 许可，其他依赖义务见 SBOM；这不授予本项目整体许可证。
 
 欢迎提交可复现 Issue 或 PR。涉及迁移、密码学、设备信任、删除或恢复的变更，应附兼容路径、实际验证和未覆盖风险。重要功能变更须同步更新本页与对应权威文档。

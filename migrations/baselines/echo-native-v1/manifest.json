@@ -51,6 +51,12 @@
       "migration_name": "007-public-user-id",
       "path": "migrations/007-public-user-id.sql",
       "sha256": "b95faf65f901d3be46a9bd7c5ed23dea319c20e0c21471f90469d853d425f5e8"
+    },
+    {
+      "version": "008",
+      "migration_name": "008-device-revocation",
+      "path": "migrations/008-device-revocation.sql",
+      "sha256": "2cfe7b9afd153ea9362ffd400785fb74e25e295c664061f492b08bab5a49201c"
     }
   ]
 }

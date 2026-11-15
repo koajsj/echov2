@@ -1,135 +1,65 @@
-# Cloud 工程验证报告
+# 本地静态验证报告
 
-## 当前验证：PC 双入口与公共 ID
+## cb20341 后的本地核心复核
 
-基线 `32f09d8faf24a5a731f4aa86f899905030e90518`，2026-11-12。当前机器可读依据为 [pc-review.json](evidence/pc-review.json)；以下历史证据分别绑定其原提交。状态 **PARTIAL**，不代表产品或生产安全通过。
+2026-11-15，整体 PARTIAL；代码、依赖锁、SQL及截图未改，前轮检查不冒充当前运行证据。本轮实际重新执行：typecheck、零 warning ESLint、AST（77份TS/TSX、256绑定）、source（161作者文件、400模块引用、127本地文档链接）均退出0；npm audit --package-lock-only --ignore-scripts 返回425依赖位置、零公告。Rust仅用现有 stable 执行 fmt --check，退出0。9份SQL摘要匹配，SBOM覆盖418个npm唯一组件与191个Rust注册表组件，许可字段齐全、Rust校验和匹配；有限私钥/token/密码URL模式扫描零命中。151个未改文件与cb20341逐字节一致，只有指定10份文档更新。全项目 Prettier 与 Git Diff 空白检查通过。没有新测试或服务。Rust 离线 WASM tree 再次退出101，默认 Cargo registry 无 index/cache/src，固定1.99.1与目标缺失；相关工程 BLOCKED。四项官方公告再次核实，未获得可离线兼容修复依据。三项 Terra 核心只读复核未确认新缺陷，不构成独立审计；范围与解除条件见[本轮台账](phase-three-report.md)。
 
-### 本轮实际运行
+## 前轮 cb20341 证据
 
-- 工程：独立执行typecheck、lint、format:check、check:ast、check:source、build:client、build:server，最终七项退出码均为0，逐项记录在PC证据；未关闭规则或增加扫描排除。
-- 数据库：临时PostgreSQL17.11，新/合成旧路径001–007逐份退出0、schema/catalog一致；23表、33外键、17唯一约束、56索引、3业务触发器、4函数。原001预期语法失败保留，修正版独立基线与002–007通过pglast。
-- 权限：owner/API均非超级用户、无BYPASSRLS；API不能DDL、访问迁移台账或修改public_id等受限列。**RLS启用表数为0**，当前依赖服务事务授权和列ACL，不宣称数据库行级租户隔离。
-- 公共ID：真实旧账户及设备FK保留、5,000个随机样本格式/唯一、强制首次碰撞成功、持续碰撞503且零行、并发operationId幂等、API UPDATE拒绝。
-- 认证/授权：34项HTTP检查覆盖邀请、注册摘要冲突、唯一、会话、重新认证、改名、退出、关闭注册，普通用户拒绝12个管理读取入口；CSRF/Origin/旧标签页拒绝。
-- 竞态：设备/邀请在观察到锁等待后过期拒绝；跨账号删除operationId仅一胜者，冲突409且不隐藏另一目标。
-- 浏览器：PC视口、两套入口、短ID复制与查询、3张官方BoardUI图表和时间筛选、真实元数据归档及3次CSV，4次Blob创建/释放；0 pageerror，控制台/HTTP预期401及门禁403已逐项分类，无意外错误。8张真实PC截图；1024 CSS px无页面溢出。
-- 密码学实验：Rust格式、native release、wasm32 release、wasm-bindgen退出0；双BrowserContext真实OpenMLS库测试通过。本地CAS、刷新恢复、重复拒绝、注入配额错误回滚及附件AEAD通过，合成opaque状态不证明完整Provider持久化。
+2026-11-15，整体 **PARTIAL**；产品通信与生产准入 **BLOCKED**。本地main与GitHub main均为`c6068557a53ca5fd6b99fef07b88e00605c18578`。本次核心复核以`981948b9e8d201cab33762f57273ef9da13cd840`为干净起点，继续于`codex/native-hardening-review`，保留`d17b0d6`及全部有效历史，PR #4保持Draft。没有安装、下载或升级依赖，没有运行测试、构建、服务、SQL、迁移或生产操作；仅用现有项目依赖执行静态检查。前次客户端构建明确标为历史证据。
 
-### 审计与许可证
+## 实际检查
 
-npm audit退出0，零公告；本轮仅新增精确锁定Recharts3.9.2与Remixicon React4.9.0供官方BoardUI内部使用。npm CycloneDX以package-lock-only生成，包含418组件（含其他平台可选包），npm导出器原遗漏Remixicon的非SPDX许可，已核对实际包声明与v4.9.0原文并补充具名Remix Icon License 1.0；当前无缺失许可条目；Rust SBOM191组件无缺失。许可证义务仍需发布前履行，不把清单等同法律审核。本项目没有整体LICENSE。
+本机Node24.17.0、npm11.13.0、项目TypeScript5.9.3、Prettier3.9.10、ESLint10.14.0及Vite8.3.6已存在。Rust已安装stable1.99.0，固定1.99.1及完整crate缓存缺失。最终集中修复结果见[本轮证据](evidence/final-convergence.json)，前次结果见[加固证据](evidence/native-hardening-review.json)，问题逐项见[修复台账](phase-three-report.md)。
 
-BoardUI CLI0.5.9真实stdio MCP调用get_started/list_components/get_skill/get_component；免费KPI/revenue/orders源码附MIT版权，来源仓库固定提交及原始源码哈希在PC证据。未获取未授权Pro源码，未采用Pro模板或安装第二套基础UI。
+本次CORE-01–04修改后重新执行类型、零warning Lint、AST与源码引用检查；AST为77份TS/TSX、256本地绑定，源码检查覆盖161作者文件、52 TS/JS、38 TSX、400字面模块引用。13份JS/MJS用node --check、1份Shell用bash -n均退出0；rustfmt仅格式检查退出0。npm锁审计当前425依赖位置/零公告；SBOM对应418个npm唯一组件、191个Rust组件，许可字段齐全、crate校验和匹配。9份SQL工件摘要及25份受保护工件原字节核对通过；有限私钥/token/密码URL模式扫描零命中，不宣称完整秘密检测。格式与本地链接在文档同步后复核；详细数值留在coreConvergence字段。
 
-Cargo audit退出1，3项公告：RUSTSEC-2026-0387（crypto-bigint0.5.5）、RUSTSEC-2026-0331及0330（libcrux-kem0.0.9），另有proc-macro-error2停止维护警告。活动WASM树的crypto-bigint未获安全兼容升级；gate继续BLOCKED。
+三项Terra只读复核及修复后复核未发现新增可确定回归；不构成第三方独立审计。缺getrandom索引导致本轮WASM活动树退出101；四项官方RustSec页面版本信息重核仍不能补齐活动feature/API兼容证明，未调整任何依赖。设备/邀请未知结果、数据库配置拒绝路径及IndexedDB阻塞的真实行为均未运行；分别标记NEEDS_RUNTIME_VERIFICATION或NOT_RUN，产品门禁仍BLOCKED。
 
-Semgrep官方规则固定 `a5ad1714f00c9f7fde980cab0ea1d6dc6d414fd2`，213条运行规则，扫描作者源码及工具，69项发现（55 INFO、13 WARNING、1 ERROR），0扫描错误。ERROR在认证回归的loopback HTTP合成夹具，不发送真实凭据或生产流量；保留发现及解释，不禁规则。其他SQL常量拼接、部署/库代码启发式发现需结合输入边界审查，不将SAST结果称为零告警或正式安全审计。发现文件、位置和规则保存在PC证据。
+| 检查                                                               | 状态                       | 结果与边界                                                                                                                                       |
+| ------------------------------------------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| main基线                                                           | PASS                       | `git ls-remote origin refs/heads/main`与本地main一致；不丢弃前序提交或未提交工作                                                                 |
+| TypeScript                                                         | PASS                       | `npm run typecheck`，完整client/server/tools三份tsconfig，退出0                                                                                  |
+| ESLint                                                             | PASS                       | `npm run lint`，原有规则、零warning上限，退出0                                                                                                   |
+| Prettier                                                           | PASS                       | `npm run format:check`，全项目格式检查                                                                                                           |
+| AST                                                                | PASS                       | `npm run check:ast`，真实解析TS/TSX及本地直接导出绑定；不是语义安全证明                                                                          |
+| 源码/文件引用/文档链接                                             | PASS                       | `npm run check:source`，作者文件、TSX、字面引用和本地链接；动态/远程链接不属于该检查                                                             |
+| 当前客户端构建                                                     | NOT_RUN                    | 最终集中修复不重新构建；复查f54fc345已有产物图，不将旧尺寸当最终提交尺寸                                                                         |
+| Rust格式                                                           | PASS                       | `CARGO_NET_OFFLINE=true cargo +stable fmt --manifest-path crypto/mls-lab/Cargo.toml --all -- --check`退出0；仅格式                               |
+| Cargo活动WASM树                                                    | NOT_AVAILABLE              | `在crypto/mls-lab运行cargo +stable tree --locked --offline --target wasm32-unknown-unknown`退出101，缺getrandom索引/缓存；未联网补依赖           |
+| 依赖/许可证元数据                                                  | PASS                       | npm425个安装位置对应418个唯一name/version；Rust192个包包含根，对应SBOM191个组件；无缺失或多余组件、组件许可字段无缺失，声明与lock根一致          |
+| SQL工件摘要                                                        | PASS                       | manifest源文件与001–008共9个SHA256匹配；SQL、manifest及依赖锁文件本轮未改                                                                        |
+| SQL权限/外键/事务                                                  | PARTIAL                    | 人工追踪参数化查询、账号→session→device→conversation→group锁序、外键、索引、删除、008固定search_path/函数权限与幂等；不是SQL解析或数据库运行验收 |
+| 安全源审查                                                         | PARTIAL                    | 逐模块追踪认证/CSRF/受众、授权锁、KeyPackage/身份边界、投递/删除、归档、脚本和配置；危险调用与敏感模式扫描、完整Diff复核。不能宣称零漏洞         |
+| cargo-audit / Semgrep / PostgreSQL AST                             | NOT_AVAILABLE              | 本机缺可执行程序或SQL解析库；未安装、未替换或关闭安全规则                                                                                        |
+| 当前npm公告扫描                                                    | PASS                       | npm audit --package-lock-only --ignore-scripts --json退出0，425依赖位置，0公告；仅查询安全元数据，没有安装                                       |
+| 测试 / 服务 / HTTP / WSS / 浏览器 / 数据库 / 迁移 / Rust或WASM构建 | NOT_RUN                    | 无新测试、测试账号、临时库或应用进程，无部署                                                                                                     |
+| 真实剪贴板 / 键盘读屏 / 懒加载交互 / 锁等待竞争                    | NEEDS_RUNTIME_VERIFICATION | 没有可用的已运行应用环境；未启动服务，未用模拟替代                                                                                               |
+| MLS产品、可信设备、离线墓碑、密钥/灾备恢复、低配容量               | BLOCKED                    | 尚缺真实产品实现或准入证据，详见G1–G6；crypto-gate持续关闭                                                                                       |
 
-客户端构建退出0，但Vite报告约1,013kB压缩前主JS块（gzip约304kB）超过500kB建议值；未修改阈值隐藏提示，后续仍有拆包优化空间。源码检查首次遇到未暂存的已删除手机图片而报ENOENT，记录Git删除后复跑通过；未修改检查规则。
+历史verification.json里的npm锁摘要属于更早Cloud快照，与当前main的锁字节不同；当前package-lock SHA-256为`45bfa2fa9f668e62e6d301f36ec1e4813060cb55926e866591706f9a36ce8034`，Cargo.lock为`9ca0ca55441b04fc379e5f8e3bfacd20ec03d87464ab5d2d3efdbe2ec62760e6`。本轮与main/f54锁字节一致，npm/Rust SBOM组件集合仍匹配，保留旧证据不改历史摘要。
 
-### 资源与未覆盖项
+依赖许可证检查仅证明现有元数据覆盖，不构成法律或分发合规审计。没有用cargo fmt替代编译/安全审计；没有降低密码强度、放宽阈值、加入audit ignore或未经审查的fork。
 
-实际memory.max=34359738368、cpu.max=400000 100000；Docker请求限制未生效，memory.swap.max=max。限额检查退出1/BLOCKED。无20GB磁盘配额；受限持续负载NOT_RUN。
+## 前次实际构建分析（f54fc345）
 
-独立30秒功能负载：60次真实注册模式GET，p50=3.843ms、p95=23.974ms、max=153.204ms；两个观测Node进程CPU共1.11秒，生命周期VmHWM之和207810560字节。后者不是并发全栈内存峰值，未包含PostgreSQL/Caddy；不推导低配容量。浏览器、Rust、SQL及扫描范围之外的完整产品多设备、恢复、物理故障和生产部署仍未通过。
+以下为前次实际产物数据；本轮只复查已存在的图和文件，当前AuthPage/CSS等已有修改，因此不能作为最终提交的构建或体积PASS。
 
----
+同一已有Vite配置前后构建，使用`generateBundle`读取module归属，再读取最终磁盘JS计数；gzip采用同一个`node:zlib gzipSync`默认配置，可能与Vite控制台估算不同。入口闭包沿静态imports求和，不把单个入口文件大小当全部初始加载成本。
 
-## 历史验证记录（以下对应先前提交）
+| 指标                       |    拆分前 |    拆分后 |
+| -------------------------- | --------: | --------: |
+| 单独入口JS（字节）         | 1,014,265 |   224,364 |
+| 用户入口静态JS闭包（字节） | 1,014,265 |   447,321 |
+| 上述闭包gzip（字节）       |   301,796 |   143,345 |
+| 全部JS合计（字节）         | 1,014,265 | 1,023,188 |
+| JS分块数                   |         1 |        11 |
+| 最大JS分块（字节）         | 1,014,265 |   395,857 |
 
-2026-11-12。本报告替代旧的本机只读静态快照；旧快照由 Git 历史保存。所有安装、构建、数据库与浏览器操作均在 Codex Cloud；没有在用户本机下载/安装，没有生产访问。**整体 PARTIAL；检查通过不代表完整产品、安全门禁或生产容量通过。**
+初始JS减少55.9%，gzip减少52.5%；总JS因分块引用增加约0.9%，不是全量体积缩小。React/HeroUI共用基础保留共享分块；Recharts与BoardUI图表位于Dashboard动态路径，Remixicon已tree-shake，不属于用户静态闭包。用户工作区、管理工作区、Dashboard和归档是边界，较小管理页面保留组合；未配置逐依赖manualChunks。CSS仍约496.63kB（Vite估算gzip47.13kB），未为压缩体积删除主题/组件样式。真实网络预加载与路由切换仍需浏览器验证。
 
-## 可复核证据
+## 历史证据与交付
 
-命令、实际退出码、测试摘要、历史 SQL 指纹、工具与清理状态见 [verification.json](evidence/verification.json)。npm 与 Rust 的 CycloneDX 锁闭清单分别为 [npm SBOM](evidence/npm-sbom.json) 与 [Rust SBOM](evidence/rust-sbom.json)。功能缺口与安全结论见[第三阶段报告](phase-three-report.md)。
+保留[11-12本地审查](evidence/local-security-review.json)、[PC审查](evidence/pc-review.json)、[最终Cloud复核](evidence/final-review.json)和[Cloud验证](evidence/verification.json)。八张PC截图未改，来自历史Cloud基线，不展示本轮Copy Button或懒加载运行结果。前序008未执行，不得假定数据库已具备其触发器。
 
-实际工具：Node 24.22.1、npm 11.9.0、TypeScript 5.9.3、ESLint 10.14.0、Prettier 3.9.10、PostgreSQL 17.11、Chromium 156.0.8078.79、Playwright 1.65.0、Rust/Cargo 1.99.1、wasm-bindgen-cli 0.2.105、Semgrep 1.185.0、cargo-audit 0.22.0、pglast 8.7。Cloud HTTPS 实验使用已有 Caddy 2.6.2；它不是生产组件版本或安全维护验收。
-
-## 工程命令
-
-```sh
-npm ci
-npm run typecheck
-npm run lint
-npm run format:check
-npm run check:ast
-npm run check:source
-npm run build:client
-npm run build:server
-```
-
-| 命令                 | 最终退出码 | 状态                                 |
-| -------------------- | ---------- | ------------------------------------ |
-| npm run typecheck    | 0          | PASS                                 |
-| npm run lint         | 0          | PASS                                 |
-| npm run format:check | 0          | PASS；先修正浏览器脚本格式告警后重跑 |
-| npm run check:ast    | 0          | PASS                                 |
-| npm run check:source | 0          | PASS                                 |
-| npm run build:client | 0          | PASS                                 |
-| npm run build:server | 0          | PASS                                 |
-
-各命令独立记录退出码，不通过 shell 最后一条成功掩盖前序失败。源码检查实际解析 TS/JS 和 TSX，并核对作者文件引用/文档链接；其 PASS 仅表示该范围。完整类型、第三方 API、SQL 与运行仍由各自检查承担。TSX 不再跳过；没有用空类型声明、禁用规则或新增作者文件排除来制造 PASS。
-
-WASM 验证使用 Cargo.lock、固定工具链，分别执行 `cargo fmt --all -- --check`、native release、wasm32 release、wasm-bindgen。浏览器实际加载生成的 WASM。生成 pkg 含上游 lint 指令，测试后作为生成物清理；不编辑生成文件、不改变 ESLint 配置来吞掉告警。Cargo target/pkg、node_modules、数据库或凭据不进入 Git。
-
-## 数据库与 SQL
-
-`check-migrations.mjs` 在两个独立临时数据库上验证 001–006、最终 dump/目录一致、旧字节保留与最小权限。所有迁移 DDL 用普通 owner，应用用普通 API；test admin 只建立隔离数据库/观测负例。每份失败立即停止，不跳过。另有初始化回滚、pending 非空、零行/丢失回执、003 旧消息保护及 006 异常等负例。
-
-pglast 8.7 静态解析 002–006 与独立基线通过；原始 001 在 authorization 处预期语法失败并保留原字节。这不是修正版失败。静态语法解析不替代 PostgreSQL 中执行函数、约束或权限测试。
-
-`check-auth-workflow.mjs` 验证真实 HTTP 注册/邀请/幂等/唯一/登录/会话/重新认证/改名/受众隔离/退出/关闭注册，以及数据库实际记录。
-
-`check-deletion-race.mjs` 让两个不同合成账号在读后同时争用全局 operationId，确认一条请求记录、一个隐藏目标、另一请求冲突，原操作重试 pending-anchor。Owner 写入的结构凭证只用于 SQL 并发，不是可信 MLS 身份证据。
-
-## 浏览器与密码学范围
-
-- `check-app-browser.mjs`：真实 HTTPS 注册、登录、重新认证、元数据导出/下载/只读预览、真实管理员用户查询与 CSV 三次下载、正确文件名/内容、全部 4 个 Blob URL 释放、两种 audience 退出后 Session 行消失、导航、390px 无横向溢出、reduced-motion 偏好与键盘退出，无 pageerror。
-- `check-mls-browser.mjs`：两个独立 BrowserContext，真实 OpenMLS WASM / 套件 1 的 KeyPackage、Welcome、Commit、Application、重放/无效 Commit 拒绝、pending/staged discard、Merge、Remove、Epoch 1→2。不是两台独立物理设备，也不是产品 MLS E2E。
-- `check-local-crypto-browser.mjs`：Web Locks/IndexedDB 两标签 CAS 单胜者、刷新恢复、重复操作拒绝、注入配额错误后的原子回滚；附件 AES-GCM 往返、不同 key/IV、篡改拒绝和大小边界。opaque sealedState 是合成字节，未证明完整 provider 状态安全恢复。
-
-pageerror 通过只证明没有捕获到页面未处理异常；本轮未完整分类所有 console 消息，不宣称浏览器控制台零错误。
-
-Firefox 和 WebKit 官方 Playwright 下载域名分别实际被 Cloud 网络策略 403 拒绝；未绕过策略，状态 NOT_AVAILABLE。iOS 无实机。真实 OS 崩溃、物理磁盘满、完整可访问性/跨浏览器视觉、产品 Commit 冲突/离线墓碑/系统恢复均未通过，不用实验结果代替。
-
-## 供应链、SAST 与许可证
-
-npm audit 当前零公告。原 minimatch 10.2.6 公告通过固定 override 11.0.8 修复，并实际安装、类型/Lint/构建验证；不使用 audit ignore。package-lock.json 固定解析闭包。
-
-Cargo audit 实际退出 1，锁闭 3 项公告与 1 项停止维护警告；未忽略任何公告。实际 WASM 依赖树含 crypto-bigint 0.5.5 的 RUSTSEC-2026-0387，现有曲线依赖不能无损升级至 patched >=0.7.6。suite 1 不选择 P-256 不是完整可达性证明。libcrux-kem 0.0.9 两项公告在锁闭中，但 `cargo tree --locked --target wasm32-unknown-unknown -i libcrux-kem` 未找到活动路径。停止维护的 proc-macro-error2 也保留记录。详见[密码学](native-cryptography.md)及 evidence 中公告编号与版本。生产门禁继续 BLOCKED。
-
-Semgrep registry 网络访问遭 403，改用允许的 Git HTTPS 获取官方规则库 `semgrep/semgrep-rules` 固定提交 `a5ad1714f00c9f7fde980cab0ea1d6dc6d414fd2`，本地运行 JavaScript/TypeScript/Rust 规则，metrics/version check 关闭以避免遥测/额外访问。没有关闭扫描规则；213 条实际执行规则扫描 83 份作者源码，61 项发现（48 INFO、13 WARNING）、0 扫描错误；分类和范围见 evidence。
-
-自动告警需按实际语义复核：中文 JSX 未国际化、已显式类型化组件的 props 传播、用户确认对话框、现代 Node/浏览器支持的 replaceAll、SQL/正则字符串中的模板标记，以及对固定显式字段数组/测试诊断使用 JSON.stringify。它们不构成已确认可利用漏洞，但不把带告警的扫描伪称零发现或完整安全审计。参数化 SQL、输入验证、认证与库风险仍需人工复核；扫描覆盖有限。
-
-npm SBOM 381 组件、Rust 锁闭 SBOM 191 组件均有第三方 license 元数据；Rust 含可选与非活动平台依赖，非最终 WASM 可达性清单。主要为 MIT/Apache-2.0/BSD/ISC，另有 MPL-2.0、Unicode、BlueOak 等；分发时须保留相应声明并履行各自义务。SBOM 元数据核对不是许可证文本/法律合规审计。仓库自身没有 LICENSE，本轮未擅自选择全项目授权。
-
-## 资源与运维
-
-Cloud Docker 官方 Node 镜像 `node:24.22.1-trixie-slim` digest `sha256:89c5244bc22a9bc3287d89ebc7e49b9cb5bb84cd40e6175ac3421d5a9f68b95a`，以非 root、network=none、pids-limit=128、memory=2g、memory-swap=2g、cpus=1 请求限制；只读挂载代码/既有运行库，临时 PostgreSQL、Node/Fastify 和 Caddy HTTPS 位于同一隔离容器。
-
-但 Docker CgroupDriver=none，实际 memory.max=34359738368、memory.swap.max=max、cpu.max=400000 100000，未施加所需限制。短时 25 个真实 HTTPS 请求（含两路并发注册与登录）功能通过，P50 36 ms、P95 256 ms、最大 272 ms；这些数字不是受限 VPS 的容量结果，主机整体 memory.peak 不作为应用峰值。原始功能脚本输出 PASS 仅指请求断言；本报告与 evidence 将低配准入明确标为 BLOCKED。
-
-新增只读 `check-resource-limits.mjs` 检查真实 cgroup，当前退出 1；不得仅凭 Docker 接受参数宣布模拟 PASS。20 GB 磁盘配额、持久容量、持续压力与灾备演练 NOT_RUN。未创建收费资源、接触生产或改变全局 cgroup。
-
-## 审阅与清理
-
-完整 Diff、历史 SQL 指纹、锁文件、源代码/文档链接、敏感信息与 Git 状态分别复核。保留历史提交、必要迁移/安全证据，不改旧项目，不 force push、不自动合并部署。临时数据库、测试凭据、TLS 测试根、生成物、下载缓存和测试文件在验证后清理；最终实际状态写入 evidence，未执行项目不得预先标 PASS。
-
-## 本轮最终复核 — 基线55a742f之后
-
-最新可复核数据见 [final-review.json](evidence/final-review.json)；此前verification.json为前一轮基线。所有命令仍在Cloud。七项工程检查最终独立执行，源码链接检查包含本轮截图引用。Rust fmt/native release/wasm release/wasm-bindgen均退出0，真实MLS和本地存储/附件浏览器检查退出0；实验与产品集成严格区分。
-
-新增 `CONFIRM_CLOUD_AUTH=echo_native PGHOST=<临时Cloud socket> PGPORT=55432 node --import tsx scripts/check-expiry-races.mjs`，运行前必须有明确隔离数据库。观察到真实账户/设置锁等待后制造过期，断言拒绝且设备/注册零写入、邀请码零消费。观察者是临时集群测试管理员，业务Pool用非超级API角色。`check-auth-workflow.mjs`新增普通用户对11个管理读取入口的401及Origin/CSRF/过期标签页会话负例。
-
-`check-app-browser.mjs`现在收集全部console error与HTTP错误。匿名session401、缺可信设备的conversations403是预期拒绝；二者分别保留明细，其他console或HTTP错误令脚本失败。原React保留key属性错误已实际复现并修复。pageerror=[]、unexpectedConsole=[]、unexpectedHttp=[]；不再沿用前文console未运行结论。手机安全记录表新增局部滚动、键盘右方向键和页面不溢出断言。七张截图位于[截图示例](screenshots/user-auth-desktop.png)，桌面1440×1000/1280×900、手机390×844，使用fullPage，不含测试密码或会话凭据。
-
-Mermaid 11.4.1真实解析README图表、github-slugger 2.0.0校验目录锚点、所有相对链接和截图路径存在性；验证工具仅安装在Cloud临时目录，未改项目依赖。截图均来自真实Chromium，不是生成图。
-
-本轮Semgrep重新运行同一官方固定规则提交，62发现（48 INFO、13 WARNING、1 ERROR）、0扫描错误，未关闭规则或把非零发现写成零发现。npm audit退出0、零公告；Cargo audit退出1、三项公告，活动WASM树仍含crypto-bigint 0.5.5，不采用不兼容的强制patch。npm/Cargo锁闭SBOM组件及许可证元数据复核，锁文件与依赖声明未变。SQL用pglast重新解析：旧001保留预期authorization语法错误，独立基线与002–006通过；真实双路径迁移/权限回归通过。未修改历史迁移来制造通过。
-
-低配Docker重新请求memory=2g、memory-swap=2g、cpus=1，Debian trixie-slim实际读取memory.max=34359738368、cpu.max=400000 100000、memory.swap.max=max，Docker CgroupDriver=none；宿主cgroup未被委派。低配BLOCKED，持续负载、20GB配额、隔离应用峰值NOT_RUN。镜像digest与观测在最新证据中。
-
-逐问题编号、原因、修复、位置和验证见[第三阶段最新台账](phase-three-report.md#最终深度复核与截图交付--2026-11-12)。最终审查覆盖Diff、锁文件、历史SQL、截图、秘密模式与工作区；远端SHA/完整文件树和blob哈希在推送后实际核对，结果以最终交付为准。
-
-本轮最终SAST新增1项ERROR级工具发现位于 `scripts/check-auth-workflow.mjs` 的隔离测试HTTP请求：目标固定为127.0.0.1:3001，用于向真实API发送不同合成来源、CSRF和Origin负例；不发送真实凭据到外部网络，生产入口仍强制HTTPS。该项记录为经复核的测试传输告警，不忽略规则、不把扫描结果称为零发现；安全扫描整体仍PARTIAL。
+用户明确允许后，三个gpt-6.1-terra子智能体只读复核Rust/MLS、服务端和前端；主智能体检查其证据并实施修复与最终Diff核验。无Computer Use或第三方独立审计；不把子智能体复核等同独立安全认证。全部写入限定echov2；旧echo-v2未修改。新分支包含前序未合并安全提交；提交/推送后以实际GitHub SHA和PR为准，不自动合并或部署。本报告不嵌入自引用提交SHA。

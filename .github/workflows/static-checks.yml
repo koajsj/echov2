@@ -1,0 +1,69 @@
+name: Static checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: static-checks-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.17.0
+      - name: Record Node and npm versions
+        run: |
+          node --version
+          npm --version
+      - name: Install locked npm dependencies
+        run: npm ci
+      - name: TypeScript
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint
+      - name: Prettier
+        run: npm run format:check
+      - name: AST
+        run: npm run check:ast
+      - name: Source references
+        run: npm run check:source
+      - name: JavaScript syntax
+        shell: bash
+        run: |
+          mapfile -d '' -t files < <(git ls-files -z -- '*.js' '*.mjs')
+          ((${#files[@]} > 0))
+          for file in "${files[@]}"; do node --check "$file"; done
+          echo "JavaScript syntax exit code: 0 (${#files[@]} files)"
+      - name: Shell syntax
+        shell: bash
+        run: |
+          mapfile -d '' -t files < <(git ls-files -z -- '*.sh')
+          ((${#files[@]} > 0))
+          for file in "${files[@]}"; do bash -n "$file"; done
+          echo "Shell syntax exit code: 0 (${#files[@]} files)"
+      - name: Install pinned Rust formatter
+        run: |
+          rustup toolchain install 1.99.1 --profile minimal --component rustfmt
+          rustc +1.99.1 --version
+          cargo +1.99.1 --version
+          cargo +1.99.1 fmt --version
+      - name: Rust format (offline)
+        env:
+          CARGO_NET_OFFLINE: "true"
+        run: cargo +1.99.1 fmt --manifest-path crypto/mls-lab/Cargo.toml --all -- --check

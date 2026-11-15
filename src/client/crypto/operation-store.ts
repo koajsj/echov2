@@ -28,13 +28,41 @@ export async function openOperationStore(
   if (!navigator.locks || typeof indexedDB === "undefined")
     throw new Error("浏览器缺少可靠的本地存储或单写者锁");
   const opening = indexedDB.open(`echo-crypto-${namespace}`, 1);
-  opening.onupgradeneeded = () => {
-    opening.result.createObjectStore("groups");
-    opening.result.createObjectStore("operations");
-  };
-  const db = await request(opening);
-  db.onversionchange = () => db.close();
-  return db;
+  return new Promise((resolve, reject) => {
+    let refused = false;
+    // An open queued behind a blocked delete receives no blocked event itself.
+    const timer = setTimeout(() => {
+      refused = true;
+      reject(new Error("本地存储打开超时；请关闭旧连接后重试，禁止发送"));
+    }, 10000);
+    opening.onblocked = () => {
+      refused = true;
+      clearTimeout(timer);
+      reject(new Error("本地存储被其他标签阻塞；请关闭旧连接后重试，禁止发送"));
+    };
+    opening.onupgradeneeded = () => {
+      if (refused) {
+        opening.transaction?.abort();
+        return;
+      }
+      opening.result.createObjectStore("groups");
+      opening.result.createObjectStore("operations");
+    };
+    opening.onerror = () => {
+      clearTimeout(timer);
+      reject(opening.error ?? new Error("无法打开本地密码学存储，禁止发送"));
+    };
+    opening.onsuccess = () => {
+      clearTimeout(timer);
+      const db = opening.result;
+      if (refused) {
+        db.close();
+        return;
+      }
+      db.onversionchange = () => db.close();
+      resolve(db);
+    };
+  });
 }
 export async function commitCryptoOperation(
   db: IDBDatabase,

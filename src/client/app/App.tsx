@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Button } from "@heroui/react";
 import { UserApp } from "./UserApp";
-import { AdminApp } from "./AdminApp";
 import { pageTitle } from "./navigation";
+const AdminApp = lazy(() =>
+  import("./AdminApp").then((module) => ({ default: module.AdminApp })),
+);
 export function App() {
   const [page, setPage] = useState(() => location.hash.slice(1) || "login");
   const [dark, setDark] = useState(
@@ -38,11 +40,20 @@ export function App() {
           {dark ? "浅色外观" : "深色外观"}
         </Button>
       </div>
-      {location.pathname.startsWith("/admin") ? (
-        <AdminApp page={page} />
-      ) : (
-        <UserApp page={page} />
-      )}
+      <Suspense
+        fallback={
+          <main id="main" tabIndex={-1}>
+            <p role="status">正在加载工作区…</p>
+          </main>
+        }
+      >
+        {location.pathname === "/admin" ||
+        location.pathname.startsWith("/admin/") ? (
+          <AdminApp page={page} />
+        ) : (
+          <UserApp page={page} />
+        )}
+      </Suspense>
     </>
   );
 }

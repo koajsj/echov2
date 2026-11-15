@@ -10,6 +10,7 @@ import type { ConnectionHub } from "../delivery/connection-hub.js";
 import { transaction } from "../storage/database.js";
 import { lockUserSession } from "./session-access.js";
 import { HttpError } from "../api/http-error.js";
+import { sequence } from "../delivery/delivery-service.js";
 const username = {
   type: "string",
   pattern: "^[a-zA-Z0-9_]{3,32}$",
@@ -247,7 +248,7 @@ export function accountRoutes(
         current.account.id,
         current.id,
         request.body.username,
-        request.body.version,
+        sequence(request.body.version),
       );
       hub.notify(current.account.id);
       return {

@@ -1,0 +1,356 @@
+{
+  "date": "2026-11-15",
+  "status": "PARTIAL",
+  "baseline": {
+    "localMain": "c6068557a53ca5fd6b99fef07b88e00605c18578",
+    "githubMain": "c6068557a53ca5fd6b99fef07b88e00605c18578",
+    "preservedInitialHead": "d17b0d689af7aff60b3477c4eea74015b13145a2",
+    "branch": "codex/native-hardening-review",
+    "dirtyBaseline": [
+      "README.md",
+      "src/client/components/Icon.tsx",
+      "src/client/components/PublicUserId.tsx",
+      "src/client/components/cultui/"
+    ]
+  },
+  "constraints": {
+    "dependenciesInstalledOrUpgraded": false,
+    "testsAddedOrRun": false,
+    "servicesStarted": false,
+    "databaseOrVpsAccess": false,
+    "subagentsOrComputerUse": false,
+    "oldProjectModified": false,
+    "cryptoGate": "BLOCKED"
+  },
+  "issues": [
+    {
+      "id": "HARDEN-01",
+      "severity": "medium",
+      "file": "src/client/components/cultui/CopyButton.tsx",
+      "line": 8,
+      "rootCause": "Missing public-ID constraint and synchronous in-flight guard in inherited component.",
+      "fix": "Use only twelve uppercase Base32 characters; one shared PublicUserId path; await Clipboard success, report failures, two-second effect cleanup, key by ID; preserve HeroUI, status announcement, reduced motion and MIT.",
+      "status": "FIXED",
+      "verification": "TypeScript/ESLint/AST and clipboard caller tracing; no real clipboard environment.",
+      "runtimeStatus": "NEEDS_RUNTIME_VERIFICATION"
+    },
+    {
+      "id": "HARDEN-02",
+      "severity": "medium",
+      "file": "src/client/app/App.tsx",
+      "line": 5,
+      "rootCause": "Eager imports include admin charts in ordinary user entry.",
+      "fix": "Lazy admin entry, authenticated workspaces, Dashboard and DataPage; retain APIs and charts, shared modules and error/loading handling.",
+      "status": "FIXED",
+      "verification": "Actual before/after Vite output and static chunk/module graph; threshold/config unchanged.",
+      "runtimeStatus": "NEEDS_RUNTIME_VERIFICATION"
+    },
+    {
+      "id": "HARDEN-03",
+      "severity": "medium",
+      "file": "src/client/app/UserApp.tsx",
+      "line": 64,
+      "rootCause": "Account-based workspace key could reuse local state when the same account changes service session.",
+      "fix": "Key both user and admin workspace by sessionId, revision and page.",
+      "status": "FIXED",
+      "verification": "Trace both callers and useSession; TypeScript/React Hooks lint.",
+      "runtimeStatus": "NOT_RUN"
+    },
+    {
+      "id": "HARDEN-04",
+      "severity": "high",
+      "file": "src/server/accounts/session-access.ts",
+      "line": 23,
+      "rootCause": "Time predicates on SELECT FOR UPDATE may be evaluated before waiting for an unchanged locked row.",
+      "fix": "Lock account/session/device first, then query current wall-clock deadlines and active credential/root; device registration reuses helper.",
+      "status": "FIXED",
+      "verification": "TypeScript/ESLint and all helper callers, parameter bindings and lock ordering; database race not run.",
+      "runtimeStatus": "NOT_RUN"
+    },
+    {
+      "id": "HARDEN-05",
+      "severity": "medium",
+      "file": "src/server/accounts/account-service.ts",
+      "line": 60,
+      "rootCause": "Invite UPDATE expiry may be evaluated before an unchanged invitation row lock wait.",
+      "fix": "Acquire invitation row first, then atomic conditional consumption with fresh clock_timestamp, revocation and use count.",
+      "status": "FIXED",
+      "verification": "Static SQL transaction/idempotency/lock path; no database connection.",
+      "runtimeStatus": "NOT_RUN"
+    },
+    {
+      "id": "HARDEN-06",
+      "severity": "medium",
+      "file": "src/server/delivery/connection-hub.ts",
+      "line": 17,
+      "rootCause": "Fixed sixty-second socket validity can outlive the authenticated service session.",
+      "fix": "Pass locked database session expiration and cap notification validity; reject already expired attachment; notify/online filtering reuse deadline.",
+      "status": "FIXED",
+      "verification": "TypeScript/ESLint and sole hub.attach call chain; maintenance cleanup remains periodic.",
+      "runtimeStatus": "NOT_RUN"
+    },
+    {
+      "id": "HARDEN-07",
+      "severity": "low",
+      "file": "src/client/features/data/metadata-archive.ts",
+      "line": 23,
+      "rootCause": "Date.parse normalizes impossible calendar dates accepted by shape validation.",
+      "fix": "Require exact ISO round-trip after existing shape and finite-date checks.",
+      "status": "FIXED",
+      "verification": "Static import contract, TypeScript and lint; no archive execution.",
+      "runtimeStatus": "NOT_RUN"
+    },
+    {
+      "id": "HARDEN-08",
+      "severity": "low",
+      "file": "README.md",
+      "line": 91,
+      "rootCause": "Documentation confused absent dependencies/historical runs with current local capability.",
+      "fix": "Update README, changelog, reports, Rust/lab and operations boundaries; keep eight historical real PC screenshots.",
+      "status": "FIXED",
+      "verification": "Prettier, local reference scanner, diff and evidence scope review.",
+      "runtimeStatus": "NOT_RUN"
+    }
+  ],
+  "bundle": {
+    "status": "PASS",
+    "method": "Existing Vite configuration, generateBundle module/import graph plus final disk JS; gzipSync default for equal comparison, not browser transfer. Only ignored dist/bundle-review-* outputs.",
+    "before": {
+      "chunks": [
+        {
+          "file": "assets/index-CfWXx4hy.js",
+          "bytes": 1014265,
+          "gzipBytes": 301796,
+          "initial": true
+        }
+      ],
+      "initialBytes": 1014265,
+      "initialGzipBytes": 301796,
+      "totalBytes": 1014265,
+      "duplicateNonemptyModules": [],
+      "initialRechartsModuleCount": 197
+    },
+    "after": {
+      "chunks": [
+        {
+          "file": "assets/index-7ytGQJek.js",
+          "bytes": 224364,
+          "gzipBytes": 71417,
+          "initial": true
+        },
+        {
+          "file": "assets/AdminApp-DdJGTKmL.js",
+          "bytes": 2166,
+          "gzipBytes": 1101,
+          "initial": false
+        },
+        {
+          "file": "assets/AdminWorkspace-CK20cIDh.js",
+          "bytes": 123058,
+          "gzipBytes": 36808,
+          "initial": false
+        },
+        {
+          "file": "assets/DashboardPage-oExTvv75.js",
+          "bytes": 395857,
+          "gzipBytes": 111894,
+          "initial": false
+        },
+        {
+          "file": "assets/DataPage-DlRD51qc.js",
+          "bytes": 12069,
+          "gzipBytes": 4834,
+          "initial": false
+        },
+        {
+          "file": "assets/DownloadFile-CwuY2pvN.js",
+          "bytes": 385,
+          "gzipBytes": 295,
+          "initial": false
+        },
+        {
+          "file": "assets/ReauthenticationForm-Dme6yOVR.js",
+          "bytes": 24925,
+          "gzipBytes": 9255,
+          "initial": false
+        },
+        {
+          "file": "assets/Workspace-DJQwQ1Jn.js",
+          "bytes": 17407,
+          "gzipBytes": 6072,
+          "initial": false
+        },
+        {
+          "file": "assets/rolldown-runtime-XKyaHtl9.js",
+          "bytes": 726,
+          "gzipBytes": 429,
+          "initial": true
+        },
+        {
+          "file": "assets/use-api-query-BTyWmqeK.js",
+          "bytes": 99379,
+          "gzipBytes": 32666,
+          "initial": true
+        },
+        {
+          "file": "assets/use-popover-exit-hold-B-fKAPrc.js",
+          "bytes": 122852,
+          "gzipBytes": 38833,
+          "initial": true
+        }
+      ],
+      "initialBytes": 447321,
+      "initialGzipBytes": 143345,
+      "totalBytes": 1023188,
+      "duplicateNonemptyModules": [],
+      "initialRechartsModuleCount": 0
+    },
+    "css": "Unchanged theme/component CSS approximately 496.63 kB; Vite estimated gzip 47.13 kB. No manualChunks or warning threshold changes.",
+    "note": "Initial static JS excludes dynamically requested pages; total JS increases about 0.9%. Module uniqueness is a static graph check, not a browser network measurement. Final import-order cleanup changed content hashes and 5 total bytes; final on-disk metrics supersede the intermediate snapshot."
+  },
+  "dependencyMetadata": {
+    "status": "PASS",
+    "npmLockPositions": 425,
+    "npmSbomUniqueComponents": 418,
+    "rustLockPackagesIncludingRoot": 192,
+    "rustSbomComponents": 191,
+    "missingComponents": 0,
+    "extraComponents": 0,
+    "missingLicenseFields": 0,
+    "sqlManifestSha256Matches": 9,
+    "manifestsAndLocksUnchanged": true
+  },
+  "rust": {
+    "status": "BLOCKED",
+    "offlineTree": {
+      "status": "NOT_AVAILABLE",
+      "exitCode": 101,
+      "command": "CARGO_NET_OFFLINE=true cargo +stable tree --manifest-path crypto/mls-lab/Cargo.toml --locked --offline --target wasm32-unknown-unknown -i crypto-bigint",
+      "reason": "getrandom registry index/cache missing; no dependency download attempted"
+    },
+    "advisories": [
+      {
+        "id": "RUSTSEC-2026-0387",
+        "locked": "crypto-bigint 0.5.5",
+        "fixedUpstream": ">=0.7.6",
+        "path": "elliptic-curve 0.13.8 <- p256/p384/ecdsa and hpke-rs-rust-crypto <- OpenMLS RustCrypto/basic credential",
+        "reachability": "Historical WASM active; fresh feature resolution NOT_AVAILABLE. 0.7 is not a compatible 0.5 replacement."
+      },
+      {
+        "id": "RUSTSEC-2026-0331",
+        "locked": "libcrux-kem 0.0.9",
+        "fixedUpstream": ">=0.0.10",
+        "path": "hpke-rs-libcrux 0.7.0 <- hpke-rs 0.7.0 <- OpenMLS RustCrypto",
+        "reachability": "Historical optional inactive WASM path; current full lock still includes it. Short hybrid key decoding can panic."
+      },
+      {
+        "id": "RUSTSEC-2026-0330",
+        "locked": "libcrux-kem 0.0.9",
+        "fixedUpstream": ">=0.0.10",
+        "path": "Same libcrux-kem path",
+        "reachability": "Historical optional inactive WASM path; short hybrid encapsulation seed can panic."
+      },
+      {
+        "id": "RUSTSEC-2026-0173",
+        "locked": "proc-macro-error2 2.0.1",
+        "fixedUpstream": null,
+        "path": "hax-lib-macros 0.3.7 <- hax-lib 0.3.7 <- libcrux-sha3 0.0.10 <- hpke-rs 0.7.0 <- RustCrypto",
+        "reachability": "Unmaintained, not itself proof of an exploitable cryptographic algorithm. Optional KEM status does not prove this macro path inactive."
+      }
+    ],
+    "sources": [
+      "https://rustsec.org/advisories/RUSTSEC-2026-0387.html",
+      "https://rustsec.org/advisories/RUSTSEC-2026-0331.html",
+      "https://rustsec.org/advisories/RUSTSEC-2026-0330.html",
+      "https://rustsec.org/advisories/RUSTSEC-2026-0173.html"
+    ],
+    "resolution": "Keep product crypto gate closed. Need reviewed compatible upstream/provider changes, complete fixed sources/features, build/audit/interoperability in an authorized environment. No lock edit, fork, audit ignore or local algorithm patch."
+  },
+  "product": {
+    "status": "BLOCKED",
+    "lab": "Real OpenMLS 0.9.2 and RustCrypto 0.6.0, suite 1; synthetic BasicCredential and MemoryStorage only in independent lab.",
+    "missing": [
+      "Trusted account/device Credential and KeyPackage binding",
+      "Product Crypto Worker and full persistent Provider",
+      "Commit/Welcome/Proposal and epoch atomicity",
+      "Group state/inbox/outbox/cursor atomic recovery",
+      "Multitab and crash/rollback recovery",
+      "Encrypted multidevice deletion tombstones",
+      "Key recovery and independent deletion-aware system restore"
+    ],
+    "note": "Opaque sealedState/strict IndexedDB helper is not product MLS. Service-session revocation is not MLS Remove. No promise of recalling historical keys/screenshots/external copies."
+  },
+  "checks": {
+    "typecheck": {
+      "status": "PASS",
+      "command": "npm run typecheck",
+      "exitCode": 0
+    },
+    "lint": {
+      "status": "PASS",
+      "command": "npm run lint",
+      "exitCode": 0
+    },
+    "rustfmt": {
+      "status": "PASS",
+      "command": "CARGO_NET_OFFLINE=true cargo +stable fmt --manifest-path crypto/mls-lab/Cargo.toml --all -- --check",
+      "exitCode": 0
+    },
+    "sqlAndManualSecurity": {
+      "status": "PARTIAL",
+      "reason": "Manual source/SQL/call-chain review, not database execution or complete SAST."
+    },
+    "unavailable": {
+      "status": "NOT_AVAILABLE",
+      "tools": ["cargo-audit", "semgrep", "PostgreSQL AST parser"]
+    },
+    "runtime": {
+      "status": "NOT_RUN",
+      "scope": "Tests, browser, database/SQL/migrations, HTTP/WSS, Rust/WASM builds, deployment and fresh npm vulnerability query."
+    },
+    "clipboard": {
+      "status": "NEEDS_RUNTIME_VERIFICATION",
+      "reason": "No existing usable application environment; no service started and no simulated clipboard presented as real."
+    },
+    "format": {
+      "status": "PASS",
+      "command": "npm run format:check",
+      "exitCode": 0
+    },
+    "ast": {
+      "status": "PASS",
+      "command": "npm run check:ast",
+      "exitCode": 0,
+      "files": 77,
+      "localBindings": 255
+    },
+    "source": {
+      "status": "PASS",
+      "command": "npm run check:source",
+      "exitCode": 0,
+      "files": 160,
+      "parsed": 52,
+      "jsxParsed": 38,
+      "literalModuleReferences": 399,
+      "localDocumentLinks": 115
+    },
+    "scriptSyntax": {
+      "status": "PASS",
+      "nodeFiles": 13,
+      "bashFiles": 1,
+      "scope": "Syntax only; no scripts evaluated"
+    },
+    "secretsAndDiff": {
+      "status": "PASS",
+      "scopeFiles": 160,
+      "matchedSecretPatterns": 0,
+      "scope": "Private-key/token/credential patterns and full diff; not complete SAST."
+    }
+  },
+  "screenshots": {
+    "status": "NOT_RUN",
+    "preserved": 8,
+    "source": "Historical Cloud PC screenshots; none updated or represented as current UI acceptance."
+  },
+  "review": "Same agent reviewed implementation and full diff; no independent auditor. GitHub SHA is intentionally not self-referenced inside the commit."
+}

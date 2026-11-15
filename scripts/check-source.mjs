@@ -1,9 +1,17 @@
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import ts from "typescript";
+import { pathToFileURL } from "node:url";
 import { resolve, dirname, relative, extname } from "node:path";
 import { stripTypeScriptTypes, isBuiltin } from "node:module";
 import { SourceTextModule } from "node:vm";
+
+const ts = (
+  await import(
+    process.argv[2]
+      ? pathToFileURL(resolve(process.argv[2])).href
+      : "typescript"
+  )
+).default;
 
 const root = resolve(import.meta.dirname, "..");
 const manifest = JSON.parse(

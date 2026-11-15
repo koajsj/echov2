@@ -1,0 +1,35 @@
+.cult-copy {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.cult-copy [data-slot="copy-button"] {
+  min-width: 88px;
+}
+.cult-copy-icons {
+  display: inline-grid;
+  width: 16px;
+  height: 16px;
+}
+.cult-copy-icons svg {
+  grid-area: 1 / 1;
+  width: 16px;
+  height: 16px;
+}
+.cult-copy-check,
+[data-copied="true"] .cult-copy-original {
+  opacity: 0;
+  transform: scale(0.8);
+}
+[data-copied="true"] .cult-copy-check {
+  opacity: 1;
+  transform: scale(1);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cult-copy-icons svg {
+    transition:
+      opacity var(--echo-fast) var(--echo-ease),
+      transform var(--echo-fast) var(--echo-ease);
+  }
+}

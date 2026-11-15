@@ -1,5 +1,25 @@
 # 低配部署、删除证据与系统恢复
 
+## cb20341 后的本地工程边界
+
+生产部署准入 BLOCKED。本轮只在本地复核源码与依赖元数据，未连接 VPS、启动服务/数据库或执行 SQL。未提供完整数据库/媒体备份执行器、独立删除证据或防回滚隔离恢复能力；签名与单机时间也不能证明备份最新。需先完成产品密码学准入，再在另行授权的隔离环境验证备份覆盖、恢复完整性与删除新鲜性；现有部署配置不是这些验证的替代。固定工具链和完整缓存缺失的精确说明见[密码学](native-cryptography.md)。
+
+## 最终CLI收敛 — 2026-11-15
+
+FIXED仅指源码：迁移CLI在连接前要求显式MIGRATION_DATABASE_URL，限定postgres/postgresql、loopback、明确端口、echo_native_owner和/echo_native，无query/hash，连接超时5秒。禁止缺URL或缺目标字段时回退PG*选择实例；URL不证明真实ACL，owner/版本/台账/apply确认名仍独立核查。历史Cloud导出函数/测试入口不变，CLI不再接受socket/临时库目标，详见[迁移规范](../migrations/README.md)。本轮CLI/数据库/SQL/备份/恢复/部署均NOT_RUN。
+
+继续核对已安装pg后，将同一目标约束补到运行DATABASE_URL和管理员初始化ADMIN_DATABASE_URL：均需postgresql、loopback、显式1–65535端口、/echo_native及各自API/owner角色；迁移CLI也拒绝0端口。无端口旧配置需运维显式补入已核实实例端口，再在授权环境验证；不得依靠PGPORT自动选择。主机/端口/用户/库名字段不再回退对应PG*，密码、TLS和其他连接选项仍受受保护环境影响，不能把此修复当实际身份或最小权限证明。没有运行初始化或启动应用。
+
+当前前端代码有后续小幅修复，下面447,321字节及CSS数值仅为f54fc345历史构建，不是最终提交产物。未重新构建或测量网络。
+
+## 本地主环境与待执行变更 — 2026-11-15
+
+GitHub main的PR #2成果已在本地echov2接管，旧echo-v2只读；仅使用已有node_modules、不安装或升级Node/Rust/WASM依赖，不启动服务、执行SQL或访问VPS。以下Cloud资源和功能数字是历史证据，本轮没有重新运行。保留前序008迁移工件、WSS权限竞态修复与管理员账号版本条件；本轮补齐锁后期限检查、通知会话期限及前端按需加载，未修改生产配置/资源预算。
+
+008需未来获授权的owner维护窗口；新触发器SECURITY DEFINER、固定pg_catalog search_path，所有表名限定echo，PUBLIC/API不可直接调用。新增函数由非超级owner拥有，API仍不能签发Credential/KeyPackage或解冻群。先在隔离环境验证触发器、权限、历史回填和回滚再考虑应用；本轮NOT_RUN，不得部署应用后假定生产已经具备008。
+
+生产日志容量、附件配额/清理、停写备份执行器、独立删除日志目标、隔离恢复介质与保护key仍未具备。默认不添加假备份脚本；完整流程继续以本文为准，G6保持BLOCKED。Caddy/systemd解析、2GB/1核/20GB与实际恢复均无本轮运行证据。
+
 ## 当前状态 — 2026-11-12
 
 本轮没有生产部署。Cloud 已运行真实 Node/Fastify、PostgreSQL 和 Caddy HTTPS 合成工作流；Docker 的 `--memory=2g --memory-swap=2g --cpus=1` 在当前 rootless、CgroupDriver=none 环境未实际生效，容器观测为 memory.max=34359738368、cpu.max=400000 100000。该结果仅是功能运行，不是 2 GB/1 核模拟 PASS；主机整体 memory.peak 不能作为应用峰值。20 GB SSD、持续负载、磁盘告警、日志保留和完整灾备仍未验收。缺少独立新鲜删除证据/外部备份目标，系统恢复继续拒绝。
@@ -30,7 +50,7 @@ Fastify关闭自动请求日志，业务错误只输出固定code/request ID；�
 
 拟保留原始IP7天、安全记录30天、管理员审计180天、匿名每日聚合1年；当前无自动保留清理器，政策审批/法律适用OPEN。GeoIP只能用合法的本地数据库，尚无数据库不调用外部追踪API或编造地区。
 
-前端只用本地原创图标/系统字体、固定依赖声明、HeroUI v3；CSP无远程脚本/字体、禁frame/object、限定同源connect，保留WASM所需候选指令。`style-src 'unsafe-inline'`为组件样式候选折衷，不给脚本unsafe-inline；是否能收紧需真实HeroUI/CSP验证。无SW离线缓存。后续构建锁文件、SBOM、产物清单/外部签名、公钥独立校验、发布回滚不能连带回滚用户数据。
+前端使用本地原创SVG、BoardUI所需Remixicon及系统字体；HeroUI v3、BoardUI免费源码和Cult UI按需改编组件均保留来源/许可，固定依赖声明；CSP无远程脚本/字体、禁frame/object、限定同源connect，保留WASM所需候选指令。`style-src 'unsafe-inline'`为组件样式候选折衷，不给脚本unsafe-inline；是否能收紧需真实HeroUI/CSP验证。无SW离线缓存。后续构建锁文件、SBOM、产物清单/外部签名、公钥独立校验、发布回滚不能连带回滚用户数据。
 
 ## 独立删除日志：严格恢复保证的前提
 
@@ -67,7 +87,7 @@ Fastify关闭自动请求日志，业务错误只输出固定code/request ID；�
 
 API池仍5、PG连接20、Node heap384MiB/MemoryMax768MiB；新增锁等待5秒和事务空闲15秒上限。systemd关闭core dump，限制NOFILE2048，保护kernel/control groups、禁止SUID/SGID和personality变更；未设置可能破坏V8 JIT/WASM的MemoryDenyWriteExecute。PostgreSQL另关闭duration日志，仍须检查宿主机/pgaudit/崩溃收集，不承诺配置覆盖全部日志来源。Shell先决检查对齐Node24.17最低版本；从未运行该脚本或provision工具。
 
-静态资源预算：前端只用本地SVG/系统字体，没有远程资源；Vite关闭sourcemap。期望普通前端传输≤1 MiB压缩、未来单独MLS chunk≤2 MiB压缩是审查预算而非实际产物大小；未构建、无锁闭包或WASM，当前无法测量，超预算必须审查来源，不能削弱密码/加密。元数据归档最大1 MiB、每集合5000，口令KDF只在客户端；CSV每页≤50条（增长≤30个观测桶），没有全量入内存导出。
+静态资源预算：前端只用本地SVG/系统字体，没有远程资源；Vite关闭sourcemap。期望普通前端传输≤1 MiB压缩、未来单独MLS chunk≤2 MiB压缩是审查预算而非实际产物大小；2026-11-15已有依赖的Vite构建给出用户入口静态JS闭包447,321字节（同一Node gzip143,345字节），CSS约496.63kB（Vite估算gzip47.13kB）；不是浏览器传输测量。完整WASM及实际网络未验，超预算必须审查来源，不能削弱密码/加密。元数据归档最大1 MiB、每集合5000，口令KDF只在客户端；CSV每页≤50条（增长≤30个观测桶），没有全量入内存导出。
 
 后台statfs提供媒体路径所在卷total/available字节，不泄露路径，不等于媒体物理占用；缺目录返回未知+原因，其他错误单独失败。DB附件登记量与卷容量分别显示。附件上传/账号和全站配额执行、磁盘低水位拒写、保留任务、日志容量上限和备份执行器仍BLOCKED；不能上线依赖这些保护的媒体业务。20GB不放本地完整灾备，外部容量/轮转/过期删除证据和隔离恢复介质均须运维确定。
 

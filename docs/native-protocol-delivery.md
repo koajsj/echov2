@@ -1,5 +1,23 @@
 # 应用协议与一致性投递
 
+## cb20341 后的产品通信复核
+
+BLOCKED。重新追踪 append 的首个调用，requireReviewedCrypto 仍无条件抛出503；没有产品 Worker、Welcome 收件箱生产者或经验证的 Commit 投影/恢复接口。route_version、seq 不等于 mls_epoch。离线分页和投递骨架不构成可用私聊/群聊；本轮不扩充未经原生状态验证的发送接口。解除条件包括真实 Credential/Welcome/Commit 验证、状态冲突冻结、精确原操作幂等恢复，以及完整 Provider 与收发状态原子边界。
+
+## 最终静态收敛 — 2026-11-15
+
+PARTIAL。WSS在进入异步认证前同步注册唯一的message拒绝监听，错误直接terminate；避免认证/行锁等待期间忽略入站消息。注册设置成功或失败后刷新权威版本；改名复用有界序号校验。真实WSS、HTTP与并发NOT_RUN。服务期限取数据库session到期与60秒较早值；notify/统计过滤过期连接，物理连接由既有30秒循环回收，不承诺在无事件时精确到毫秒断开。
+
+产品Commit/Welcome生产者、Proposal与staged状态持久化、Merge/Discard恢复、完整Outbox/去重/游标原子性、私聊群组角色与离线同步仍BLOCKED；SQL候选冻结及服务收据不构成MLS确认。crypto-gate继续无条件拒写503，以下11-12运行描述为历史证据。
+
+本次修复服务操作的未知响应处理：设备页支持同时重新读取session绑定和设备目录；管理员邀请码撤销在finally刷新权威列表，并可手动刷新注册/邀请记录。错误提示与刷新状态分开，未将网络错误解释为事务必然回滚，也未将刷新成功解释为原操作成功。此机制不处理MLS未知Commit、消息幂等或离线消费确认；这些能力仍须真实Provider与原子状态恢复，BLOCKED。
+
+## 本地接口收敛 — 2026-11-12
+
+`GET /v1/admin/users`新增`version`十进制字符串；`POST /v1/admin/users/:id/status`必须提交`{suspended:boolean, version:string}`。新近认证/CSRF后按actor账号→session→目标账号锁定，比较数据库当前version，过时返回409 VERSION_CONFLICT，未知或不可修改目标404。同状态返回updated:false、不新增版本或审计，状态变化保留session撤销、组冻结和审计同事务。前端错误后刷新权威列表；网络未知结果不能凭旧版本重复切换。
+
+WSS在账号/session行锁内重验并挂载，撤销若先提交则无法挂载，若后提交则可看到已挂载连接并终止。期限/背压在通知发送前核验；关闭登记即时移除，强制断开可能在客户端表现为1006，仍只允许重新认证/HTTPS补齐，不是消息已处理或删除已同步。相关并发和浏览器运行NOT_RUN。聊天写入、Commit/Welcome产品闭环及离线墓碑继续BLOCKED。
+
 ## 当前状态 — 2026-11-12
 
 route_version、seq 与客户端 mls_epoch 仍严格分离。服务端聊天 append 门禁保持 503；WASM 实验仅证明库在两个隔离浏览器上下文中处理真实 wire bytes，未证明 Echo Delivery 的 Welcome 排序、Commit 冲突恢复、重连/离线投递或端到端群组一致性。完整协议集成仍 BLOCKED，不用 SQL CAS 代替密码学验证。
@@ -49,23 +67,23 @@ route_version、seq 与客户端 mls_epoch 仍严格分离。服务端聊天 app
 
 所有受保护写请求使用同源Cookie、Origin、CSRF及X-Echo-Session非秘密UUID上下文；受保护前端读也带上下文。稳定错误code/requestId，无SQL/秘密日志。404原操作未观察到不证明未知提交不会稍后完成。
 
-| API                                                                                                              | 实际实现与限制                                                            |
-| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| POST /v1/accounts                                                                                                | 开放/邀请/关闭，用户名唯一，operation、邀请码消费同事务                   |
-| POST /v1/sessions；GET /v1/session；DELETE /v1/sessions/current                                                  | 同认证内核、独立user/admin audience；密码登录不授设备信任                 |
-| POST /v1/sessions/reauthenticate；PATCH /v1/account/username                                                     | 新近认证、稳定UUID、改名CAS；改名事务内重验会话                           |
-| GET /v1/accounts/lookup?username=                                                                                | 已登录精确查找，UUID/用户名，unverified-directory，不自动信任             |
-| GET /v1/devices?after=；POST /v1/devices；POST /v1/devices/:id/revoke                                            | 50+1分页、pending登记/幂等服务撤销；撤session/WSS、冻结；不等于MLS Remove |
-| GET /v1/identity                                                                                                 | 本人当前公开根目录；不证明本机有私钥/可信                                 |
-| GET /v1/conversations?after=                                                                                     | 当前有效设备/成员路由元数据，最多50+1 UUID分页，无私密组名                |
-| POST /v1/messages                                                                                                | Service内503关闭；外层契约不是MLS集成                                     |
-| GET /v1/operations/:id                                                                                           | 限原发送账号和原设备，收据/原密文摘要/删除和到期标记                      |
-| GET /v1/conversations/:id/messages?after=&limit=                                                                 | 新快照隐藏待删/到期密文，按joined_seq下界，超前cursor拒绝自动回滚         |
-| POST /v1/cursors                                                                                                 | 单调服务投递确认、不超head；不是已读或原生处理证明，当前前端不自动调用    |
-| GET /v1/events?context=                                                                                          | 仅通知；Origin、Cookie、匹配session UUID；握手与attach两次核对上下文      |
-| POST /v1/messages/:id/delete；GET /v1/deletions/own                                                              | 原作者/new-auth/有效设备；202待锚、本人含expiry记录；非物理完成           |
-| GET /v1/admin/{overview,users,devices,logins,security,audit,invitations,backups,growth}；GET /v1/admin/users/:id | 独立超管、真实元数据分页；无正文、密码哈希、私钥或原邀请码返回            |
-| PATCH /v1/admin/registration；POST /v1/admin/invitations；POST /v1/admin/users/:id/status                        | 新近认证、事务内session重验、审计；邀请operation幂等，token仅初次返回     |
+| API                                                                                                              | 实际实现与限制                                                                                         |
+| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| POST /v1/accounts                                                                                                | 开放/邀请/关闭，用户名唯一，operation、邀请码消费同事务                                                |
+| POST /v1/sessions；GET /v1/session；DELETE /v1/sessions/current                                                  | 同认证内核、独立user/admin audience；密码登录不授设备信任                                              |
+| POST /v1/sessions/reauthenticate；PATCH /v1/account/username                                                     | 新近认证、稳定UUID、改名CAS；改名事务内重验会话                                                        |
+| GET /v1/accounts/lookup?username= 或 ?publicId=                                                                  | 已登录精确查找，用户名或12位Base32公共ID二选一；返回内部UUID及公共ID，unverified-directory，不自动信任 |
+| GET /v1/devices?after=；POST /v1/devices；POST /v1/devices/:id/revoke                                            | 50+1分页、pending登记/幂等服务撤销；撤session/WSS、冻结；不等于MLS Remove                              |
+| GET /v1/identity                                                                                                 | 本人当前公开根目录；不证明本机有私钥/可信                                                              |
+| GET /v1/conversations?after=                                                                                     | 当前有效设备/成员路由元数据，最多50+1 UUID分页，无私密组名                                             |
+| POST /v1/messages                                                                                                | Service内503关闭；外层契约不是MLS集成                                                                  |
+| GET /v1/operations/:id                                                                                           | 限原发送账号和原设备，收据/原密文摘要/删除和到期标记                                                   |
+| GET /v1/conversations/:id/messages?after=&limit=                                                                 | 新快照隐藏待删/到期密文，按joined_seq下界，超前cursor拒绝自动回滚                                      |
+| POST /v1/cursors                                                                                                 | 单调服务投递确认、不超head；不是已读或原生处理证明，当前前端不自动调用                                 |
+| GET /v1/events?context=                                                                                          | 仅通知；Origin、Cookie、匹配session UUID；握手与attach两次核对上下文                                   |
+| POST /v1/messages/:id/delete；GET /v1/deletions/own                                                              | 原作者/new-auth/有效设备；202待锚、本人含expiry记录；非物理完成                                        |
+| GET /v1/admin/{overview,users,devices,logins,security,audit,invitations,backups,growth}；GET /v1/admin/users/:id | 独立超管、真实元数据分页；无正文、密码哈希、私钥或原邀请码返回                                         |
+| PATCH /v1/admin/registration；POST /v1/admin/invitations；POST /v1/admin/users/:id/status                        | 新近认证、事务内session重验、审计；邀请operation幂等，token仅初次返回                                  |
 
 第三阶段新增API（均不是MLS接口）：
 
@@ -74,7 +92,8 @@ route_version、seq 与客户端 mls_epoch 仍严格分离。服务端聊天 app
 | GET /v1/account/sessions?after=                             | 本人未过期会话50+1 UUID页，无凭据；含current标记                                                       |
 | POST /v1/account/sessions/revoke                            | `{sessionId:UUID或null}`；null撤除当前外全部；新近认证/CSRF/锁内复核，当前ID返回409 USE_LOGOUT         |
 | GET /v1/admin/users/:id/sessions?after=；POST 同路径/revoke | 超管查询/新近认证撤全部目标会话，禁止自身全撤；不限制未来新登录                                        |
-| GET /v1/admin/users?username=&after=                        | username可选，精确ASCII不区分大小写；保留UUID分页                                                      |
+| GET /v1/admin/users?username=&publicId=&after=              | 两种可选精确过滤同时存在时取交集，ASCII不区分大小写；公共ID十二位Base32，保留UUID分页                  |
+| GET /v1/admin/trends?days=                                  | 管理员真实UTC注册/投递趋势，仅7/30/90日；无观测桶不造比例，流量为null                                  |
 | POST /v1/admin/devices/:id/revoke                           | 复用服务撤销、冻结和审计；不声称MLS移除                                                                |
 | POST /v1/admin/invitations/:id/revoke                       | 行锁、幂等，已消费注册不回滚；事务内审计                                                               |
 | POST /v1/admin/security/:id/review                          | id为有界bigint十进制；幂等记录reviewed，resolved始终false；审计event_id外键                            |

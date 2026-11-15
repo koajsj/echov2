@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import type { Pool } from "pg";
 import type { DeliveryEnvelope } from "../../shared/contracts.js";
 import { limits } from "../../shared/contracts.js";
 import { uuidSchema, sequenceSchema } from "../../shared/validation.js";
@@ -6,8 +7,11 @@ import type { SessionService } from "../accounts/sessions.js";
 import type { DeliveryService } from "./delivery-service.js";
 import type { ConnectionHub } from "./connection-hub.js";
 import { HttpError } from "../api/http-error.js";
+import { transaction } from "../storage/database.js";
+import { lockUserSession } from "../accounts/session-access.js";
 export function deliveryRoutes(
   app: FastifyInstance,
+  pool: Pool,
   sessions: SessionService,
   delivery: DeliveryService,
   hub: ConnectionHub,
@@ -39,18 +43,33 @@ export function deliveryRoutes(
     },
     (socket, request) => {
       // Install listeners synchronously; no inbound messages are accepted.
-      socket.on("error", () => socket.close());
+      socket.on("error", () => socket.terminate());
+      socket.on("message", () => socket.close(1008, "Use HTTPS for writes"));
       void sessions
         .require(request)
-        .then((current) => {
+        .then(async (current) => {
           if (current.id !== request.query.context) {
             socket.close(1008, "Session changed");
             return;
           }
-          if (socket.readyState === 1)
-            hub.attach(socket, current.id, current.account.id);
+          // Attach while holding the same account/session locks as revocation.
+          // A later revoker can then observe and close this socket after commit.
+          await transaction(pool, async (db) => {
+            const session = await lockUserSession(
+              db,
+              current.account.id,
+              current.id,
+            );
+            if (socket.readyState === 1)
+              hub.attach(
+                socket,
+                current.id,
+                current.account.id,
+                session.expiresAt.getTime(),
+              );
+          });
         })
-        .catch(() => socket.close(1008, "Session unavailable"));
+        .catch(() => socket.terminate());
     },
   );
   app.get<{

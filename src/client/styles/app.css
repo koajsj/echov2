@@ -146,30 +146,11 @@ label {
   display: grid;
   gap: 4px;
 }
-.split-panels,
-.metrics {
+.split-panels {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
   margin-bottom: 32px;
-}
-.metrics > div {
-  display: grid;
-  gap: 8px;
-  padding: 24px 0;
-  border-top: 1px solid var(--echo-border);
-}
-.metrics span {
-  color: var(--echo-muted);
-  font-size: var(--echo-type-label);
-}
-.metrics strong {
-  font-size: var(--echo-type-display);
-  font-weight: var(--echo-weight-medium);
-  font-variant-numeric: tabular-nums;
-}
-.metrics .unknown {
-  font-size: var(--echo-type-title);
 }
 .table-scroll {
   max-width: 100%;
